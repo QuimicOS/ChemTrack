@@ -1,0 +1,45 @@
+[
+    {
+      "pickup_id": "00084194",
+      "label_id": "0000953",
+      "requested_by": "maria.gomez@upr.edu",
+      "date_requested": "2024-10-01",
+      "chemical_name": "Acetone",
+      "building": "Luchetti",
+      "room_number": "L-203",
+      "stored": "6 Gallons",
+      "container_size": "10 Liters",
+      "timeframe": "Monday, 9:00 AM - 12:00 PM",
+      "status": "completed",
+      "completion_method": "Regular"
+    },
+    {
+      "pickup_id": "00084196",
+      "label_id": "0000955",
+      "requested_by": "ramirez.ana@upr.edu",
+      "date_requested": "2024-10-03",
+      "chemical_name": "Ethyl Alcohol",
+      "building": "Johnson",
+      "room_number": "J-202",
+      "stored": "15 Gallons",
+      "container_size": "20 Liters",
+      "timeframe": "Wednesday, 11:00 AM - 2:00 PM",
+      "status": "active",
+      "completion_method": ""
+    },
+    {
+      "pickup_id": "00084197",
+      "label_id": "0000956",
+      "requested_by": "john.doe@upr.edu",
+      "date_requested": "2024-10-04",
+      "chemical_name": "Methanol",
+      "building": "Ramirez",
+      "room_number": "R-303",
+      "stored": "8 Gallons",
+      "container_size": "25 Liters",
+      "timeframe": "Friday, 8:00 AM - 12:00 PM",
+      "status": "active",
+      "completion_method": ""
+    }
+  ]
+  

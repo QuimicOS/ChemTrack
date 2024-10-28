@@ -1,0 +1,24 @@
+{
+    "label_id": "123",
+    "edited_by": "juan.pablo@upr.edu",
+    "stored_quantity": "5.5",
+    "units": "L",
+    "chemicals": [
+      {
+        "chemical_name": "Acetone",
+        "cas_number": "67-64-1",
+        "percentage": "20"
+      },
+      {
+        "chemical_name": "Methanol",
+        "cas_number": "67-56-1",
+        "percentage": "15"
+      },
+      {
+        "chemical_name": "Sodium Chloride",
+        "cas_number": "7647-14-5",
+        "percentage": "10"
+      }
+    ]
+  }
+  

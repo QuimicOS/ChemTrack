@@ -1,0 +1,25 @@
+{
+  "created_by": "maria.gomez",
+  "date_created": "2024-10-24",
+  "department": "ICOM",
+  "building": "Stefani",
+  "room_number": "S-227",
+  "lab_name": "Capstone ICOM",
+  "principal_investigator": "Nayda Santiago",
+  "container_size": "4 Gallons",
+  "stored": "2",
+  "label_size": "Medium",
+  "units": "l",
+  "chemicals": [
+    {
+      "chemical_name": "Lenolin",
+      "cas_number": "1234-45-6",
+      "percentage": "37"
+    },
+    {
+      "chemical_name": "Maicena",
+      "cas_number": "2345-90-2",
+      "percentage": "63"
+    }
+  ]
+}
