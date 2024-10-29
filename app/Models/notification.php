@@ -14,7 +14,9 @@ class Notification extends Model
     protected $fillable = [
         'pending_date',
         'send_to',
-        'message'
+        'message',
+        'status_of_notification',
+        'notification_type'
     ];
     
     // DIRECT RELATIONSHIPS
