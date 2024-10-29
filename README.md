@@ -1,6 +1,7 @@
 ## Script to install the ChemTrack Project
 1) git clone to the repo
 2) composer install
+    Create a ".env" file and paste the ".env copy" info into it. THIS IS FOR LOCAL USE ONLY. For deployment use the server info where is needed.
 3) php artisan key:generate
 4) php artisan config:clear
 5) php artisan migrate
