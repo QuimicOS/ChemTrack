@@ -9,7 +9,7 @@
 6) winget install Schniz.fnm
 7) fnm env --use-on-cd | Out-String | Invoke-Expression
 8) fnm use --install-if-missing 20
-9) node -v # should print `v20.18.0`
+9) node -v 
 10)npm -v 'should print last version'
 11) npm install
 12) npm run build
