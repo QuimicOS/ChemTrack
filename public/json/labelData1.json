@@ -10,6 +10,7 @@
   "quantity": "500",
   "units": "mL",
   "status": "Pending",
+  "message": "",
   "chemicals": [
     {
       "chemical_name": "Hydrochloric Acid",

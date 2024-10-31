@@ -12,23 +12,24 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     
     <style>
-        body {
+        body, html {
             background-color: #E4E4E4;
             font-size: 1rem;
             font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
-            height: 100%;
-            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        
+  
         /* Navbar styling */
         .navbar {
             padding-left: 1rem;
             padding-right: 1rem;
             height: 70px;
         }
-        
+  
         /* Sidebar Styles */
         .menu-main {
             position: fixed;
@@ -48,14 +49,15 @@
             margin-left: 10px;
             border-radius: 10px;
         }
-
+  
+        /* Content and footer layout */
         .content-area {
             margin-left: 270px;
             padding: 1.25rem;
             margin-top: 70px;
-            margin-bottom: 20px; /* Add space for the footer */
+            flex: 1; /* Allows content area to grow and push footer down */
         }
-
+  
         /* Button side bar */
         .menu-button {
             width: 100%;
@@ -68,45 +70,45 @@
             text-decoration: none;
             transition: background-color 0.3s;
         }
-
-        /* Sidebar hover */
+  
+        /* Sidebar when hovering over an option */ 
         .menu-button:hover {
             background-color: rgba(255, 255, 255, 0.1);
         }
-
+  
         .line-divider {
             border: 1px solid #fff;
             margin: 1rem 0;
             width: 100%;
         }
-
+  
         /* Footer Styles */
         .footerprimary {
             background-color: #f8f9fa;
             padding: 1rem;
             text-align: center;
             border-radius: 10px;
-            margin-left: 270px; /* Align with content */
-            width: calc(100% - 270px); /* Avoid sidebar overlap */
+            margin-top: 20px;
+            border-radius: 10px;
         }
-
+  
         .footerprimary p {
             margin-bottom: 0;
             color: #6c757d;
         }
-
+  
         .footerprimary nav a {
             color: #6c757d;
             margin-left: 10px;
             margin-right: 10px;
             text-decoration: none;
         }
-
+  
         .sign-out {
             margin-top: auto;
             margin-bottom: 20px;
         }
-    </style>
+      </style>
 </head>
 <body>
     <!-- Navbar -->
@@ -129,13 +131,14 @@
                   <button class="btn btn-light position-relative" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-bell"></i>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationCount">
-                        3
+                        4
                     </span>
                   </button>
                   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
                     <li><a class="dropdown-item notification-link" href="{{ route('admin/notifications') }}" data-notification="pickup">New pickup request</a></li>
-                    <li><a class="dropdown-item notification-link" href="{{ route('admin/notifications') }}" data-notification="lab-edit">Lab details edited</a></li>
-                    <li><a class="dropdown-item notification-link" href="{{ route('admin/notifications') }}" data-notification="chemical-add">Chemical added</a></li>
+                    <li><a class="dropdown-item notification-link" href="{{ route('admin/notifications') }}" data-notification="lab-edit">Invalidated pickup request</a></li>
+                    <li><a class="dropdown-item notification-link" href="{{ route('admin/notifications') }}" data-notification="chemical-add">New Chemical added</a></li>
+                    <li><a class="dropdown-item notification-link" href="{{ route('admin/notifications') }}" data-notification="chemical-add">New User request</a></li>
                   </ul>
                 </div>
 

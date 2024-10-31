@@ -5,7 +5,7 @@
 @section('content')
   <style>
       .content-area {
-        margin-left: 140px;
+        margin-left: 120px;
         padding: 1.25rem;
         margin-top: 25px;
       }

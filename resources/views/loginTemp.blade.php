@@ -21,11 +21,11 @@
         <div id="error-message" class="error"></div>
         <div class="form-group mb-3">
             <label for="email">Email</label>
-            <input type="email" id="email" class="form-control" placeholder="Enter your email">
+            <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
         </div>
         <div class="form-group mb-3">
             <label for="password">Password</label>
-            <input type="password" id="password" class="form-control" placeholder="Enter your password">
+            <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
         </div>
         <button class="btn btn-primary w-100" onclick="login()">Log In</button>
     </div>
@@ -35,6 +35,15 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('error-message');
+
+            // Clear any previous error message
+            errorMessage.textContent = "";
+
+            // Check if email includes "@"
+            if (!email.includes("@")) {
+                errorMessage.textContent = "The email address must contain '@'.";
+                return;
+            }
 
             try {
                 // Fetch the users JSON file
@@ -53,8 +62,6 @@
                     return;
                 }
 
-                errorMessage.textContent = "";
-
                 // Redirect based on user role
                 if (user.role === "admin") {
                     window.location.href = "{{ url('/admin/homeAdmin') }}";
@@ -63,7 +70,7 @@
                 } else if (user.role === "staff") {
                     window.location.href = "{{ url('/staff/homeStaff') }}";
                 } else {
-                    alert("ACCES DENIED");
+                    alert("ACCESS DENIED");
                     window.location.href = "{{ url('home') }}";
                 }
 

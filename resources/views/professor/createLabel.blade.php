@@ -1,4 +1,4 @@
-@extends('admin.templateAdmin')
+@extends('professor.templateProfessor')
 
 @section('title', 'Create Label - ChemTrack')
 

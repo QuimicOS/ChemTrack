@@ -10,6 +10,7 @@
     "quantity": "750",
     "units": "mL",
     "status": "Pending",
+    "message": "",
     "chemicals": [
       {
         "chemical_name": "Ethanol",

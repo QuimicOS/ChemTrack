@@ -12,97 +12,101 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     
     <style>
-    body {
-        background-color: #E4E4E4;
-        font-size: 1rem;
-        font-family: 'Roboto', sans-serif;
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        overflow-x: hidden;
+      body, html {
+          background-color: #E4E4E4;
+          font-size: 1rem;
+          font-family: 'Roboto', sans-serif;
+          margin: 0;
+          padding: 0;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
       }
-    
+
       /* Navbar styling */
       .navbar {
-        padding-left: 1rem;
-        padding-right: 1rem;
-        height: 70px;
+          padding-left: 1rem;
+          padding-right: 1rem;
+          height: 70px;
       }
-    
+
       /* Sidebar Styles */
       .menu-main {
-        position: fixed;
-        top: 75px;
-        left: 0;
-        height: calc(90% - 75px);
-        width: 250px;
-        background: linear-gradient(180deg, #3e3d45, #202020);
-        padding: 10px;
-        box-sizing: border-box;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        color: #fff;
-        z-index: 1000;
-        overflow-y: auto;
-        margin-left: 10px;
-        border-radius: 10px;
+          position: fixed;
+          top: 75px;
+          left: 0;
+          height: calc(90% - 75px);
+          width: 250px;
+          background: linear-gradient(180deg, #3e3d45, #202020);
+          padding: 10px;
+          box-sizing: border-box;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          color: #fff;
+          z-index: 1000;
+          overflow-y: auto;
+          margin-left: 10px;
+          border-radius: 10px;
       }
 
+      /* Content and footer layout */
       .content-area {
-        margin-left: 270px;
-        padding: 1.25rem;
-        margin-top: 70px; /* Push content to be right below the navbar */
+          margin-left: 270px;
+          padding: 1.25rem;
+          margin-top: 70px;
+          flex: 1; /* Allows content area to grow and push footer down */
       }
 
-    /* Button side bar */
+      /* Button side bar */
       .menu-button {
-        width: 100%;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 10px;
-        color: #fff;
-        text-decoration: none;
-        transition: background-color 0.3s;
+          width: 100%;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 10px;
+          color: #fff;
+          text-decoration: none;
+          transition: background-color 0.3s;
       }
+
       /* Sidebar when hovering over an option */ 
       .menu-button:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+          background-color: rgba(255, 255, 255, 0.1);
       }
-    
+
       .line-divider {
-        border: 1px solid #fff;
-        margin: 1rem 0;
-        width: 100%;
+          border: 1px solid #fff;
+          margin: 1rem 0;
+          width: 100%;
       }
-    
+
       /* Footer Styles */
       .footerprimary {
-        background-color: #f8f9fa;
-        padding: 1rem;
-        border-radius: 10px;
-        text-align: center;
-        margin-top: 20px;
-        border-radius: 10px;
+          background-color: #f8f9fa;
+          padding: 1rem;
+          text-align: center;
+          border-radius: 10px;
+          margin-top: 20px;
+          border-radius: 10px;
       }
-    
+
       .footerprimary p {
-        margin-bottom: 0;
-        color: #6c757d;
+          margin-bottom: 0;
+          color: #6c757d;
       }
-    
+
       .footerprimary nav a {
-        color: #6c757d;
-        margin-left: 10px;
-        margin-right: 10px;
-        text-decoration: none;
+          color: #6c757d;
+          margin-left: 10px;
+          margin-right: 10px;
+          text-decoration: none;
       }
-    
+
       .sign-out {
-        margin-top: auto;
-        margin-bottom: 20px;
+          margin-top: auto;
+          margin-bottom: 20px;
       }
     </style>
 </head>
@@ -116,10 +120,10 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">About Us</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Contact Us</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Help</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('staff/homeStaff') }}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('staff/aboutUs') }}">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('staff/contactUs') }}">Contact Us</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('staff/help') }}">Help</a></li>
                 </ul>
 
                 <!-- Notification Bell Icon -->
@@ -127,13 +131,11 @@
                   <button class="btn btn-light position-relative" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-bell"></i>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationCount">
-                        3
+                        1
                     </span>
                   </button>
                   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
-                    <li><a class="dropdown-item notification-link" href="#" data-notification="pickup">New pickup request</a></li>
-                    <li><a class="dropdown-item notification-link" href="#" data-notification="lab-edit">Lab details edited</a></li>
-                    <li><a class="dropdown-item notification-link" href="#" data-notification="chemical-add">Chemical added</a></li>
+                    <li><a class="dropdown-item notification-link" href="{{ route('staff/notifications') }}" data-notification="pickup">Label 5 Months</a></li>
                   </ul>
                 </div>
 
@@ -155,12 +157,12 @@
         </div>
         <div class="line-divider"></div>
         <div class="menu-section">
-          <a href="#" class="menu-button">Search Label</a>
-          <a href="#" class="menu-button">Create Label</a>
-          <a href="#" class="menu-button">Edit Label</a>
-          <a href="#" class="menu-button">Invalidate Label</a>
-          <a href="#" class="menu-button">Pickup Request</a>
-          <a href="#" class="menu-button">Invalidate Pickup Request</a>
+          <a href="{{ route('staff/searchLabel') }}" class="menu-button">Search Label</a>
+          <a href="{{ route('staff/createLabel') }}" class="menu-button">Create Label</a>
+          <a href="{{ route('staff/editLabel') }}" class="menu-button">Edit Label</a>
+          <a href="{{ route('staff/invalidLabel') }}" class="menu-button">Invalidate Label</a>
+          <a href="{{ route('staff/pickupRequest') }}" class="menu-button">Pickup Request</a>
+          <a href="{{ route('staff/invalidPickup') }}" class="menu-button">Invalidate Pickup Request</a>
           <a href="#" class="menu-button">Add Chemical</a>
         </div>
         <div class="line-divider"></div>
@@ -180,8 +182,9 @@
     <footer class="footerprimary">
         <p>© 2024 ChemTrack UPRM. All rights reserved.</p>
         <nav class="d-flex justify-content-center">
-            <a href="#" class="text-muted mx-3">Contact Us</a>
-            <a href="#" class="text-muted mx-3">About Us</a>
+          <a href="{{ route('staff/contactUs') }}" class="text-muted mx-3">Contact Us</a>
+          <a href="{{ route('staff/aboutUs') }}" class="text-muted mx-3">About Us</a>
+          <a href="{{ route('staff/help') }}" class="text-muted mx-3">Help</a>
         </nav>
     </footer>
 
