@@ -27,6 +27,7 @@
     /* Middle options styling */
     .middle-options {
         margin-top: 20px;
+        padding-left: 100px;
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
@@ -81,37 +82,37 @@
 
         <!-- Middle Options -->
         <div class="middle-options">
-            <a href="{{ route('admin/searchLabel') }}" class="middle-option">
+            <a href="{{ route('professor/searchLabel') }}" class="middle-option">
                 <img src="{{ asset('photos/searchLabel.png') }}" alt="Search Label Image" class="option-image">
                 <h3>Search Label</h3>
             </a>
-            <a href="{{ route('admin/createLabel') }}" class="middle-option">
+            <a href="{{ route('professor/createLabel') }}" class="middle-option">
                 <img src="{{ asset('photos/createLabel.png') }}" alt="Create Label Image" class="option-image">
                 <h3>Create Label</h3>
             </a>
-            <a href="{{ route('admin/editLabel') }}" class="middle-option">
+            <a href="{{ route('professor/editLabel') }}" class="middle-option">
                 <img src="{{ asset('photos/editLabel.png') }}" alt="Edit Label Image" class="option-image">
                 <h3>Edit Label</h3>
             </a>
-            <a href="{{ route('admin/invalidLabel') }}" class="middle-option">
+            <a href="{{ route('professor/invalidLabel') }}" class="middle-option">
                 <img src="{{ asset('photos/invalidLabel.png') }}" alt="Invalidate Label Image" class="option-image">
                 <h3>Invalidate Label</h3>
             </a>
-            <a href="{{ route('admin/pickupRequest') }}" class="middle-option">
+            <a href="{{ route('professor/pickupRequest') }}" class="middle-option">
                 <img src="{{ asset('photos/pickupRequest.png') }}" alt="Pickup Request Image" class="option-image">
                 <h3>Pickup Request</h3>
             </a>
-            <a href="{{ route('admin/invalidPickup') }}" class="middle-option">
+            <a href="{{ route('professor/invalidPickup') }}" class="middle-option">
                 <img src="{{ asset('photos/invalidRequest.png') }}" alt="Invalidate Pickup Request Image" class="option-image">
                 <h3>Invalidate Pickup</h3>
             </a>
-            <a href="#" class="middle-option">
+            <a href="{{ route('professor/addChemical') }}" class="middle-option">
                 <img src="{{ asset('photos/manageChemicals.png') }}" alt="Manage Chemicals Image" class="option-image">
-                <h3>Manage Chemical</h3>
+                <h3>Add Chemical</h3>
             </a>
-            <a href="#" class="middle-option">
+            <a href="{{ route('professor/roleRequest') }}" class="middle-option">
                 <img src="{{ asset('photos/manageRoles.png') }}" alt="Role Management Image" class="option-image">
-                <h3>Role Management</h3>
+                <h3>Role Request</h3>
             </a>
         </div>
     </div>

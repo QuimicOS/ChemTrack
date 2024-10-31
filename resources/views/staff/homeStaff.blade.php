@@ -106,7 +106,7 @@
                 <img src="{{ asset('photos/invalidRequest.png') }}" alt="Invalidate Pickup Request Image" class="option-image">
                 <h3>Invalidate Pickup</h3>
             </a>
-            <a href="#" class="middle-option">
+            <a href="{{ route('staff/addChemical') }}" class="middle-option">
                 <img src="{{ asset('photos/manageChemicals.png') }}" alt="Pickup Historial Image" class="option-image">
                 <h3>Add Chemical</h3>
             </a>

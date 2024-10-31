@@ -167,12 +167,12 @@
           <a href="{{ route('admin/pickupRequest') }}" class="menu-button">Pickup Request</a>
           <a href="{{ route('admin/invalidPickup') }}" class="menu-button">Invalidate Pickup Request</a>
           <a href="{{ route('admin/pickupHistorial') }}" class="menu-button">Pickup Historial</a>
-          <a href="#" class="menu-button">Manage Chemical</a>
-          <a href="#" class="menu-button">Role Management</a>
-          <a href="#" class="menu-button">Unwanted Material Summary</a>
-          <a href="#" class="menu-button">Unwanted Material Memorandum</a>
-          <a href="#" class="menu-button">Manage Laboratories</a>
-          <a href="#" class="menu-button">Manage Quiz</a>
+          <a href="{{ route('admin/manageChemical') }}" class="menu-button">Manage Chemical</a>
+          <a href="{{ route('admin/roleManagement') }}" class="menu-button">Role Management</a>
+          <a href="{{ route('admin/unwantedMaterialSummary') }}" class="menu-button">Unwanted Material Summary</a>
+          <a href="{{ route('admin/unwantedMaterialMemorandum') }}" class="menu-button">Unwanted Material Memorandum</a>
+          <a href="{{ route('admin/manageLaboratories') }}" class="menu-button">Manage Laboratories</a>
+          <a href="{{ route('admin/manageQuiz') }}" class="menu-button">Manage Quiz</a>
         </div>
         <div class="line-divider"></div>
 

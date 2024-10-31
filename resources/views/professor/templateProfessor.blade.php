@@ -163,8 +163,8 @@
           <a href="{{ route('professor/invalidLabel') }}" class="menu-button">Invalidate Label</a>
           <a href="{{ route('professor/pickupRequest') }}" class="menu-button">Pickup Request</a>
           <a href="{{ route('professor/invalidPickup') }}" class="menu-button">Invalidate Pickup Request</a>
-          <a href="#" class="menu-button">Add Chemical</a>
-          <a href="#" class="menu-button">User Request</a>
+          <a href="{{ route('professor/addChemical') }}" class="menu-button">Add Chemical</a>
+          <a href="{{ route('professor/roleRequest') }}" class="menu-button">User Request</a>
         </div>
         <div class="line-divider"></div>
 

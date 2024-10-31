@@ -80,6 +80,31 @@ Route::get('admin/pickupHistorial', function () {
     return view('admin/pickupHistorial');
 })->name('admin/pickupHistorial');
 
+Route::get('admin/manageChemical', function () {
+    return view('admin/manageChemical');
+})->name('admin/manageChemical');
+
+Route::get('admin/roleManagement', function () {
+    return view('admin/roleManagement');
+})->name('admin/roleManagement');
+
+Route::get('admin/unwantedMaterialSummary', function () {
+    return view('admin/unwantedMaterialSummary');
+})->name('admin/unwantedMaterialSummary');
+
+Route::get('admin/unwantedMaterialMemorandum', function () {
+    return view('admin/unwantedMaterialMemorandum');
+})->name('admin/unwantedMaterialMemorandum');
+
+Route::get('admin/manageLaboratories', function () {
+    return view('admin/manageLaboratories');
+})->name('admin/manageLaboratories');
+
+Route::get('admin/manageQuiz', function () {
+    return view('admin/manageQuiz');
+})->name('admin/manageQuiz');
+
+
 ////////////////////////////////PROFESSOR ROUTES//////////////////////////////////////////////
 
 Route::get('professor/homeProfessor', function () {
@@ -126,6 +151,13 @@ Route::get('professor/invalidPickup', function () {
     return view('professor/invalidPickup');
 })->name('professor/invalidPickup');
 
+Route::get('professor/roleRequest', function () {
+    return view('professor/roleRequest');
+})->name('professor/roleRequest');
+
+Route::get('professor/addChemical', function () {
+    return view('professor/addChemical');
+})->name('professor/addChemical');
 
 ////////////////////////////////STAFF ROUTES//////////////////////////////////////////////
 
@@ -173,7 +205,9 @@ Route::get('staff/invalidPickup', function () {
     return view('staff/invalidPickup');
 })->name('staff/invalidPickup');
 
-
+Route::get('staff/addChemical', function () {
+    return view('staff/addChemical');
+})->name('staff/addChemical');
 
 
 Route::get('/dashboard', function () {

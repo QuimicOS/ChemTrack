@@ -1,4 +1,4 @@
-@extends('professor.templateProfessor')
+@extends('staff/templateStaff')
 
 @section('title', 'Add Chemicals')
 

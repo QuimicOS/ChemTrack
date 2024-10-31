@@ -151,27 +151,27 @@
                 <img src="{{ asset('photos/PickupHistorial.png') }}" alt="Pickup Historial Image" class="option-image">
                 <h3>Pickup Historial</h3>
             </a>
-            <a href="#" class="middle-option">
+            <a href="{{ route('admin/manageChemical') }}" class="middle-option">
                 <img src="{{ asset('photos/manageChemicals.png') }}" alt="Manage Chemicals Image" class="option-image">
                 <h3>Manage Chemical</h3>
             </a>
-            <a href="#" class="middle-option">
+            <a href="{{ route('admin/roleManagement') }}" class="middle-option">
                 <img src="{{ asset('photos/manageRoles.png') }}" alt="Role Management Image" class="option-image">
                 <h3>Role Management</h3>
             </a>
-            <a href="#" class="middle-option">
+            <a href="{{ route('admin/unwantedMaterialSummary') }}" class="middle-option">
                 <img src="{{ asset('photos/Summary.png') }}" alt="Unwanted Material Summary Image" class="option-image">
                 <h3>UW Summary</h3>
             </a>
-            <a href="#" class="middle-option">
+            <a href="{{ route('admin/unwantedMaterialMemorandum') }}" class="middle-option">
                 <img src="{{ asset('photos/memorandum.png') }}" alt="Unwanted Material Memorandum Image" class="option-image">
                 <h3>UW Memorandum</h3>
             </a>
-            <a href="#" class="middle-option">
+            <a href="{{ route('admin/manageLaboratories') }}" class="middle-option">
                 <img src="{{ asset('photos/manageLabs.png') }}" alt="Manage Laboratories Image" class="option-image">
                 <h3>Manage Laboratories</h3>
             </a>
-            <a href="#" class="middle-option">
+            <a href="{{ route('admin/manageQuiz') }}" class="middle-option">
                 <img src="{{ asset('photos/manageQuiz.png') }}" alt="Manage Quiz Image" class="option-image">
                 <h3>Manage Quiz</h3>
             </a>

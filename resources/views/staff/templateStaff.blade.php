@@ -163,7 +163,7 @@
           <a href="{{ route('staff/invalidLabel') }}" class="menu-button">Invalidate Label</a>
           <a href="{{ route('staff/pickupRequest') }}" class="menu-button">Pickup Request</a>
           <a href="{{ route('staff/invalidPickup') }}" class="menu-button">Invalidate Pickup Request</a>
-          <a href="#" class="menu-button">Add Chemical</a>
+          <a href="{{ route('staff/addChemical') }}" class="menu-button">Add Chemical</a>
         </div>
         <div class="line-divider"></div>
 
