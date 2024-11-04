@@ -2,15 +2,20 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Carbon\Carbon;
+// use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+    // use HasApiTokens;
+
+    protected $primaryKey = 'id';
+    protected $table = 'users';
 
     /**
      * The attributes that are mass assignable.
@@ -19,8 +24,14 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'last_name',
         'email',
-        'password',
+        'role',
+        'department',
+        'room_number',
+        'user_status',
+        'certification_date',
+        'certification_status',
     ];
 
     /**
@@ -29,20 +40,44 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $hidden = [
-        'password',
         'remember_token',
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * The attributes that should be cast to native types.
      *
-     * @return array<string, string>
+     * @var array<string, string>
      */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+    protected $casts = [
+        'certification_date' => 'date',
+        'certification_status' => 'boolean',
+    ];
+
+
+     public static $PostRules= [
+        
+        'name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'email' => 'required|string|max:255',
+        'role' => 'required|string|max:255',
+        'department' => 'required|string|max:255',
+        'room_number' => 'required|string|max:255',
+        'user_status' => 'required|string|max:255',
+        'certification_status' => 'required|boolean',
+        'certification_date' => 'required|date',
+        'lab_id' => 'nullable|integer'
+        
+     ];
+
+     public static $PutRules= [
+        
+        'name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'email' => 'required|string|max:255',
+        'role' => 'required|string|max:255',
+        'department' => 'required|string|max:255',
+        'user_status' => 'required|string|max:255',
+   
+        
+     ];
 }
