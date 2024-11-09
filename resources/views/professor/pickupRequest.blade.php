@@ -149,18 +149,20 @@
 
     <!-- JavaScript for Pickup Request Validation -->
     <script>
+        // Validate the form to enable/disable request button
         const labelID = document.getElementById('labelID');
         const requestBtn = document.getElementById('requestBtn');
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
         
         function validateForm() {
             const labelValue = labelID.value.trim();
-            const isValidLabelID = /^\d+$/.test(labelValue);
-            labelID.classList.toggle('is-invalid', !isValidLabelID);
+            const isValidLabelID = /^\d+$/.test(labelValue); // Check if Label ID is numeric
+            labelID.classList.toggle('is-invalid', !isValidLabelID); // Toggle invalid class based on validity
             
             let isTimeSelectionValid = true;
-            let hasValidDay = false;
+            let hasValidDay = false; // Track if at least one valid time is selected
             
+            // Ensure both start and end times are selected or neither
             days.forEach(day => {
                 const start = document.getElementById(day + 'Start').value;
                 const end = document.getElementById(day + 'End').value;
@@ -171,15 +173,18 @@
                 }
             });
             
+            // Enable request button only if Label ID and time selection are valid
             requestBtn.disabled = !(isValidLabelID && isTimeSelectionValid && hasValidDay);
         }
         
+        // Add event listeners to validate form on input changes
         labelID.addEventListener('input', validateForm);
         days.forEach(day => {
             document.getElementById(day + 'Start').addEventListener('change', validateForm);
             document.getElementById(day + 'End').addEventListener('change', validateForm);
         });
         
+        // Function to download JSON file with label ID and selected times
         function downloadJSONFile() {
             let timeframe = '';
             
@@ -204,6 +209,7 @@
             const blob = new Blob([jsonContent], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
         
+             // Create and trigger download link
             const a = document.createElement('a');
             a.href = url;
             a.download = `pickup_request_${labelID.value}.json`;
@@ -211,14 +217,16 @@
             a.click();
             document.body.removeChild(a);
         
-            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(url); // Clean up URL object
         }
         
+        // Show modal for confirmation and populate with selected times
         requestBtn.addEventListener('click', function () {
             document.getElementById('modalLabelID').innerText = labelID.value;
             const modalTimeList = document.getElementById('modalTimeList');
-            modalTimeList.innerHTML = '';
+            modalTimeList.innerHTML = ''; // Clear any existing list items
         
+            // Populate modal with selected times
             days.forEach(day => {
                 const start = document.getElementById(day + 'Start').value;
                 const end = document.getElementById(day + 'End').value;
@@ -229,17 +237,20 @@
                 }
             });
         
+            // Display confirmation modal
             const confirmRequestModal = new bootstrap.Modal(document.getElementById('confirmRequestModal'));
             confirmRequestModal.show();
         });
         
+        // Handle confirm button click in modal, download JSON, and reset form
         document.getElementById('confirmRequest').addEventListener('click', function () {
             downloadJSONFile();
             
-            alert('Pickup Request JSON file has been downloaded.');
+            alert('Pickup Request submited');
             const confirmRequestModal = bootstrap.Modal.getInstance(document.getElementById('confirmRequestModal'));
             confirmRequestModal.hide();
         
+            // Reset form fields
             labelID.value = '';
             days.forEach(day => {
                 document.getElementById(day + 'Start').value = '-';

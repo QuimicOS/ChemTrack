@@ -26,7 +26,8 @@
     .filter-container {
         margin-bottom: 20px;
         display: flex;
-        justify-content: space-between;
+        justify-content: center; /* Center the filter section */
+        gap: 20px;
     }
 </style>
 
@@ -47,9 +48,8 @@
             </select>
         </div>
         <div>
-            <label for="sortByDate" class="form-label">Order by Date:</label>
-            <button class="btn btn-outline-primary" onclick="sortTableByDate('asc')">Ascending</button>
-            <button class="btn btn-outline-primary" onclick="sortTableByDate('desc')">Descending</button>
+            <label for="filterRoom" class="form-label">Search by Room Number:</label>
+            <input type="text" id="filterRoom" class="form-control w-auto" placeholder="Enter room number">
         </div>
     </div>
 
@@ -63,6 +63,7 @@
                     <th scope="col">Building</th>
                     <th scope="col">Room Number</th>
                     <th scope="col">Container Capacity</th>
+                    <th scope="col">Pickup Requested</th>
                     <th scope="col">Pickup Date</th>
                     <th scope="col">Status</th>
                     <th scope="col">Actions</th>
@@ -76,7 +77,8 @@
                     <td>Luchetti</td>
                     <td>L-203</td>
                     <td>6 Gallons</td>
-                    <td data-date="2024-10-10">2024-10-10</td>
+                    <td>2024-10-05</td>
+                    <td>-</td>
                     <td>Active</td>
                     <td>
                         <button class="btn btn-danger" onclick="showModal('00123')">Invalidate</button>
@@ -89,9 +91,10 @@
                     <td>Figueroa</td>
                     <td>F-101</td>
                     <td>10 Liters</td>
-                    <td data-date="2024-09-28">2024-09-28</td>
+                    <td>2024-09-20</td>
+                    <td>-</td>
                     <td>Invalid</td>
-                    <td><button class="btn btn-secondary" disabled>Already Invalidated</button></td>
+                    <td></td>
                 </tr>
                 <tr data-status="Completed">
                     <td>00125</td>
@@ -100,9 +103,10 @@
                     <td>Johnson</td>
                     <td>J-202</td>
                     <td>20 Liters</td>
-                    <td data-date="2024-09-30">2024-09-30</td>
+                    <td>2024-09-25</td>
+                    <td>2024-09-30</td>
                     <td>Completed</td>
-                    <td><button class="btn btn-secondary" disabled>Already Completed</button></td>
+                    <td></td>
                 </tr>
             </tbody>
         </table>
@@ -129,32 +133,57 @@
     </div>
 </div>
 
+<!-- Include DataTables CSS and JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
 <script>
+    $(document).ready(function() {
+        // Initialize DataTable without default search box
+        const table = $('#pickupTable').DataTable({
+            "pageLength": 10,
+            "order": [[7, "asc"]],
+            "dom": 'tip'  // Hide default search box and only show paging
+        });
+
+        // Custom search by Room Number
+        $('#filterRoom').on('input', function() {
+            table.column(4).search(this.value).draw(); // Room Number is column index 4
+        });
+    });
+
+    // Variable to store selected pickup ID for invalidation
     let selectedPickupID = null;
 
+    // Show modal and set the selected pickup ID
     function showModal(pickupID) {
-        selectedPickupID = pickupID;
-        document.getElementById('modalPickupID').textContent = pickupID;
+        selectedPickupID = pickupID; // Set selected pickup ID
+        document.getElementById('modalPickupID').textContent = pickupID; // Display pickup ID in modal
         const modal = new bootstrap.Modal(document.getElementById('invalidateModal'));
         modal.show();
     }
 
+    // Confirm invalidation of the selected pickup and update the table row
     function confirmInvalidate() {
         const tableRows = document.querySelectorAll('#pickupTable tbody tr');
         
+        // Loop through rows to find the selected pickup ID and update its status
         tableRows.forEach(row => {
-            const pickupIDCell = row.cells[0].textContent.trim();
+            const pickupIDCell = row.cells[0].textContent.trim(); // Get the pickup ID cell text
             if (pickupIDCell === selectedPickupID) {
                 row.setAttribute('data-status', 'Invalid');
-                row.cells[7].textContent = 'Invalid';
-                row.cells[8].innerHTML = '<button class="btn btn-secondary" disabled>Already Invalidated</button>';
+                row.cells[8].textContent = 'Invalid'; // Set status cell text to 'Invalid'
+                row.cells[9].innerHTML = ''; // Remove button content in Actions column
             }
         });
         
+        // Hide the modal after confirmation
         const modal = bootstrap.Modal.getInstance(document.getElementById('invalidateModal'));
         modal.hide();
     }
 
+    // Filter table rows based on the selected status
     function filterTable() {
         const filterValue = document.getElementById('filterStatus').value;
         const rows = document.querySelectorAll('#pickupTable tbody tr');
@@ -167,20 +196,6 @@
                 row.style.display = 'none';
             }
         });
-    }
-
-    function sortTableByDate(order) {
-        const table = document.getElementById('pickupTable');
-        const rowsArray = Array.from(table.rows).slice(1);
-        const orderMultiplier = order === 'asc' ? 1 : -1;
-
-        rowsArray.sort((a, b) => {
-            const dateA = new Date(a.querySelector('[data-date]').getAttribute('data-date'));
-            const dateB = new Date(b.querySelector('[data-date]').getAttribute('data-date'));
-            return (dateA - dateB) * orderMultiplier;
-        });
-
-        rowsArray.forEach(row => table.tBodies[0].appendChild(row));
     }
 </script>
 @endsection

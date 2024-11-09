@@ -9,86 +9,115 @@
         padding: 1.25rem;
         margin-top: 25px;
     }
+
+    /* Styling for the search container */
+    .search-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: flex-start;
+        margin-bottom: 1.5rem;
+    }
+
+    .search-container label {
+        white-space: nowrap;
+    }
+
+    .search-container input {
+        min-width: 200px;
+        max-width: 200px;
+    }
+
+    .search-container button {
+        height: 38px;
+    }
+
+    /* Container for form fields */
+    .form-block {
+        border: 1px solid #ccc;
+        padding: 20px;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        margin-bottom: 20px;
+    }
 </style>
 
-<!-- Main Content -->
 <div class="content-area container">
     <div class="text-center mb-4">
         <h1 class="display-5">Edit Label</h1>
         <hr class="my-4">
     </div>
 
-    <!-- Edit Label Form -->
-    <div class="row mb-5">
-        <div class="col-md-6">
-            <label for="labelID" class="form-label">Label ID <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="labelID" placeholder="Enter Label ID" required>
-            <div class="invalid-feedback">Please enter a valid numeric Label ID.</div>
-        </div>
-        <div class="col-md-6 d-flex align-items-end">
-            <button id="searchButton" class="btn btn-primary w-100" disabled>Search</button>
-        </div>
+    <!-- Label ID Input with Search Button (aligned horizontally) -->
+    <div class="search-container">
+        <label for="labelID" class="form-label">Label ID <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" id="labelID" placeholder="Enter Label ID" required>
+        <button id="searchButton" class="btn btn-primary" disabled>Search</button>
+        <div class="invalid-feedback" style="width: 100%;">Please enter a valid numeric Label ID.</div>
     </div>
 
     <!-- Form Fields Section (Initially Hidden) -->
-    <div class="form-section">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="mb-3">
+    <div class="form-section form-block">
+        <fieldset>
+            <legend>Basic Information</legend>
+            <div class="row">
+                <div class="col-md-6 mb-3">
                     <label for="editedBy" class="form-label">Edited By (Username)</label>
                     <input type="text" class="form-control" id="editedBy" readonly>
                 </div>
-                <div class="mb-3">
+                <div class="col-md-6 mb-3">
                     <label for="stored" class="form-label">New Total Stored</label>
                     <input type="text" class="form-control" id="stored" placeholder="Enter stored quantity (ex. 4.6, 7)" oninput="validateStoredInput()">
                     <small id="storedError" class="text-danger" style="display: none;">Incorrect input: Only numeric values are allowed.</small>
                 </div>
-                <div class="mb-3">
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
                     <label for="units" class="form-label">Units</label>
                     <select class="form-select" id="units" required>
-                        <option selected>Select units</option>
-                        <option value="gal">gal</option>
-                        <option value="ml">mL</option>
-                        <option value="L">L</option>
-                        <option value="g">g</option>
-                        <option value="kg">kg</option>
-                        <option value="lbs">lbs</option>
+                        <option selected disabled>Select units</option>
+                        <option value="gal">Gallons (gal)</option>
+                        <option value="ml">Milliliters (mL)</option>
+                        <option value="L">Liters (L)</option>
+                        <option value="g">Grams (g)</option>
+                        <option value="kg">Kilograms (kg)</option>
+                        <option value="lbs">Pounds (lbs)</option>
                     </select>
                 </div>
-                <div class="mb-3">
+                <div class="col-md-6 mb-3">
                     <label for="labelSize" class="form-label">Label Size</label>
                     <select class="form-select" id="labelSize" required>
-                        <option selected>Select label size</option>
+                        <option selected disabled>Select label size</option>
                         <option value="Small">Small (1x1)</option>
                         <option value="Medium">Medium (3x2)</option>
                         <option value="Large">Large (6x4)</option>
                     </select>
                 </div>
             </div>
+        </fieldset>
+
+        <!-- Chemical Table Section -->
+        <div class="table-section table-responsive">
+            <table class="table table-bordered" id="chemicalTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Chemical Name</th>
+                        <th>CAS Number</th>
+                        <th>Percentage</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows populated dynamically -->
+                </tbody>
+            </table>
+            <button class="btn btn-primary mb-3" id="addRow">Add Row</button>
         </div>
-    </div>
 
-    <!-- Chemical Table Section -->
-    <div class="table-section table-responsive">
-        <table class="table table-bordered" id="chemicalTable">
-            <thead class="table-dark">
-                <tr>
-                    <th>Chemical Name</th>
-                    <th>CAS Number</th>
-                    <th>Percentage</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Rows populated dynamically -->
-            </tbody>
-        </table>
-        <button class="btn btn-primary mb-3" id="addRow">Add Row</button>
-    </div>
-
-    <!-- Submit Button -->
-    <div class="d-grid gap-2 submit-section">
-        <button class="btn btn-success" id="updateLabel" type="button" disabled>Update Label</button>
+        <!-- Submit Button -->
+        <div class="d-grid gap-2 submit-section">
+            <button class="btn btn-success" id="updateLabel" type="button" disabled>Update Label</button>
+        </div>
     </div>
 </div>
 
@@ -118,6 +147,7 @@
 @section('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 <script>
+    // Initialize variable to store the row to be removed and label data
     let rowToRemove;
     let labelData = {};  // Store the fetched label data here
 
@@ -125,19 +155,25 @@
     document.querySelector('.form-section').style.display = 'none';
     document.querySelector('.table-section').style.display = 'none';
     document.querySelector('.submit-section').style.display = 'none';
+    document.getElementById('units').addEventListener('change', checkFormValidity);
+    document.getElementById('labelSize').addEventListener('change', checkFormValidity);
 
     // Fetch and populate the form from JSON
     function loadLabelData(labelId) {
         fetch(`/json/labelData${labelId}.json`)
             .then(response => response.json())
             .then(data => {
-                labelData = data;
+                labelData = data; // Store fetched data
                 document.getElementById('labelID').value = data.label_id;
                 document.getElementById('editedBy').value = data.edited_by;
                 document.getElementById('stored').value = data.stored_quantity;
                 document.getElementById('units').value = data.units;
+
+                // Clear existing table rows
                 const tableBody = document.getElementById('chemicalTable').getElementsByTagName('tbody')[0];
-                tableBody.innerHTML = ''; // Clear existing rows
+                tableBody.innerHTML = '';
+
+                // Populate chemical data rows
                 data.chemicals.forEach(chemical => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
@@ -148,13 +184,16 @@
                     `;
                     tableBody.appendChild(row);
                 });
+
+                // Show form sections after populating
                 document.querySelector('.form-section').style.display = 'block';
                 document.querySelector('.table-section').style.display = 'block';
                 document.querySelector('.submit-section').style.display = 'block';
-                checkFormValidity(); 
+
+                checkFormValidity(); // Validate form after loading data
             })
             .catch(error => {
-                alert('Label ID not found');
+                alert('Label ID not found'); // Alert if label data not found
             });
     }
 
@@ -162,24 +201,24 @@
     function validateStoredInput() {
         const storedInput = document.getElementById("stored");
         const errorMessage = document.getElementById("storedError");
-        const isValid = /^\d*\.?\d*$/.test(storedInput.value);
+        const isValid = /^\d*\.?\d*$/.test(storedInput.value); // Test for numeric values
 
         errorMessage.style.display = isValid ? "none" : "block";
         checkFormValidity();
     }
 
-    // Validate that the label ID contains only numeric characters
+    // Enable/disable search button based on Label ID input
     document.getElementById('labelID').addEventListener('input', function () {
         const labelID = document.getElementById('labelID').value;
-        const isNumeric = /^\d+$/.test(labelID);
+        const isNumeric = /^\d+$/.test(labelID); // Check if input is numeric
         document.getElementById('searchButton').disabled = !isNumeric;
-        document.getElementById('labelID').classList.toggle('is-invalid', !isNumeric);
+        document.getElementById('labelID').classList.toggle('is-invalid', !isNumeric); // Toggle invalid class
     });
 
     // Search label data when clicking the search button
     document.getElementById('searchButton').addEventListener('click', function () {
         const labelID = document.getElementById('labelID').value;
-        loadLabelData(labelID);
+        loadLabelData(labelID); // Call function to load data
     });
 
     // Validate that the percentage field is numeric only
@@ -193,21 +232,25 @@
         const stored = document.getElementById('stored').value.trim();
         const units = document.getElementById('units').value;
         const chemicalRows = document.querySelectorAll('#chemicalTable tbody tr');
+        const labelSize = document.getElementById('labelSize').value;
         let allRowsValid = true;
 
+        // Validate each row
         chemicalRows.forEach(row => {
             const chemicalName = row.querySelector('.chemical-name').value.trim();
             const casNumber = row.querySelector('.cas-number').value.trim();
             const percentage = row.querySelector('.percentage').value.trim();
             const isValidPercentage = /^\d*\.?\d*$/.test(percentage);
 
+            // Set validity flag if any row is invalid
             if (!chemicalName || !casNumber || !isValidPercentage) {
                 allRowsValid = false;
             }
         });
 
+        // Enable/disable update button based on overall form validity
         const updateButton = document.getElementById('updateLabel');
-        updateButton.disabled = !stored || !/^\d*\.?\d*$/.test(stored) || units === 'Select units' || !allRowsValid;
+        updateButton.disabled = !stored || !/^\d*\.?\d*$/.test(stored) || units === "Select units" || labelSize === "Select label size" || !allRowsValid;
     }
 
     // Add row functionality for chemicals
@@ -227,11 +270,13 @@
     // Prepare JSON and PDF download after updating label
     document.getElementById('updateLabel').addEventListener('click', function () {
         // Collect updated data
+        alert('Label updated Sucessfully');
         labelData.stored_quantity = document.getElementById('stored').value;
         labelData.units = document.getElementById('units').value;
         labelData.label_size = document.getElementById('labelSize').value;
         labelData.chemicals = [];
 
+        // Collect updated chemical data from table
         document.querySelectorAll('#chemicalTable tbody tr').forEach(row => {
             const chemicalName = row.querySelector('.chemical-name').value;
             const casNumber = row.querySelector('.cas-number').value;
@@ -244,7 +289,7 @@
             });
         });
 
-        // Generate JSON file
+        // Generate and download JSON file
         const jsonData = JSON.stringify(labelData, null, 2);
         const blob = new Blob([jsonData], { type: 'application/json' });
         const jsonLink = document.createElement('a');
@@ -261,6 +306,7 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
+        // Add label information and table headers
         doc.text(`Label ID: ${data.label_id}`, 10, 10);
         doc.text(`Stored Quantity: ${data.stored_quantity}`, 10, 20);
         doc.text(`Units: ${data.units}`, 10, 30);
@@ -281,7 +327,7 @@
             y += 10;
         });
 
-        doc.save(`label_${data.label_id}.pdf`);
+        doc.save(`label_${data.label_id}.pdf`); // Save PDF with label ID
     }
 
     // Set modal with row info and assign the row to be removed
@@ -290,6 +336,8 @@
         const chemicalName = row.querySelector('.chemical-name').value;
         const casNumber = row.querySelector('.cas-number').value;
         const percentage = row.querySelector('.percentage').value;
+
+        // Populate modal with row data
         document.getElementById('modalChemicalName').textContent = chemicalName;
         document.getElementById('modalCASNumber').textContent = casNumber;
         document.getElementById('modalPercentage').textContent = percentage;
@@ -299,12 +347,26 @@
     // Confirm removal of row on modal confirmation
     document.getElementById('confirmRemove').addEventListener('click', function () {
         if (rowToRemove) {
-            rowToRemove.remove();
+            rowToRemove.remove(); // Remove row from table
             rowToRemove = null;
             const modal = bootstrap.Modal.getInstance(document.getElementById('removeModal'));
-            modal.hide();
+            modal.hide(); // Close modal
             checkFormValidity();
         }
     });
+
+    // Restrict Label ID input to numbers only
+    document.getElementById('labelID').addEventListener('input', function (e) {
+        // Only allow numeric characters
+        this.value = this.value.replace(/\D/g, '');
+        checkSearchButtonState();
+    });
+
+    function checkSearchButtonState() {
+        const labelID = document.getElementById('labelID').value;
+        const isNumeric = /^\d+$/.test(labelID); // Check if input is numeric
+        document.getElementById('searchButton').disabled = !isNumeric;
+        document.getElementById('labelID').classList.toggle('is-invalid', !isNumeric); // Toggle invalid class
+    }
 </script>
 @endsection

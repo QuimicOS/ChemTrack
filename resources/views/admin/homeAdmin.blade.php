@@ -223,9 +223,9 @@
         const volumeGeneratedChart = new Chart(volumeCtx, {
             type: 'line',
             data: {
-                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                labels: ['Week 4', 'Week 3', 'Week 2', 'Week 1'],
                 datasets: [{
-                    label: 'Volume Generated (Gal) last 30 days',
+                    label: 'Volume Generated',
                     data: [5, 8, 4, 10],
                     backgroundColor: 'rgba(54, 162, 235, 0.2)',
                     borderColor: 'rgba(54, 162, 235, 1)',
@@ -236,21 +236,34 @@
             },
             options: {
                 responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Volume Generated (GAL) last 30 days',
+                        font: {
+                            size: 24 // Increase font size for the title
+                        }
+                    }
+                },
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Gal' // Y-axis label
+                        }
                     }
                 }
             }
         });
-
+    
         const weightCtx = document.getElementById('weightGeneratedChart').getContext('2d');
         const weightGeneratedChart = new Chart(weightCtx, {
             type: 'line',
             data: {
-                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                labels: ['Week 4', 'Week 3', 'Week 2', 'Week 1'],
                 datasets: [{
-                    label: 'Weight Generated (Lbs) last 30 days',
+                    label: 'Weight Generated',
                     data: [50, 60, 40, 80],
                     backgroundColor: 'rgba(255, 99, 132, 0.2)',
                     borderColor: 'rgba(255, 99, 132, 1)',
@@ -261,9 +274,22 @@
             },
             options: {
                 responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Weight Generated (LBS) last 30 days',
+                        font: {
+                            size: 24 // Increase font size for the title
+                        }
+                    }
+                },
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Lbs' // Y-axis label
+                        }
                     }
                 }
             }

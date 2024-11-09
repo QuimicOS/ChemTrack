@@ -130,33 +130,39 @@
 </div>
 
 <script>
+    // Variable to store selected pickup ID for invalidation
     let selectedPickupID = null;
 
+    // Show modal and set the selected pickup ID
     function showModal(pickupID) {
-        selectedPickupID = pickupID;
-        document.getElementById('modalPickupID').textContent = pickupID;
+        selectedPickupID = pickupID; // Set selected pickup ID
+        document.getElementById('modalPickupID').textContent = pickupID; // Display pickup ID in modal
         const modal = new bootstrap.Modal(document.getElementById('invalidateModal'));
         modal.show();
     }
 
+    // Confirm invalidation of the selected pickup and update the table row
     function confirmInvalidate() {
         const tableRows = document.querySelectorAll('#pickupTable tbody tr');
         
+        // Loop through rows to find the selected pickup ID and update its status
         tableRows.forEach(row => {
-            const pickupIDCell = row.cells[0].textContent.trim();
+            const pickupIDCell = row.cells[0].textContent.trim(); // Get the pickup ID cell text
             if (pickupIDCell === selectedPickupID) {
                 row.setAttribute('data-status', 'Invalid');
-                row.cells[7].textContent = 'Invalid';
-                row.cells[8].innerHTML = '<button class="btn btn-secondary" disabled>Already Invalidated</button>';
+                row.cells[7].textContent = 'Invalid'; // Set status cell text to 'Invalid'
+                row.cells[8].innerHTML = '<button class="btn btn-secondary" disabled>Already Invalidated</button>'; // Disable action button
             }
         });
         
+        // Hide the modal after confirmation
         const modal = bootstrap.Modal.getInstance(document.getElementById('invalidateModal'));
         modal.hide();
     }
 
+    // Filter table rows based on the selected status
     function filterTable() {
-        const filterValue = document.getElementById('filterStatus').value;
+        const filterValue = document.getElementById('filterStatus').value; // Get selected filter value
         const rows = document.querySelectorAll('#pickupTable tbody tr');
 
         rows.forEach(row => {
@@ -169,17 +175,20 @@
         });
     }
 
+    // Sort table rows by date in ascending or descending order
     function sortTableByDate(order) {
         const table = document.getElementById('pickupTable');
         const rowsArray = Array.from(table.rows).slice(1);
         const orderMultiplier = order === 'asc' ? 1 : -1;
 
+        // Sort rows based on date attribute
         rowsArray.sort((a, b) => {
             const dateA = new Date(a.querySelector('[data-date]').getAttribute('data-date'));
             const dateB = new Date(b.querySelector('[data-date]').getAttribute('data-date'));
             return (dateA - dateB) * orderMultiplier;
         });
 
+        // Append sorted rows to table body
         rowsArray.forEach(row => table.tBodies[0].appendChild(row));
     }
 </script>

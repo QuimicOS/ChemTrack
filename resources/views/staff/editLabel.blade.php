@@ -227,6 +227,7 @@
     // Prepare JSON and PDF download after updating label
     document.getElementById('updateLabel').addEventListener('click', function () {
         // Collect updated data
+        alert('Label updated Sucessfully');
         labelData.stored_quantity = document.getElementById('stored').value;
         labelData.units = document.getElementById('units').value;
         labelData.label_size = document.getElementById('labelSize').value;
