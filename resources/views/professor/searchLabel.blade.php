@@ -105,8 +105,8 @@
     </table>
   </div>
 
-  <!-- JavaScript to disable/enable the search button and show the form when pressed -->
   <script>
+    // Enable or disable the search button based on Label ID input
     document.getElementById('labelID').addEventListener('input', function () {
       const labelID = document.getElementById('labelID').value;
 
@@ -116,6 +116,7 @@
       // Disable search button if the input is empty or contains non-numeric characters
       document.getElementById('searchButton').disabled = !isNumeric;
 
+      // Toggle invalid class based on input validity
       if (!isNumeric) {
         document.getElementById('labelID').classList.add('is-invalid');
       } else {
@@ -123,6 +124,7 @@
       }
     });
 
+    // Handle search button click to load and display label data
     document.getElementById('searchButton').addEventListener('click', function () {
       const labelID = document.getElementById('labelID').value;
 
@@ -179,10 +181,10 @@
         })
         .catch(error => {
           console.error('Error fetching JSON:', error);
-          alert('An error occurred while fetching the data.');
+          alert('An error occurred while fetching the data.'); // Alert user of any error
         });
     } else {
-      alert('Label not found!');
+      alert('Label not found!'); // Alert if label ID is not found
     }
   });
   </script>

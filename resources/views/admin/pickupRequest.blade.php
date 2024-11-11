@@ -39,22 +39,17 @@
             margin-bottom: 5px; /* Reduce the label spacing */
         }
 
-        .request-btn {
-            margin-top: 20px;
-        }
-
-        .request-btn button {
-            background-color: #1E90FF;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .request-btn button:hover {
-            background-color: #4682B4;
-        }
+        fieldset {
+        border: 1px solid #ccc;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background-color: #f8f9fa;
+    }
+    legend {
+        font-size: 1.2rem;
+        font-weight: bold;
+        padding: 0 0.5rem;
+    }
     </style>
 
     <!-- Main Content with Time Selection -->
@@ -66,9 +61,10 @@
         </div>
 
         <!-- Label ID Input -->
+        <fieldset>
         <div class="mb-4">
-            <label for="labelID" class="form-label">LABEL ID:</label>
-            <input type="text" class="form-control w-50 mx-auto" id="labelID" placeholder="Enter Label ID" required>
+            <label for="labelID" class="form-label">LABEL ID:<span class="text-danger">*</span></label>
+            <input type="text" class="form-control w-50 mx-auto" id="labelID" placeholder="Enter Label ID" required oninput="validateLabelID()">
             <div class="invalid-feedback">Please enter a valid numeric Label ID.</div>
         </div>
 
@@ -115,11 +111,11 @@
                 </div>
             @endforeach
         </div>
-
+        </fieldset>
         <!-- Request Button -->
-        <div class="request-btn">
-            <button class="btn btn-outline-primary" id="requestBtn" disabled>REQUEST</button>
-        </div>
+
+        <button class="btn btn-success" id="requestBtn" disabled>REQUEST</button>
+
     </div>
 
     <!-- Modal for Review and Submit -->
@@ -143,24 +139,26 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS and Popper.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
-
     <!-- JavaScript for Pickup Request Validation -->
     <script>
-        const labelID = document.getElementById('labelID');
+        // Restrict input to numeric only for Label ID
+        function validateLabelID() {
+            const labelID = document.getElementById('labelID');
+            labelID.value = labelID.value.replace(/\D/g, ''); // Remove any non-numeric characters
+            validateForm();
+        }
+
         const requestBtn = document.getElementById('requestBtn');
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
         
         function validateForm() {
-            const labelValue = labelID.value.trim();
-            const isValidLabelID = /^\d+$/.test(labelValue);
-            labelID.classList.toggle('is-invalid', !isValidLabelID);
+            const labelValue = document.getElementById('labelID').value;
+            const isValidLabelID = labelValue !== ''; // Label ID is valid if it's not empty
             
             let isTimeSelectionValid = true;
-            let hasValidDay = false;
+            let hasValidDay = false; // Track if at least one valid time is selected
             
+            // Ensure both start and end times are selected or neither
             days.forEach(day => {
                 const start = document.getElementById(day + 'Start').value;
                 const end = document.getElementById(day + 'End').value;
@@ -171,15 +169,18 @@
                 }
             });
             
+            // Enable request button only if Label ID and time selection are valid
             requestBtn.disabled = !(isValidLabelID && isTimeSelectionValid && hasValidDay);
         }
         
-        labelID.addEventListener('input', validateForm);
+        // Add event listeners to validate form on input changes
+        document.getElementById('labelID').addEventListener('input', validateLabelID);
         days.forEach(day => {
             document.getElementById(day + 'Start').addEventListener('change', validateForm);
             document.getElementById(day + 'End').addEventListener('change', validateForm);
         });
         
+        // Function to download JSON file with label ID and selected times
         function downloadJSONFile() {
             let timeframe = '';
             
@@ -196,7 +197,7 @@
             timeframe = timeframe.slice(0, -2);
     
             const data = {
-                labelID: labelID.value,
+                labelID: document.getElementById('labelID').value,
                 timeframe: timeframe
             };
             
@@ -204,21 +205,24 @@
             const blob = new Blob([jsonContent], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
         
+            // Create and trigger download link
             const a = document.createElement('a');
             a.href = url;
-            a.download = `pickup_request_${labelID.value}.json`;
+            a.download = `pickup_request_${data.labelID}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
         
-            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(url); // Clean up URL object
         }
         
+        // Show modal for confirmation and populate with selected times
         requestBtn.addEventListener('click', function () {
-            document.getElementById('modalLabelID').innerText = labelID.value;
+            document.getElementById('modalLabelID').innerText = document.getElementById('labelID').value;
             const modalTimeList = document.getElementById('modalTimeList');
-            modalTimeList.innerHTML = '';
+            modalTimeList.innerHTML = ''; // Clear any existing list items
         
+            // Populate modal with selected times
             days.forEach(day => {
                 const start = document.getElementById(day + 'Start').value;
                 const end = document.getElementById(day + 'End').value;
@@ -229,18 +233,21 @@
                 }
             });
         
+            // Display confirmation modal
             const confirmRequestModal = new bootstrap.Modal(document.getElementById('confirmRequestModal'));
             confirmRequestModal.show();
         });
         
+        // Handle confirm button click in modal, download JSON, and reset form
         document.getElementById('confirmRequest').addEventListener('click', function () {
             downloadJSONFile();
             
-            alert('Pickup Request JSON file has been downloaded.');
+            alert('Pickup Request submitted');
             const confirmRequestModal = bootstrap.Modal.getInstance(document.getElementById('confirmRequestModal'));
             confirmRequestModal.hide();
         
-            labelID.value = '';
+            // Reset form fields
+            document.getElementById('labelID').value = '';
             days.forEach(day => {
                 document.getElementById(day + 'Start').value = '-';
                 document.getElementById(day + 'End').value = '-';

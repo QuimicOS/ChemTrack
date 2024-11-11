@@ -67,10 +67,12 @@
 </div>
 
 <script>
+    // Validate Label ID input
     function validateLabelID() {
         const labelID = document.getElementById('labelID').value;
         const feedback = document.getElementById('labelIDFeedback');
         
+        // Check if Label ID is numeric Enable/Disable Search Button
         if (/^\d+$/.test(labelID)) {
             document.getElementById('labelID').classList.remove('is-invalid');
             feedback.style.display = 'none';
@@ -81,10 +83,12 @@
         validateForm();
     }
 
+    // Validate Reason for Invalidation input
     function validateReason() {
         const reason = document.getElementById('reason').value;
         const feedback = document.getElementById('reasonFeedback');
         
+        // Check if reason length is at least 4 characters
         if (reason.length >= 4) {
             document.getElementById('reason').classList.remove('is-invalid');
             feedback.style.display = 'none';
@@ -95,6 +99,7 @@
         validateForm();
     }
 
+    // Enable Invalidate button only if both inputs are valid
     function validateForm() {
         const labelID = document.getElementById('labelID').value;
         const reason = document.getElementById('reason').value;
@@ -108,6 +113,7 @@
         }
     }
 
+    // Show modal for invalidation confirmation
     function showModal() {
         const labelID = document.getElementById('labelID').value;
         const reason = document.getElementById('reason').value;
@@ -121,6 +127,7 @@
         modal.show();
     }
 
+    // Invalidate label and download JSON with invalidation info
     function invalidateLabel() {
         const labelID = document.getElementById('labelID').value;
         

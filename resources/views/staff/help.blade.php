@@ -88,7 +88,7 @@
 
         <!-- Need More Help Section -->
         <div class="alert alert-info text-center mt-4">
-            <h4>Need More Help? <a href="{{ route('admin/contactUs') }}" class="text-decoration-underline">Contact Us!</a></h4>
+            <h4>Need More Help? <a href="{{ route('staff/contactUs') }}" class="text-decoration-underline">Contact Us!</a></h4>
         </div>
     </div>
 

@@ -36,6 +36,20 @@
     .invalid-percentage {
         border-color: red;
     }
+
+    /* Styling for fieldsets and legends */
+    fieldset {
+        border: 1px solid #ccc;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background-color: #f8f9fa;
+    }
+
+    legend {
+        font-size: 1.2rem;
+        font-weight: bold;
+        padding: 0 0.5rem;
+    }
 </style>
 
 <div class="text-center mb-4">
@@ -46,146 +60,166 @@
 <!-- Create Label Form -->
 <div class="row">
     <div class="col-md-6">
-        <div class="mb-3">
-            <label for="createdBy" class="form-label">Created By (Username)</label>
-            <input type="text" class="form-control" id="createdBy" value="juan.pablo@upr.edu" readonly>
-        </div>
-        <div class="mb-3">
-            <label for="dateCreated" class="form-label">Date</label>
-            <input type="date" class="form-control" id="dateCreated" readonly>
-        </div>
-        <div class="mb-3">
-            <label for="department" class="form-label">Department</label>
-            <select class="form-select" id="department">
-                <option selected>Select Department</option>
-                <option value="INEL">INEL</option>
-                <option value="ICOM">ICOM</option>
-                <option value="BIOL">BIOL</option>
-                <option value="CHEM">CHEM</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="building" class="form-label">Building</label>
-            <select class="form-select" id="building">
-                <option selected>Select Building</option>
-                <option value="Luchetti">Luchetti</option>
-                <option value="Chardon">Chardon</option>
-                <option value="Stefani">Stefani</option>
-                <option value="Admi">Admi</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="roomNumber" class="form-label">Room Number</label>
-            <select class="form-select" id="roomNumber">
-                <option selected>Select Room Number</option>
-                <option value="101">Room 101</option>
-                <option value="102">Room 102</option>
-                <option value="201">Room 201</option>
-                <option value="202">Room 202</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="labName" class="form-label">Laboratory Name</label>
-            <input type="text" class="form-control" id="labName" placeholder="Select Room Number to autofill" readonly>
-        </div>
-        <div class="mb-3">
-            <label for="principalInvestigator" class="form-label">Principal Investigator</label>
-            <input type="text" class="form-control" id="principalInvestigator" placeholder="Select Room Number to autofill" readonly>
-        </div>
+        <!-- Block 1: Basic Information -->
+        <fieldset>
+            <legend>Basic Information</legend>
+            <div class="mb-3">
+                <label for="createdBy" class="form-label">Created By (Username)</label>
+                <input type="text" class="form-control" id="createdBy" value="juan.pablo@upr.edu" readonly>
+            </div>
+            <div class="mb-3">
+                <label for="dateCreated" class="form-label">Date</label>
+                <input type="date" class="form-control" id="dateCreated" readonly>
+            </div>
+        </fieldset>
+
+        <!-- Block 2: Location Details -->
+        <fieldset>
+            <legend>Location Details</legend>
+            <div class="mb-3">
+                <label for="department" class="form-label">Department</label>
+                <select class="form-select" id="department">
+                    <option selected>Select Department</option>
+                    <option value="INEL">INEL</option>
+                    <option value="ICOM">ICOM</option>
+                    <option value="BIOL">BIOL</option>
+                    <option value="CHEM">CHEM</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="building" class="form-label">Building</label>
+                <select class="form-select" id="building">
+                    <option selected>Select Building</option>
+                    <option value="Luchetti">Luchetti</option>
+                    <option value="Chardon">Chardon</option>
+                    <option value="Stefani">Stefani</option>
+                    <option value="Admi">Admi</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="roomNumber" class="form-label">Room Number</label>
+                <select class="form-select" id="roomNumber">
+                    <option selected>Select Room Number</option>
+                    <option value="101">Room 101</option>
+                    <option value="102">Room 102</option>
+                    <option value="201">Room 201</option>
+                    <option value="202">Room 202</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="labName" class="form-label">Laboratory Name</label>
+                <input type="text" class="form-control" id="labName" placeholder="Select Room Number to autofill" readonly>
+            </div>
+            <div class="mb-3">
+                <label for="principalInvestigator" class="form-label">Principal Investigator</label>
+                <input type="text" class="form-control" id="principalInvestigator" placeholder="Select Room Number to autofill" readonly>
+            </div>
+        </fieldset>
     </div>
 
     <div class="col-md-6">
-        <div class="mb-3">
-            <label for="containerSize" class="form-label">Container Capacity</label>
-            <input type="text" class="form-control" id="containerSize" placeholder="Enter container capacity (ex. 6 gallons)">
-        </div>
-        <div class="mb-3">
-            <label for="stored" class="form-label">Stored</label>
-            <input type="text" class="form-control" id="stored" placeholder="Enter stored quantity (ex. 4.6, 7)" oninput="validateStoredInput()">
-            <small id="storedError" class="text-danger" style="display: none;">Incorrect input: Only numeric values are allowed.</small>
-        </div>
-        <div class="mb-3">
-            <label for="units" class="form-label">Units</label>
-            <select class="form-select" id="units">
-                <option selected>Select units</option>
-                <option value="gal">gal</option>
-                <option value="ml">mL</option>
-                <option value="L">L</option>
-                <option value="g">g</option>
-                <option value="kg">kg</option>
-                <option value="lbs">lbs</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="labelSize" class="form-label">Label Size</label>
-            <select class="form-select" id="labelSize">
-                <option selected>Select label size</option>
-                <option value="Small">Small (1x1)</option>
-                <option value="Medium">Medium (3x2)</option>
-                <option value="Large">Large (6x4)</option>
-            </select>
-        </div>
+        <!-- Block 3: Container Details -->
+        <fieldset>
+            <legend>Container Details</legend>
+            <div class="mb-3">
+                <label for="containerSize" class="form-label">Container Capacity</label>
+                <input type="text" class="form-control" id="containerSize" placeholder="Enter container capacity (ex. 6 gallons)">
+            </div>
+            <div class="mb-3">
+                <label for="stored" class="form-label">Added Quantity</label>
+                <input type="text" class="form-control" id="stored" placeholder="Enter stored quantity (ex. 4.6, 7)" oninput="validateStoredInput()">
+                <small id="storedError" class="text-danger" style="display: none;">Incorrect input: Only numeric values are allowed.</small>
+            </div>
+            <div class="mb-3">
+                <label for="units" class="form-label">Units</label>
+                <select class="form-select" id="units">
+                    <option selected>Select units</option>
+                    <option value="Gallons">Gallons (gal)</option>
+                    <option value="Milliliters">Milliliters (mL)</option>
+                    <option value="Liters">Liters (L)</option>
+                    <option value="Grams">Grams (g)</option>
+                    <option value="Kilograms">Kilograms (kg)</option>
+                    <option value="Pounds">Pounds (lbs)</option>
+
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="labelSize" class="form-label">Label Size</label>
+                <select class="form-select" id="labelSize">
+                    <option selected>Select label size</option>
+                    <option value="Small">Small (1x1)</option>
+                    <option value="Medium">Medium (3x2)</option>
+                    <option value="Large">Large (6x4)</option>
+                </select>
+            </div>
+        </fieldset>
     </div>
 </div>
 
-<!-- Chemical Table -->
-<div class="mb-3">
-    <label for="chemicalTable" class="form-label">Chemicals</label>
-    <table class="table table-bordered" id="chemicalTable">
-        <thead>
-            <tr>
-                <th>Chemical Name</th>
-                <th>CAS Number</th>
-                <th>Percentage</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>
-                    <input type="text" class="form-control chemical-name" list="chemicalList" placeholder="Chemical Name">
-                    <datalist id="chemicalList">
-                        <option value="Acetone">
-                        <option value="Ethanol">
-                        <option value="Methanol">
-                        <option value="Toluene">
-                        <option value="Benzene">
-                    </datalist>
-                </td>
-                <td><input type="text" class="form-control" name="cas_number[]" placeholder="CAS Number" required></td>
-                <td><input type="number" class="form-control percentage" name="percentage[]" placeholder="Percentage"></td>
-                <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
-            </tr>
-        </tbody>
-    </table>
-    <button type="button" class="btn btn-success" id="addRow">Add Row</button>
-</div>
+<!-- Block 4: Chemical Table -->
+<fieldset>
+    <legend>Chemicals</legend>
+    <div class="mb-3">
+        <label for="chemicalTable" class="form-label">Chemicals</label>
+        <table class="table table-bordered" id="chemicalTable">
+            <thead>
+                <tr>
+                    <th>Chemical Name</th>
+                    <th>CAS Number</th>
+                    <th>Percentage</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <input type="text" class="form-control chemical-name" list="chemicalList" placeholder="Chemical Name">
+                        <datalist id="chemicalList">
+                            <option value="Acetone">
+                            <option value="Ethanol">
+                            <option value="Methanol">
+                            <option value="Toluene">
+                            <option value="Benzene">
+                        </datalist>
+                    </td>
+                    <td><input type="text" class="form-control" name="cas_number[]" placeholder="CAS Number" required></td>
+                    <td><input type="number" class="form-control percentage" name="percentage[]" placeholder="Percentage"></td>
+                    <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
+    </div>
+</fieldset>
 
 <!-- Submit button -->
-<button type="button" class="btn btn-primary" onclick="validateAndShowSummary()">Submit and Generate PDF</button>
+<button type="button" class="btn btn-success" onclick="validateAndShowSummary()">Submit and Generate PDF</button>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 
 @endsection
 
+
 @section('scripts')
 <script>
+    // Automatically set today's date in the Date field
     document.addEventListener("DOMContentLoaded", function() {
         // Automatically set today's date
-        const today = new Date().toISOString().substr(0, 10);
-        document.getElementById("dateCreated").value = today;
+        const today = new Date().toISOString().substr(0, 10); // Formats the date to YYYY-MM-DD
+        document.getElementById("dateCreated").value = today; // Sets today's date as default
 
         // Add row functionality
         document.getElementById('addRow').addEventListener('click', function() {
             const tableBody = document.getElementById('chemicalTable').getElementsByTagName('tbody')[0];
-            const newRow = tableBody.insertRow();
+            const newRow = tableBody.insertRow();  // Inserts a new row in the table body
             newRow.innerHTML = `
                 <td><input type="text" class="form-control chemical-name" placeholder="Chemical Name" required></td>
                 <td><input type="text" class="form-control" name="cas_number[]" placeholder="CAS Number" required></td>
                 <td><input type="number" class="form-control percentage" name="percentage[]" placeholder="Percentage" required></td>
                 <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
             `;
-            addRemoveRowListeners();
-            applyAutocomplete(newRow.querySelector('.chemical-name'));  // Apply autocomplete to the new row
+            addRemoveRowListeners(); // Adds event listeners for row removal
+            applyAutocomplete(newRow.querySelector('.chemical-name'));  // Enables autocomplete for new row
         });
 
         // Remove row functionality
@@ -200,11 +234,11 @@
     function applyAutocomplete(input) {
         input.addEventListener("input", function() {
             closeAllLists();
-            if (!this.value) return false;
+            if (!this.value) return false; // Stops if no input
             const list = document.createElement("div");
             list.setAttribute("id", this.id + "autocomplete-list");
             list.setAttribute("class", "autocomplete-items");
-            this.parentNode.appendChild(list);
+            this.parentNode.appendChild(list); // Appends to the input's parent
         });
 
          // Room to lab mapping for autofill
@@ -288,6 +322,7 @@
 
     // Download JSON
     function downloadJsonFile(labelData) {
+        alert('Label created Sucessfully');
         const fileName = 'label_' + new Date().getTime() + '.json';
         const json = JSON.stringify(labelData, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
@@ -335,6 +370,7 @@
         }
     }
     
+    // Generate PDF document
     function generatePDF(labelData) {
         const { jsPDF } = window.jspdf;
 
@@ -357,6 +393,7 @@
             doc.setFontSize(10);
         }
 
+        // Center-aligned text for Label Information
         const centerX = width / 2;
         let y = 10;
         doc.text("UNWANTED MATERIAL", centerX, 5, { align: "center" });
@@ -368,6 +405,7 @@
         y += 4;
         doc.text(`Room #: ${labelData.room_number}`, centerX, y, { align: "center" });
 
+        // Generates table headers and layout
         y += 6;
         const tableWidth = 50;
         const startX = centerX - tableWidth / 2;
@@ -385,6 +423,7 @@
         doc.line(startX + colWidths[0] + colWidths[1], y, startX + colWidths[0] + colWidths[1], y + rowHeight * 2);
         doc.line(startX + tableWidth, y, startX + tableWidth, y + rowHeight * 2);
 
+        // Loops over chemicals to display data rows
         labelData.chemicals.slice(0, 2).forEach((chemical, index) => {
             y += rowHeight;
             doc.text(chemical.chemical_name, startX + colWidths[0] / 2, y, { align: "center" });

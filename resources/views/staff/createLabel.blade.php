@@ -288,6 +288,7 @@
 
     // Download JSON
     function downloadJsonFile(labelData) {
+        alert('Label created Sucessfully');
         const fileName = 'label_' + new Date().getTime() + '.json';
         const json = JSON.stringify(labelData, null, 2);
         const blob = new Blob([json], { type: 'application/json' });

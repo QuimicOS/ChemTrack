@@ -169,23 +169,24 @@
 
 @section('scripts')
 <script>
+    // Automatically set today's date in the Date field
     document.addEventListener("DOMContentLoaded", function() {
         // Automatically set today's date
-        const today = new Date().toISOString().substr(0, 10);
-        document.getElementById("dateCreated").value = today;
+        const today = new Date().toISOString().substr(0, 10); // Formats the date to YYYY-MM-DD
+        document.getElementById("dateCreated").value = today; // Sets today's date as default
 
         // Add row functionality
         document.getElementById('addRow').addEventListener('click', function() {
             const tableBody = document.getElementById('chemicalTable').getElementsByTagName('tbody')[0];
-            const newRow = tableBody.insertRow();
+            const newRow = tableBody.insertRow();  // Inserts a new row in the table body
             newRow.innerHTML = `
                 <td><input type="text" class="form-control chemical-name" placeholder="Chemical Name" required></td>
                 <td><input type="text" class="form-control" name="cas_number[]" placeholder="CAS Number" required></td>
                 <td><input type="number" class="form-control percentage" name="percentage[]" placeholder="Percentage" required></td>
                 <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
             `;
-            addRemoveRowListeners();
-            applyAutocomplete(newRow.querySelector('.chemical-name'));  // Apply autocomplete to the new row
+            addRemoveRowListeners(); // Adds event listeners for row removal
+            applyAutocomplete(newRow.querySelector('.chemical-name'));  // Enables autocomplete for new row
         });
 
         // Remove row functionality
@@ -200,11 +201,11 @@
     function applyAutocomplete(input) {
         input.addEventListener("input", function() {
             closeAllLists();
-            if (!this.value) return false;
+            if (!this.value) return false; // Stops if no input
             const list = document.createElement("div");
             list.setAttribute("id", this.id + "autocomplete-list");
             list.setAttribute("class", "autocomplete-items");
-            this.parentNode.appendChild(list);
+            this.parentNode.appendChild(list); // Appends to the input's parent
         });
 
          // Room to lab mapping for autofill
@@ -288,6 +289,7 @@
 
     // Download JSON
     function downloadJsonFile(labelData) {
+        alert('Label created Sucessfully');
         const fileName = 'label_' + new Date().getTime() + '.json';
         const json = JSON.stringify(labelData, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
@@ -335,6 +337,7 @@
         }
     }
     
+    // Generate PDF document
     function generatePDF(labelData) {
         const { jsPDF } = window.jspdf;
 
@@ -357,6 +360,7 @@
             doc.setFontSize(10);
         }
 
+        // Center-aligned text for Label Information
         const centerX = width / 2;
         let y = 10;
         doc.text("UNWANTED MATERIAL", centerX, 5, { align: "center" });
@@ -368,6 +372,7 @@
         y += 4;
         doc.text(`Room #: ${labelData.room_number}`, centerX, y, { align: "center" });
 
+        // Generates table headers and layout
         y += 6;
         const tableWidth = 50;
         const startX = centerX - tableWidth / 2;
@@ -385,6 +390,7 @@
         doc.line(startX + colWidths[0] + colWidths[1], y, startX + colWidths[0] + colWidths[1], y + rowHeight * 2);
         doc.line(startX + tableWidth, y, startX + tableWidth, y + rowHeight * 2);
 
+        // Loops over chemicals to display data rows
         labelData.chemicals.slice(0, 2).forEach((chemical, index) => {
             y += rowHeight;
             doc.text(chemical.chemical_name, startX + colWidths[0] / 2, y, { align: "center" });
