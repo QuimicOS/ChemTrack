@@ -3,13 +3,24 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LabelController;
+use App\Http\Controllers\UserController;
 
 
 Route::get('/', function () {
     return view('home');
 });
 
-//Route::get('/labels/search', [LabelController::class, 'searchLabel']);
+/// LOGIN ENDPOINT
+// Route::get('/saml/login', function () {
+//     // Redirect to the actual Sign-On URL provided by  IdP
+//     return redirect('http://chemtrack.test/saml2/4fb05276-8140-4bab-a71f-4c1fcf859686/login'); // Replace with the actual URL
+// })->name('saml.login');
+
+
+
+
+
+
 
 
 ////////////////////////////////DEFAULT ROUTES//////////////////////////////////////////////
@@ -219,5 +230,28 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+
+
+
+
+
+
+//Statistics for Admin dashboard
+
+
+Route::get('/labels/last7days', [LabelController::class, 'countLabelsLast7Days']);
+Route::get('/labels/weight', [LabelController::class, 'calculateTotalWeight']); 
+Route::get('/labels/volume', [LabelController::class, 'calculateTotalVolume']); 
+
+
+Route::get('/users/new-members', [UserController::class, 'countNewMembersLast30Days']);
+
+
+
+
+// Search Label
+Route::get('/getAdminLabels/{id}', action: [LabelController::class, 'show']);   // GET a label by ID
+
 
 require __DIR__.'/auth.php';

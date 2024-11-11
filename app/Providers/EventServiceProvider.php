@@ -38,7 +38,7 @@ class EventServiceProvider extends ServiceProvider
             // Log the user in
             if ($user) {
                 Auth::login($user);
-                return redirect()->route('dashboard'); // Replace 'dashboard' with your intended route
+                return redirect()->route('admin.homeAdmin'); // Replace 'dashboard' with your intended route
 
             }
         });

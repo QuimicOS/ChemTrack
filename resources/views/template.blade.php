@@ -169,7 +169,7 @@
             </ul>
         </nav>
         <div class="log-in-parent">
-            <a href="{{ url('loginTemp') }}" class="btn btn-primary">LOG IN</a>
+            <a href="{{ url('saml/login') }}" class="btn btn-primary">LOG IN</a>
         </div>
     </header>
 
@@ -190,7 +190,7 @@
             <a href="{{ url('aboutUs') }}" class="menu-button">
                 <div class="menu-item">About Us</div>
             </a>
-            <a href="{{ url('loginTemp') }}" class="btn btn-outline-light mt-4">Login</a>
+            <a href="{{ url('saml/login') }}" class="btn btn-outline-light mt-4">Login</a>
         </div>
     </div>
 

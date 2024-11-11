@@ -127,22 +127,12 @@
       const labelID = document.getElementById('labelID').value;
 
 
-    // Define a mapping between label IDs and JSON files
-    const jsonFileMapping = {
-      '12345': '/json/labelData1.json',
-      '67890': '/json/labelData2.json',
-      '11223': '/json/labelData3.json'
-    };
-
-    // Check if the entered label ID corresponds to a JSON file
-    if (jsonFileMapping[labelID]) {
-      // Fetch the appropriate JSON file based on the label ID
-      fetch(jsonFileMapping[labelID])
+      fetch(`/api/getAdminLabels/${labelID}`)
         .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json(); // Ensure the response is parsed as JSON
+            if (!response.ok) {
+                throw new Error('Label not found');
+            }
+            return response.json(); // Ensure the response is parsed as JSON
         })
         .then(data => {
           // Populate form fields with the data from JSON
@@ -178,12 +168,9 @@
           });
         })
         .catch(error => {
-          console.error('Error fetching JSON:', error);
-          alert('An error occurred while fetching the data.');
-        });
-    } else {
-      alert('Label not found!');
-    }
+            console.error('Error fetching label:', error);
+            alert('Label not found or an error occurred.');
+    });
   });
   </script>
 @endsection

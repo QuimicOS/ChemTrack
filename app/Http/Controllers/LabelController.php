@@ -319,11 +319,10 @@ class LabelController extends Controller
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-public function calculateVolumeAndWeight()
+public function calculateTotalWeight()
 {
-    // Define solid and liquid units for categorization
-    $solidUnits = ['g', 'kg', 'lb']; 
-    $liquidUnits = ['mL', 'L', 'gal']; 
+    // Define solid units for categorization
+    $solidUnits = ['g', 'kg', 'lb'];
 
     // Get the date 30 days ago
     $thirtyDaysAgo = Carbon::now()->subDays(30);
@@ -331,25 +330,50 @@ public function calculateVolumeAndWeight()
     // Get all labels created in the last 30 days
     $labels = Label::where('created_at', '>=', $thirtyDaysAgo)->get();
 
-    // Initialize variables
+    // Initialize variable for total solid weight
     $totalSolidWeight = 0;
+
+    // Loop through labels to sum quantities based on units
+    foreach ($labels as $label) {
+        if (in_array(strtolower($label->units), $solidUnits)) {
+            $totalSolidWeight += $label->quantity;
+        }
+    }
+
+    // Return the total solid weight as a response
+    return response()->json([
+        'total_solid_weight' => $totalSolidWeight,
+    ]);
+}
+
+
+public function calculateTotalVolume()
+{
+    // Define liquid units for categorization
+    $liquidUnits = ['mL', 'L', 'gal'];
+
+    // Get the date 30 days ago
+    $thirtyDaysAgo = Carbon::now()->subDays(30);
+
+    // Get all labels created in the last 30 days
+    $labels = Label::where('created_at', '>=', $thirtyDaysAgo)->get();
+
+    // Initialize variable for total liquid volume
     $totalLiquidVolume = 0;
 
     // Loop through labels to sum quantities based on units
     foreach ($labels as $label) {
-        if (in_array(strtolower($label->units), $solidUnits)) { //strlower to lower and upper case to insesitivity
-            $totalSolidWeight += $label->quantity;
-        } elseif (in_array(strtolower($label->units), $liquidUnits)) {
+        if (in_array(strtolower($label->units), $liquidUnits)) {
             $totalLiquidVolume += $label->quantity;
         }
     }
 
-    // Return the totals as a response
+    // Return the total liquid volume as a response
     return response()->json([
-        'total_solid_weight' => $totalSolidWeight,
         'total_liquid_volume' => $totalLiquidVolume,
     ]);
 }
+
 
 
 
@@ -413,14 +437,6 @@ public function unwantedMaterialSummary(Request $request)
         ////LABELS CREATED ON THE LAST 7 DAYS
     public function countLabelsLast7Days()
     {
-        // Get the date 7 days ago from now
-        // $sevenDaysAgo = Carbon::now()->subDays(7);
-
-        // // Count the labels created in the last 7 days
-        // $labelCount = Label::where('created_at', '>=', $sevenDaysAgo)->count();
-
-        // // Return the count in a JSON response
-        // return response()->json(['label_count' => $labelCount]);
 
         $sevenDaysAgo = now()->subWeek();
         $today = now();
