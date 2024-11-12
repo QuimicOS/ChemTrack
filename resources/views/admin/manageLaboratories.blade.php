@@ -5,18 +5,30 @@
 @section('content')
 <style>
     .content-area {
-        margin-left: 120px; /* Aligns with sidebar width */
+        margin-left: 120px;
         padding: 1.25rem;
-        margin-top: 25px; /* Consistent top margin */
+        margin-top: 25px;
     }
     .table-container {
         margin-top: 20px;
+        display: none; /* Hide table initially */
     }
     .form-label {
         font-weight: bold;
     }
     .btn-primary, .btn-secondary {
         font-weight: bold;
+    }
+    fieldset {
+        border: 1px solid #ccc;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background-color: #f8f9fa;
+    }
+    legend {
+        font-size: 1.2rem;
+        font-weight: bold;
+        padding: 0 0.5rem;
     }
 </style>
 
@@ -28,82 +40,82 @@
     </div>
 
     <!-- Form Section for Adding Laboratory -->
-    <form id="laboratoryForm" novalidate>
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="department" class="form-label">Department</label>
-                <input type="text" class="form-control" id="department" placeholder="Enter department" required>
-                <div class="invalid-feedback">Department must contain only letters.</div>
+    <fieldset>
+        <legend>Add Laboratory</legend>
+        <form id="laboratoryForm" novalidate>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="department" class="form-label">Department</label>
+                    <input type="text" class="form-control" id="department" placeholder="Enter department" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="building" class="form-label">Building</label>
+                    <input type="text" class="form-control" id="building" placeholder="Enter building" required>
+                </div>
             </div>
-            <div class="col-md-6">
-                <label for="building" class="form-label">Building</label>
-                <input type="text" class="form-control" id="building" placeholder="Enter building" required>
-                <div class="invalid-feedback">Building must contain only letters.</div>
-            </div>
-        </div>
 
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="roomNumber" class="form-label">Room Number</label>
-                <input type="text" class="form-control" id="roomNumber" placeholder="Enter room number (e.g., S-122)" required>
-                <div class="invalid-feedback">Room Number must be in format: Letter(s)-Number(s) (e.g., S-122).</div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="roomNumber" class="form-label">Room Number</label>
+                    <input type="text" class="form-control" id="roomNumber" placeholder="Enter room number (3-5 characters)" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="labName" class="form-label">Laboratory Name</label>
+                    <input type="text" class="form-control" id="labName" placeholder="Enter laboratory name" required>
+                </div>
             </div>
-            <div class="col-md-6">
-                <label for="labName" class="form-label">Laboratory Name</label>
-                <input type="text" class="form-control" id="labName" placeholder="Enter laboratory name" required>
-                <div class="invalid-feedback">Laboratory Name must contain only letters.</div>
-            </div>
-        </div>
 
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="professorInvestigator" class="form-label">Professor Investigator</label>
-                <input type="text" class="form-control" id="professorInvestigator" placeholder="Enter professor name" required>
-                <div class="invalid-feedback">Professor name must contain only letters.</div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="professorInvestigator" class="form-label">Professor Investigator</label>
+                    <input type="text" class="form-control" id="professorInvestigator" placeholder="Enter professor name" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="supervisor" class="form-label">Supervisor</label>
+                    <input type="text" class="form-control" id="supervisor" placeholder="Enter supervisor name" required>
+                </div>
             </div>
-            <div class="col-md-6">
-                <label for="supervisor" class="form-label">Supervisor</label>
-                <input type="text" class="form-control" id="supervisor" placeholder="Enter supervisor name" required>
-                <div class="invalid-feedback">Supervisor name must contain only letters.</div>
-            </div>
-        </div>
 
-        <!-- Submit Button -->
-        <div class="text-end">
-            <button type="button" class="btn btn-primary" onclick="validateAndAddLab()">Add Laboratory</button>
-        </div>
-    </form>
+            <!-- Submit Button -->
+            <div class="text-end">
+                <button type="button" class="btn btn-success fw-bold" onclick="validateAndAddLab()" disabled>Add Laboratory</button>
+            </div>
+        </form>
+    </fieldset>
 
     <!-- Search Section for Room Number -->
-    <div class="row my-5">
-        <div class="col-md-10">
-            <label for="searchRoom" class="form-label">Search Room by Number</label>
-            <input type="text" class="form-control" id="searchRoom" placeholder="Search room number">
+    <fieldset>
+        <legend>Search Laboratory</legend>
+        <div class="row my-5">
+            <div class="col-md-10">
+                <label for="searchRoom" class="form-label">Search Room by Number</label>
+                <input type="text" class="form-control" id="searchRoom" placeholder="Search room number (3-5 characters)">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-primary w-100" onclick="searchRoom()" disabled>Search</button>
+            </div>
         </div>
-        <div class="col-md-2 d-flex align-items-end">
-            <button class="btn btn-secondary w-100" onclick="searchRoom()">Search</button>
-        </div>
-    </div>
 
-    <!-- Table Section (Laboratories) -->
-    <div class="table-container">
-        <table class="table table-bordered table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>Department</th>
-                    <th>Building</th>
-                    <th>Room Number</th>
-                    <th>Laboratory Name</th>
-                    <th>Professor Investigator</th>
-                    <th>Supervisor</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="laboratoryTableBody">
-                <!-- Rows will be inserted dynamically -->
-            </tbody>
-        </table>
-    </div>
+        <!-- Table Section (Laboratories) -->
+        <div class="table-container">
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Department</th>
+                        <th>Building</th>
+                        <th>Room Number</th>
+                        <th>Laboratory Name</th>
+                        <th>Professor Investigator</th>
+                        <th>Supervisor</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="laboratoryTableBody">
+                    <!-- Rows will be inserted dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </fieldset>
 </div>
 
 <!-- Edit Modal -->
@@ -141,8 +153,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveEdit()">Save changes</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="saveEdit()">Save changes</button>
             </div>
         </div>
     </div>
@@ -161,7 +173,7 @@
                 <p id="deleteLabDetails"></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-danger" onclick="confirmDelete()">Delete</button>
             </div>
         </div>
@@ -173,90 +185,165 @@
 
 @section('scripts')
 <script>
-// Dummy array to store laboratory data
-let laboratories = [];
+
+// Dummy data for initial table view
+let laboratories = [
+    { department: "Chemistry", building: "Science", roomNumber: "S-122", labName: "Organic Chemistry Lab", professor: "Dr. Jane Doe", supervisor: "John Smith" },
+    { department: "Physics", building: "Main", roomNumber: "PH-101", labName: "Quantum Physics Lab", professor: "Dr. Albert Einstein", supervisor: "Marie Curie" }
+];
+
 let editingIndex = -1;
 let deletingIndex = -1;
 
-// Function to validate and add a new laboratory
+// Regular expressions for validation
+const textPattern = /^[a-zA-Z\s]+$/; // Only letters and spaces
+const roomPattern = /^.*$/; // Any character, 3-5 characters long
+const nameWithSpecialCharsPattern = /^[a-zA-Z\s.,'-]+$/; // Allows letters, spaces, and some special characters for names
+
+
+// Validation for the Add form
+const departmentField = document.getElementById('department');
+const buildingField = document.getElementById('building');
+const roomNumberField = document.getElementById('roomNumber');
+const labNameField = document.getElementById('labName');
+const professorField = document.getElementById('professorInvestigator');
+const supervisorField = document.getElementById('supervisor');
+const addLabButton = document.querySelector('button[onclick="validateAndAddLab()"]');
+
+// Validation for the Edit Modal
+const editDepartmentField = document.getElementById('editDepartment');
+const editBuildingField = document.getElementById('editBuilding');
+const editRoomNumberField = document.getElementById('editRoomNumber');
+const editLabNameField = document.getElementById('editLabName');
+const editProfessorField = document.getElementById('editProfessor');
+const editSupervisorField = document.getElementById('editSupervisor');
+const saveEditButton = document.querySelector('button[onclick="saveEdit()"]');
+
+// Search validation
+const searchRoomField = document.getElementById('searchRoom');
+const searchButton = document.querySelector('button[onclick="searchRoom()"]');
+
+// Function to restrict input to valid characters based on a pattern
+function enforceInputRestrictions(field, pattern) {
+    field.addEventListener('keypress', (e) => {
+        const char = String.fromCharCode(e.which);
+        if (!pattern.test(char)) {
+            e.preventDefault();
+        }
+    });
+}
+
+// Enforce restrictions on input fields
+enforceInputRestrictions(departmentField, textPattern);
+enforceInputRestrictions(buildingField, textPattern);
+enforceInputRestrictions(roomNumberField, /./); // Any character allowed
+enforceInputRestrictions(labNameField, /./);
+enforceInputRestrictions(professorField, textPattern);
+enforceInputRestrictions(supervisorField, textPattern);
+
+// Apply same restrictions to Edit Modal fields
+enforceInputRestrictions(editDepartmentField, textPattern);
+enforceInputRestrictions(editBuildingField, textPattern);
+enforceInputRestrictions(editRoomNumberField, /./);
+enforceInputRestrictions(editLabNameField, /./);
+enforceInputRestrictions(editProfessorField, textPattern);
+enforceInputRestrictions(editSupervisorField, textPattern);
+
+// Function to validate a single input field with a regex pattern
+function validateField(field, pattern) {
+    const isValid = pattern.test(field.value.trim());
+    return isValid;
+}
+
+// Function to validate the Add Lab form
+function validateAddLabForm() {
+    const isDepartmentValid = validateField(departmentField, textPattern);
+    const isBuildingValid = validateField(buildingField, textPattern);
+    const isRoomValid = validateField(roomNumberField, roomPattern);
+    const isLabNameValid = labNameField.value.trim() !== '';
+    const isProfessorValid = validateField(professorField, nameWithSpecialCharsPattern);
+    const isSupervisorValid = validateField(supervisorField, nameWithSpecialCharsPattern);
+
+    addLabButton.disabled = !(isDepartmentValid && isBuildingValid && isRoomValid && isLabNameValid && isProfessorValid && isSupervisorValid);
+}
+
+// Function to validate the Search Room field
+function validateSearchField() {
+    const isSearchValid = validateField(searchRoomField, roomPattern);
+    searchButton.disabled = !isSearchValid;
+}
+
+// Function to validate all fields in the Edit Modal
+function validateEditLabForm() {
+    const isEditDepartmentValid = validateField(editDepartmentField, textPattern);
+    const isEditBuildingValid = validateField(editBuildingField, textPattern);
+    const isEditRoomValid = validateField(editRoomNumberField, roomPattern);
+    const isEditLabNameValid = editLabNameField.value.trim() !== '';
+    const isEditProfessorValid = validateField(editProfessorField, nameWithSpecialCharsPattern);
+    const isEditSupervisorValid = validateField(editSupervisorField, nameWithSpecialCharsPattern);
+
+    saveEditButton.disabled = !(isEditDepartmentValid && isEditBuildingValid && isEditRoomValid && isEditLabNameValid && isEditProfessorValid && isEditSupervisorValid);
+}
+
+
+// Attach validation to Add Lab form fields
+departmentField.addEventListener('input', validateAddLabForm);
+buildingField.addEventListener('input', validateAddLabForm);
+roomNumberField.addEventListener('input', validateAddLabForm);
+labNameField.addEventListener('input', validateAddLabForm);
+professorField.addEventListener('input', validateAddLabForm);
+supervisorField.addEventListener('input', validateAddLabForm);
+
+// Attach validation to Edit Modal fields
+editDepartmentField.addEventListener('input', validateEditLabForm);
+editBuildingField.addEventListener('input', validateEditLabForm);
+editRoomNumberField.addEventListener('input', validateEditLabForm);
+editLabNameField.addEventListener('input', validateEditLabForm);
+editProfessorField.addEventListener('input', validateEditLabForm);
+editSupervisorField.addEventListener('input', validateEditLabForm);
+
+// Attach validation to the Search Room field
+searchRoomField.addEventListener('input', validateSearchField);
+// Function to add laboratory if valid
 function validateAndAddLab() {
-    const departmentField = document.getElementById('department');
-    const buildingField = document.getElementById('building');
-    const roomNumberField = document.getElementById('roomNumber');
-    const labNameField = document.getElementById('labName');
-    const professorField = document.getElementById('professorInvestigator');
-    const supervisorField = document.getElementById('supervisor');
-    let isValid = true;
+    if (addLabButton.disabled) return;
 
-    const namePattern = /^[a-zA-Z\s]+$/;
-    const roomPattern = /^[a-zA-Z]+-[0-9]{3}$/;
+    const lab = {
+        department: departmentField.value.trim(),
+        building: buildingField.value.trim(),
+        roomNumber: roomNumberField.value.trim(),
+        labName: labNameField.value.trim(),
+        professor: professorField.value.trim(),
+        supervisor: supervisorField.value.trim(),
+    };
 
-    // Validate fields
-    if (!namePattern.test(departmentField.value.trim())) {
-        departmentField.classList.add('is-invalid');
-        isValid = false;
-    } else {
-        departmentField.classList.remove('is-invalid');
-    }
-
-    if (!namePattern.test(buildingField.value.trim())) {
-        buildingField.classList.add('is-invalid');
-        isValid = false;
-    } else {
-        buildingField.classList.remove('is-invalid');
-    }
-
-    if (!roomPattern.test(roomNumberField.value.trim())) {
-        roomNumberField.classList.add('is-invalid');
-        isValid = false;
-    } else {
-        roomNumberField.classList.remove('is-invalid');
-    }
-
-    if (!namePattern.test(labNameField.value.trim())) {
-        labNameField.classList.add('is-invalid');
-        isValid = false;
-    } else {
-        labNameField.classList.remove('is-invalid');
-    }
-
-    if (!namePattern.test(professorField.value.trim())) {
-        professorField.classList.add('is-invalid');
-        isValid = false;
-    } else {
-        professorField.classList.remove('is-invalid');
-    }
-
-    if (!namePattern.test(supervisorField.value.trim())) {
-        supervisorField.classList.add('is-invalid');
-        isValid = false;
-    } else {
-        supervisorField.classList.remove('is-invalid');
-    }
-
-    if (isValid) {
-        const lab = {
-            department: departmentField.value.trim(),
-            building: buildingField.value.trim(),
-            roomNumber: roomNumberField.value.trim(),
-            labName: labNameField.value.trim(),
-            professor: professorField.value.trim(),
-            supervisor: supervisorField.value.trim(),
-        };
-
-        laboratories.push(lab);
-        alert('Laboratory added successfully!');
-        clearForm();
-    }
+    laboratories.push(lab);
+    alert('Laboratory added successfully!');
+    clearForm();
 }
 
 // Function to clear form fields
 function clearForm() {
     document.getElementById('laboratoryForm').reset();
+    addLabButton.disabled = true;
 }
 
-// Function to render the table with laboratory data
-function renderTable(filteredLabs = laboratories) {
+// Function to search for rooms by number
+function searchRoom() {
+    const searchValue = searchRoomField.value.trim().toLowerCase();
+    const filteredLabs = laboratories.filter(lab => lab.roomNumber.toLowerCase() === searchValue);
+
+    renderTable(filteredLabs);
+
+    if (filteredLabs.length === 0) {
+        alert('No laboratories found for the given room number.');
+    } else {
+        document.querySelector('.table-container').style.display = 'block';
+    }
+}
+
+// Function to render table with search results
+function renderTable(filteredLabs) {
     const tableBody = document.getElementById('laboratoryTableBody');
     tableBody.innerHTML = '';
 
@@ -269,60 +356,65 @@ function renderTable(filteredLabs = laboratories) {
                         <td>${lab.professor}</td>
                         <td>${lab.supervisor}</td>
                         <td>
-                            <button class="btn btn-sm btn-warning" onclick="editLab(${index})">Edit</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteLab(${index})">Delete</button>
+                            <button class="btn btn-sm btn-primary" onclick="editLab('${lab.roomNumber}')">Edit</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteLab('${lab.roomNumber}')">Delete</button>
                         </td>
                     </tr>`;
         tableBody.innerHTML += row;
     });
 }
 
-// Search function
-function searchRoom() {
-    const searchValue = document.getElementById('searchRoom').value.trim().toLowerCase();
-    const filteredLabs = laboratories.filter(lab => lab.roomNumber.toLowerCase().includes(searchValue));
-    renderTable(filteredLabs);
-}
+// Function to edit a lab in the Edit Modal by room number
+function editLab(roomNumber) {
+    editingIndex = laboratories.findIndex(lab => lab.roomNumber === roomNumber);
 
-// Function to edit laboratory details
-function editLab(index) {
-    editingIndex = index;
-    const lab = laboratories[index];
+    if (editingIndex === -1) {
+        alert('Error: Laboratory not found for editing.');
+        return;
+    }
 
-    // Fill the modal with current lab details
-    document.getElementById('editDepartment').value = lab.department;
-    document.getElementById('editBuilding').value = lab.building;
-    document.getElementById('editRoomNumber').value = lab.roomNumber;
-    document.getElementById('editLabName').value = lab.labName;
-    document.getElementById('editProfessor').value = lab.professor;
-    document.getElementById('editSupervisor').value = lab.supervisor;
+    const lab = laboratories[editingIndex];
+    editDepartmentField.value = lab.department;
+    editBuildingField.value = lab.building;
+    editRoomNumberField.value = lab.roomNumber;
+    editLabNameField.value = lab.labName;
+    editProfessorField.value = lab.professor;
+    editSupervisorField.value = lab.supervisor;
 
     const editModal = new bootstrap.Modal(document.getElementById('editModal'));
     editModal.show();
+    validateEditLabForm();
 }
 
 // Save the edited laboratory details
 function saveEdit() {
-    const updatedLab = {
-        department: document.getElementById('editDepartment').value.trim(),
-        building: document.getElementById('editBuilding').value.trim(),
-        roomNumber: document.getElementById('editRoomNumber').value.trim(),
-        labName: document.getElementById('editLabName').value.trim(),
-        professor: document.getElementById('editProfessor').value.trim(),
-        supervisor: document.getElementById('editSupervisor').value.trim(),
+    if (editingIndex === -1) return;
+
+    laboratories[editingIndex] = {
+        department: editDepartmentField.value.trim(),
+        building: editBuildingField.value.trim(),
+        roomNumber: editRoomNumberField.value.trim(),
+        labName: editLabNameField.value.trim(),
+        professor: editProfessorField.value.trim(),
+        supervisor: editSupervisorField.value.trim(),
     };
 
-    laboratories[editingIndex] = updatedLab;
     alert('Laboratory updated successfully!');
-    renderTable();
+    searchRoom();
     const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
     editModal.hide();
 }
 
-// Delete a laboratory
-function deleteLab(index) {
-    deletingIndex = index;
-    const lab = laboratories[index];
+// Function to delete a lab by room number
+function deleteLab(roomNumber) {
+    deletingIndex = laboratories.findIndex(lab => lab.roomNumber === roomNumber);
+
+    if (deletingIndex === -1) {
+        alert('Error: Laboratory not found for deletion.');
+        return;
+    }
+
+    const lab = laboratories[deletingIndex];
     document.getElementById('deleteLabDetails').innerText = `Department: ${lab.department}, Building: ${lab.building}, Room: ${lab.roomNumber}, Lab: ${lab.labName}, Professor: ${lab.professor}, Supervisor: ${lab.supervisor}`;
 
     const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
@@ -333,7 +425,7 @@ function deleteLab(index) {
 function confirmDelete() {
     laboratories.splice(deletingIndex, 1);
     alert('Laboratory deleted successfully!');
-    renderTable();
+    searchRoom();
     const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
     deleteModal.hide();
 }
