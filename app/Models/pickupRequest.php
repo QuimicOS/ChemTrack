@@ -12,7 +12,6 @@ class PickupRequest extends Model
     protected $table = 'pickup';
 
     protected $fillable = [
-        'request_date',
         'pickup_date',
         'status_of_pickup',
         'timeframe',

@@ -14,7 +14,7 @@ class Chemical extends Model
     protected $fillable = [
         'chemical_name',
         'cas_number',
-        'status'
+        'status_of_chemical'
     ];
 
     // INVERSE RELATIONSHIPS

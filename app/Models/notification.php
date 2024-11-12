@@ -12,7 +12,6 @@ class Notification extends Model
     protected $table = 'notification';
 
     protected $fillable = [
-        'pending_date',
         'send_to',
         'message',
         'status_of_notification',
