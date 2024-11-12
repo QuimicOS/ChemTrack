@@ -6,7 +6,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LabelController;
 use App\Http\Controllers\LaboratoryController;
-
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PickupRequestController;
+use App\Http\Controllers\ChemicalController;
+use App\Http\Controllers\NotificationController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -28,28 +31,52 @@ Route::post('api/logout', [AuthController::class, 'logout'])->middleware('auth:s
 ////////////////////////////////////////////////////////////////////////////////////////
 // Route::get('/labels/last7days', [LabelController::class, 'countLabelsLast7Days']);
 
+// ----------------------------------Pickup Request Routes-----------------------------------------------
+Route::post('/pickupCreate', [PickupRequestController::class, 'createPickupRequest']); 
+Route::put('/pickupLabelComplete', [PickupRequestController::class, 'completePickupRequest']);
+Route::put('/pickupInvalidate', [PickupRequestController::class, 'deletePickupRequest']); 
+Route::get('/pickupSearch', [PickupRequestController::class, 'searchPickupRequests']); 
+Route::get('/pickupList', [PickupRequestController::class, 'listPickupRequests']); 
+Route::get('/pickupDetails', [PickupRequestController::class, 'getPickupDetails']); 
+Route::get('/pickupStatus', [PickupRequestController::class, 'getPickupStatus']); 
+// ------------------------------------------------------------------------------------------------------
 
+// -------------------------------------Chemical Routes--------------------------------------------------
+Route::post('/chemicalCreate', [ChemicalController::class, 'addChemical']); 
+Route::put('/chemicalInvalidate', [ChemicalController::class, 'deleteChemical']); 
+Route::put('/chemicalModify', [ChemicalController::class, 'editChemical']); 
+Route::get('/chemicalCreatedCount', [ChemicalController::class, 'chemicalsMadeThisMonth']); 
+Route::get('/chemicalCasNumber', [ChemicalController::class, 'getCasNumber']); 
+// ------------------------------------------------------------------------------------------------------
 
+// -----------------------------------Notification Routes------------------------------------------------
+Route::get('/notificationsPending', [NotificationController::class, 'getPendingNotifications']); 
+Route::post('/notificationTrigger', [NotificationController::class, 'triggerNotification']);
+Route::put('/notificationRead', [NotificationController::class, 'markAsRead']);
+// ------------------------------------------------------------------------------------------------------
 
+// -------------------------------------Default API Routes------------------------------------------------
+// PICKUP REQUESTS
+Route::get('/pickupAll', [PickupRequestController::class, 'getAll']); 
+Route::get('/pickupById/{id}', [PickupRequestController::class, 'find']); 
+Route::post('/pickupPost', [PickupRequestController::class, 'create']); 
+Route::put('/pickupPut/{id}', [PickupRequestController::class, 'update']); 
+Route::delete('/pickupDelete/{id}', [PickupRequestController::class, 'destroy']); 
 
+// NOTIFICATIONS
+Route::get('/notificationAll', [NotificationController::class, 'getAll']); 
+Route::get('/notificationById/{id}', [NotificationController::class, 'get']); 
+Route::post('/notificationPost', [NotificationController::class, 'create']); 
+Route::put('/notificationPut/{id}', [NotificationController::class, 'update']); 
+Route::delete('/notificationDelete/{id}', [NotificationController::class, 'destroy']); 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// CHEMICALS
+Route::get('/chemicalAll', [ChemicalController::class, 'getAll']); 
+Route::get('/chemicalById/{id}', [ChemicalController::class, 'get']); 
+Route::post('/chemicalPost', [ChemicalController::class, 'create']); 
+Route::put('/chemicalPut/{id}', [ChemicalController::class, 'update']); 
+Route::delete('/chemicalDelete/{id}', [ChemicalController::class, 'destroy']); 
+// ------------------------------------------------------------------------------------------------------
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////// Admin outes only///////////////////////////////////////////
