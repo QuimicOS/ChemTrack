@@ -179,28 +179,28 @@
 
         <!-- Dashboard Cards Section (on the right) -->
         <div class="dashboard-cards">
-            <div class="dashboard-card">
-              <h5>32</h5>
-              <p>LABELS CREATED LAST 7 DAYS</p>
+            <div class="dashboard-card labels-last7days">
+                <h5></h5>
+                <p>LABELS CREATED LAST 7 DAYS</p>
             </div>
             <div class="dashboard-card">
-              <h5>12</h5>
+              <h5></h5>
               <p>PENDING PICKUP REQUESTS</p>
             </div>
             <div class="dashboard-card">
               <h5>8</h5>
               <p>CHEMICALS ADDED LAST 30 DAYS</p>
             </div>
-            <div class="dashboard-card">
-              <h5>27</h5>
+            <div class="dashboard-card weight-last30days">
+              <h5></h5>
               <p>WEIGHT GENERATED (LBS) LAST 30 DAYS</p>
             </div>
-            <div class="dashboard-card">
-              <h5>43</h5>
+            <div class="dashboard-card volume-last30days">
+              <h5></h5>
               <p>VOLUME GENERATED (GAL) LAST 30 DAYS</p>
             </div>
-            <div class="dashboard-card">
-              <h5>17</h5>
+            <div class="dashboard-card new-members-last30days">
+              <h5></h5>
               <p>NEW MEMBERS LAST 30 DAYS</p>
             </div>
         </div>
@@ -294,5 +294,71 @@
                 }
             }
         });
+    </script>
+
+    <!-- AJAX Calls for Dashboard Data Labels7Days -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            fetchLabelsLast7Days();
+            fetchWeightTotal();
+            fetchVolumeTotal();
+            fetchNewMembersLast30Days();
+        });
+
+        function fetchLabelsLast7Days() {
+        fetch('/labels/last7days')
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector('.labels-last7days h5').textContent = data.label_count;
+            })
+            .catch(error => console.error('Error fetching labels count:', error));
+        }
+
+        // <!-- AJAX Calls for Dashboard Data wightgenerated -->
+
+        function fetchWeightTotal() {
+        fetch('/labels/weight')
+            .then(response => response.json())
+            .then(data => {
+                const weightElement = document.querySelector('.weight-last30days h5');
+                if (weightElement) {
+                    weightElement.textContent = data.total_weight;
+                } else {
+                    console.error('Weight element not found');
+                }
+            })
+            .catch(error => console.error('Error fetching weight data:', error));
+    }
+
+
+        function fetchVolumeTotal() {
+        fetch('/labels/volume')
+            .then(response => response.json())
+            .then(data => {
+                // Update the statistic on the page with the total weight
+                document.querySelector('.volume-last30days h5').textContent = data.total_volume;
+
+            })
+            .catch(error => console.error('Error fetching weight data:', error));
+        }
+
+
+
+
+        function fetchNewMembersLast30Days() {
+        fetch('/users/new-members')
+        .then(response => response.json())
+        .then(data => {
+            const newMembersElement = document.querySelector('.new-members-last30days h5');
+            if (newMembersElement) {
+                newMembersElement.textContent = data.new_member_count;
+            } else {
+                console.error('New members element not found');
+            }
+        })
+        .catch(error => console.error('Error fetching new members count:', error));
+}
+
+
     </script>
 @endsection

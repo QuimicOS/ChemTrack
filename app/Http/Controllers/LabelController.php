@@ -58,80 +58,130 @@ class LabelController extends Controller
     //     return response()->json($label);
     // }
 
+
+
+
     //this will return only the labels created by the user logged in
-    public function show(Request $request, $id)
-    {
-        // Get the authenticated admin's ID
-        $adminId = Auth::id();
-
-        // Find the label by ID where 'created_by' is the authenticated admin's ID
-        $label = Label::where('id', $id)
-                    ->where('created_by', $adminId) // assuming 'created_by' column stores the admin's ID
-                    ->first();
-
-        // Check if the label exists and is created by this admin
-        if (!$label) {
-            return response()->json(['error' => 'Label not found or access denied'], 404);
-        }
-
-        return response()->json($label, 200);
+public function show(Request $request, $id)
+{
+    // Check if the user is authenticated
+    $user = Auth::user();
+    if (!$user) {
+        return response()->json(['error' => 'Unauthorized'], 401);
     }
 
+    // Get the authenticated admin's email
+    $adminEmail = $user->email;
+
+    // Find the label by ID where 'created_by' is the authenticated admin's email
+    $label = Label::with(['laboratory', 'chemicals'])
+                  ->where('label_id', $id)
+                  ->where('created_by', $adminEmail) // assuming 'created_by' column stores the admin's email
+                  ->first();
+
+    // Check if the label exists and is created by this admin
+    if (!$label) {
+        return response()->json(['error' => 'Label not found or access denied'], 404);
+    }
+
+    return response()->json($label, 200);
+}
 
 
 
 
-    /////////////////// PUT - Update a label by ID (Update operation)/////////////////////////////////////////
-    // public function updateLabelInfo(Request $request, $id)
+
+    /////////////////// a label by ID /////////////////////////////////////////
+    public function edit($id)
+    {
+        $label = Label::with(['user' => function($query) {
+                        $query->select('email');
+                    }, 'chemicals' => function($query) {
+                        $query->select('chemical_name', 'cas_number', 'percentage');
+                    }])
+                    ->where('label_id', $id)
+                    ->first(['label_id', 'units', 'quantity']);
+    
+        if (!$label) {
+            return response()->json(['error' => 'Label not found'], 404);
+        }
+    
+        return response()->json($label, 200);
+    }
+    
+
+
+    // //update a label if a specified user is attached to a specified lab
+    // public function update(Request $request, $id)
     // {
+    //     // Find the label by its ID
     //     $label = Label::find($id);
     //     if (!$label) {
     //         return response()->json(['error' => 'Label not found'], 404);
     //     }
-
-    //     // Validate and update label data
-    //     $validatedData = $request->validate(Label::$LabelPutRules);
-
-    //     $label->update($validatedData);
-    //     return response()->json($label);
+    
+    //     // Get the authenticated user and their associated lab
+    //     $user = Auth::user();
+    //     $userLabId = $user->lab_id; // Assuming `laboratories_id` is the column linking user to their lab
+    
+    //     // Check if the label's lab matches the user's lab
+    //     if ($label->lab_id !== $userLabId) { 
+    //         return response()->json(['error' => 'Unauthorized: You do not have permission to edit this label'], 403);
+    //     }
+    
+    //     // Validate input and update the label (add your validation rules as needed)
+    //     $request->validate(Label::$LabelPutRules);
+    
+    //     $label->update($request->all());
+    
+    //     return response()->json([
+    //         'message' => 'Label updated successfully',
+    //         'label' => $label
+    //     ], 200);
     // }
 
 
 
 
-
-
-
-
-
-    //update a label if a specified user is attached to a specified lab
+//// FOR EDITLABEL
     public function update(Request $request, $id)
     {
-        // Find the label by its ID
+        // Validate input data
+        $validatedData = $request->validate([
+            'units' => 'required|string|max:10',
+            'quantity' => 'required|integer|min:0',
+            'chemicals' => 'required|array',
+            'chemicals.*.chemical_id' => 'required|integer|exists:chemicals,id',
+            'chemicals.*.chemical_name' => 'required|string|max:255',
+            'chemicals.*.cas_number' => 'required|string|max:50',
+            'chemicals.*.percentage' => 'required|integer|min:0|max:100'
+        ]);
+    
+        // Find the label by ID
         $label = Label::find($id);
         if (!$label) {
             return response()->json(['error' => 'Label not found'], 404);
         }
     
-        // Get the authenticated user and their associated lab
-        $user = Auth::user();
-        $userLabId = $user->lab_id; // Assuming `laboratories_id` is the column linking user to their lab
+        // Update label's units and quantity
+        $label->update([
+            'units' => $validatedData['units'],
+            'quantity' => $validatedData['quantity']
+        ]);
     
-        // Check if the label's lab matches the user's lab
-        if ($label->lab_id !== $userLabId) { 
-            return response()->json(['error' => 'Unauthorized: You do not have permission to edit this label'], 403);
+        // Update chemicals associated with the label
+        $label->chemicals()->detach(); // Remove existing chemicals
+        foreach ($validatedData['chemicals'] as $chemicalData) {
+            $label->chemicals()->attach($chemicalData['chemical_id'], [
+                'chemical_name' => $chemicalData['chemical_name'],
+                'cas_number' => $chemicalData['cas_number'],
+                'percentage' => $chemicalData['percentage']
+            ]);
         }
     
-        // Validate input and update the label (add your validation rules as needed)
-        $request->validate(Label::$LabelPutRules);
-    
-        $label->update($request->all());
-    
-        return response()->json([
-            'message' => 'Label updated successfully',
-            'label' => $label
-        ], 200);
+        return response()->json(['success' => 'Label updated successfully'], 200);
     }
+    
 
 
 
@@ -141,22 +191,7 @@ class LabelController extends Controller
 
 
 
-    // ///////////////////////// DELETE - Remove a label by ID (Delete operation)//////////////////////////////////////////////
-    // public function deleteLabel($id)
-    // {
-    //     $label = Label::find($id);
-    //     if (!$label) {
-    //         return response()->json(['error' => 'Nothing here'], 404);
-    //     }
 
-    //     $label->delete();
-    //     return response()->json(['success' => 'Label deleted successfully']);
-    // }
-
-
-// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -198,6 +233,16 @@ class LabelController extends Controller
 
 
 
+
+
+
+
+
+
+
+
+    
+
     //change the label TO COMPLETED
     public function updateLabelStatusCompleted($id){
         $label = Label::find($id);
@@ -218,74 +263,83 @@ class LabelController extends Controller
 
 
 
-    //change status to invalid, need to add the message to explain why the invalidation
-    // public function invalidateLabel(Request $request, $id){
-    //     //ask the user message
-    //     $request->validate([
-    //         'message' => 'required|string|max:255'
-    //     ]);
 
 
-    //     $label = Label::find($id);
-    //     if (!$label) {
-    //         return response()->json(['error' => 'Label not found'], 404);
-    //     }
 
-    //     $label->update([
-    //         'status_of_label' => 'INVALID',
-    //         'message' => $request->message
+
+
+
+
+
+
+    // change status to invalid, need to add the message to explain why the invalidation
+    public function invalidateLabel(Request $request, $id){
+        //ask the user message
+        $request->validate([
+            'message' => 'required|string|max:255'
+        ]);
+
+
+        $label = Label::where('label_id',$id)->first();
+        if (!$label) {
+            return response()->json(['error' => 'Label not found'], 404);
+        }
+
+        $label->update([
+            'status_of_label' => 'INVALID',
+            'message' => $request->message
         
-    //     ]);
-    //     return response()->json([
-    //         'success' => 'Label updated successfully to Invalid',
-    //         'message' => $request->message
-    //     ]);
+        ]);
+        return response()->json([
+            'success' => 'Label updated successfully to Invalid',
+            'message' => $request->message
+        ]);
 
-    // }
-
-
-
-
-
-
-
-
-
-
-
-    public function invalidateLabel(Request $request, $id)
-{
-    // Validate the provided message
-    $request->validate([
-        'message' => 'required|string|max:255'
-    ]);
-
-    // Retrieve the label by ID
-    $label = Label::find($id);
-    if (!$label) {
-        return response()->json(['error' => 'Label not found'], 404);
     }
 
-    // Get the authenticated user and their laboratory ID
-    $user = Auth::user();
-    $userLabId = $user->lab_id; // Assuming the user has a `laboratories_id` field indicating their lab
 
-    // Check if the user's lab matches the label's lab
-    if ($label->lab_id !== $userLabId) { 
-        return response()->json(['error' => 'Unauthorized: You do not have permission to invalidate this label'], 403);
-    }
 
-    // Invalidate the label and store the message
-    $label->update([
-        'status_of_label' => 'INVALID',
-        'message' => $request->message
-    ]);
 
-    return response()->json([
-        'success' => 'Label updated successfully to Invalid',
-        'message' => $request->message
-    ], 200);
-}
+
+
+
+
+
+
+
+//     public function invalidateLabel(Request $request, $id)
+// {
+//     // Validate the provided message
+//     $request->validate([
+//         'message' => 'required|string|max:255'
+//     ]);
+
+//     // Retrieve the label by ID
+//     $label = Label::find($id);
+//     if (!$label) {
+//         return response()->json(['error' => 'Label not found'], 404);
+//     }
+
+//     // Get the authenticated user and their laboratory ID
+//     $user = Auth::user();
+//     $userLabId = $user->lab_id; // Assuming the user has a `laboratories_id` field indicating their lab
+
+//     // Check if the user's lab matches the label's lab
+//     if ($label->lab_id !== $userLabId) { 
+//         return response()->json(['error' => 'Unauthorized: You do not have permission to invalidate this label'], 403);
+//     }
+
+//     // Invalidate the label and store the message
+//     $label->update([
+//         'status_of_label' => 'INVALID',
+//         'message' => $request->message
+//     ]);
+
+//     return response()->json([
+//         'success' => 'Label updated successfully to Invalid',
+//         'message' => $request->message
+//     ], 200);
+// }
 
   
 
@@ -314,16 +368,89 @@ class LabelController extends Controller
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// STATISTICS para FRONTEND/////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-public function calculateVolumeAndWeight()
+public function calculateTotalWeight()
 {
-    // Define solid and liquid units for categorization
-    $solidUnits = ['g', 'kg', 'lb']; 
-    $liquidUnits = ['mL', 'L', 'gal']; 
+    // Define solid units for categorization
+    $solidUnits = ['g', 'kg', 'lb'];
 
     // Get the date 30 days ago
     $thirtyDaysAgo = Carbon::now()->subDays(30);
@@ -331,25 +458,50 @@ public function calculateVolumeAndWeight()
     // Get all labels created in the last 30 days
     $labels = Label::where('created_at', '>=', $thirtyDaysAgo)->get();
 
-    // Initialize variables
+    // Initialize variable for total solid weight
     $totalSolidWeight = 0;
+
+    // Loop through labels to sum quantities based on units
+    foreach ($labels as $label) {
+        if (in_array(strtolower($label->units), $solidUnits)) {
+            $totalSolidWeight += $label->quantity;
+        }
+    }
+
+    // Return the total solid weight as a response
+    return response()->json([
+        'total_solid_weight' => $totalSolidWeight,
+    ]);
+}
+
+
+public function calculateTotalVolume()
+{
+    // Define liquid units for categorization
+    $liquidUnits = ['mL', 'L', 'gal'];
+
+    // Get the date 30 days ago
+    $thirtyDaysAgo = Carbon::now()->subDays(30);
+
+    // Get all labels created in the last 30 days
+    $labels = Label::where('created_at', '>=', $thirtyDaysAgo)->get();
+
+    // Initialize variable for total liquid volume
     $totalLiquidVolume = 0;
 
     // Loop through labels to sum quantities based on units
     foreach ($labels as $label) {
-        if (in_array(strtolower($label->units), $solidUnits)) { //strlower to lower and upper case to insesitivity
-            $totalSolidWeight += $label->quantity;
-        } elseif (in_array(strtolower($label->units), $liquidUnits)) {
+        if (in_array(strtolower($label->units), $liquidUnits)) {
             $totalLiquidVolume += $label->quantity;
         }
     }
 
-    // Return the totals as a response
+    // Return the total liquid volume as a response
     return response()->json([
-        'total_solid_weight' => $totalSolidWeight,
         'total_liquid_volume' => $totalLiquidVolume,
     ]);
 }
+
 
 
 
@@ -413,14 +565,6 @@ public function unwantedMaterialSummary(Request $request)
         ////LABELS CREATED ON THE LAST 7 DAYS
     public function countLabelsLast7Days()
     {
-        // Get the date 7 days ago from now
-        // $sevenDaysAgo = Carbon::now()->subDays(7);
-
-        // // Count the labels created in the last 7 days
-        // $labelCount = Label::where('created_at', '>=', $sevenDaysAgo)->count();
-
-        // // Return the count in a JSON response
-        // return response()->json(['label_count' => $labelCount]);
 
         $sevenDaysAgo = now()->subWeek();
         $today = now();

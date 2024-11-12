@@ -195,35 +195,26 @@
     document.getElementById('searchButton').addEventListener('click', function () {
       const labelID = document.getElementById('labelID').value;
 
-      // Define a mapping between label IDs and JSON files
-      const jsonFileMapping = {
-        '12345': '/json/labelData1.json',
-        '67890': '/json/labelData2.json',
-        '11223': '/json/labelData3.json'
-      };
 
-      // Check if the entered label ID corresponds to a JSON file
-      if (jsonFileMapping[labelID]) {
-        // Fetch the appropriate JSON file based on the label ID
-        fetch(jsonFileMapping[labelID])
-          .then(response => {
+      fetch(`/api/getAdminLabels/${labelID}`)
+        .then(response => {
             if (!response.ok) {
-              throw new Error('Network response was not ok');
+                throw new Error('Label not found');
             }
             return response.json(); // Ensure the response is parsed as JSON
-          })
-          .then(data => {
-            // Populate form fields with the data from JSON
-            document.getElementById('createdBy').value = data.created_by;
-            document.getElementById('department').value = data.department;
-            document.getElementById('building').value = data.building;
-            document.getElementById('roomNumber').value = data.room_number;
-            document.getElementById('labName').value = data.lab_name;
-            document.getElementById('dateCreated').value = data.date_created;
-            document.getElementById('principalInvestigator').value = data.principal_investigator;
-            document.getElementById('quantity').value = data.quantity + " " + data.units;
-            document.getElementById('status').value = data.status;
-            document.getElementById('message').value = data.message;
+        })
+        .then(data => {
+          // Populate form fields with the data from JSON
+          document.getElementById('createdBy').value = data.created_by;
+          document.getElementById('department').value = data.department;
+          document.getElementById('building').value = data.building;
+          document.getElementById('roomNumber').value = data.room_number;
+          document.getElementById('labName').value = data.lab_name;
+          document.getElementById('dateCreated').value = data.date_created;
+          document.getElementById('principalInvestigator').value = data.principal_investigator;
+          document.getElementById('quantity').value = data.quantity + " " + data.units;
+          document.getElementById('status').value = data.status;
+          document.getElementById('message').value = data.message;
 
             // Show the form and table sections
             document.querySelector('.form-section').style.display = 'block';
@@ -233,25 +224,22 @@
             const tableBody = document.querySelector('tbody');
             tableBody.innerHTML = '';
 
-            // Populate the table with chemicals from JSON data
-            data.chemicals.forEach(chemical => {
-              const row = `
-                <tr>
-                  <td>${chemical.chemical_name}</td>
-                  <td>${chemical.cas_number}</td>
-                  <td>${chemical.percentage}%</td>
-                </tr>
-              `;
-              tableBody.innerHTML += row;
-            });
-          })
-          .catch(error => {
-            console.error('Error fetching JSON:', error);
-            alert('An error occurred while fetching the data.'); // Alert user of any error
+          // Populate the table with chemicals from JSON data
+          data.chemicals.forEach(chemical => {
+            const row = `
+              <tr>
+                <td>${chemical.chemical_name}</td>
+                <td>${chemical.cas_number}</td>
+                <td>${chemical.percentage}%</td>
+              </tr>
+            `;
+            tableBody.innerHTML += row;
           });
-      } else {
-        alert('Label not found!'); // Alert if label ID is not found
-      }
+        })
+        .catch(error => {
+            console.error('Error fetching label:', error);
+            alert('Label not found or an error occurred.');
     });
+  });
   </script>
 @endsection

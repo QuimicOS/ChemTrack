@@ -258,28 +258,7 @@ class UserController extends Controller
 
 
 
-    //POST CREATE USER AS ADMIN
-
-    //     public function createUser(Request $request)
-    // {
-    //     $validatedData = $request->validate([
-    //         'name' => 'required|string|max:255',
-    //         'lastname' => 'required|string|max:255',
-    //         'email' => 'required|string|email|max:255|unique:users',
-    //          department
-    //          room number from laboratory
-    //         'role' => 'required|string',
-    //         'lab_id' => 'required|integer|exists:laboratories,id', // Assuming you have a lab association
-    //     ]);
-
-    //     // Default status to 'accepted'
-    //     $validatedData['user_status'] = 'accepted';
-
-    //     // Create the user
-    //     $user = User::create($validatedData);
-
-    //     return response()->json(['message' => 'User created successfully', 'user' => $user], 201);
-    // }
+ 
 
 
 
@@ -402,7 +381,13 @@ class UserController extends Controller
     }
 
 
+    public function countNewMembersLast30Days()
+{
+    $thirtyDaysAgo = now()->subDays(30);
+    $newMemberCount = User::where('created_at', '>=', $thirtyDaysAgo)->count();
 
+    return response()->json(['new_member_count' => $newMemberCount], 200);
+}
 
   
  

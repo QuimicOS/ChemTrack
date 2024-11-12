@@ -28,4 +28,12 @@ class Chemical extends Model
         return $this->belongsTo(Notification::class, 'chemical_id');
     }
 
+
+    public function labels(){
+        return $this->belongsToMany(Label::class, 'label_chemical', 'chemical_id', 'label_id')
+        ->withPivot('chemical_name', 'cas_number', 'percentage')
+        ->withTimestamps();
+    }
+
+    
 }
