@@ -11,6 +11,7 @@
     }
     .table-container {
         margin-top: 20px;
+        display: none; /* Hide table initially */
     }
     .form-label {
         font-weight: bold;
@@ -34,7 +35,7 @@
             <input type="text" class="form-control" id="searchLabel" placeholder="Enter Label ID">
         </div>
         <div class="col-md-2 d-flex align-items-end">
-            <button class="btn btn-secondary w-100" id="searchLabelBtn">Search</button>
+            <button class="btn btn-primary w-100" id="searchLabelBtn">Search</button>
         </div>
     </div>
 
@@ -66,14 +67,38 @@
 // Array to store the searched labels for display in the table
 let searchedLabels = [];
 
-// Function to handle searching for labels
-document.getElementById('searchLabelBtn').addEventListener('click', function() {
-    const searchValue = document.getElementById('searchLabel').value.trim();
+// Get references to input and button elements
+const searchInput = document.getElementById('searchLabel');
+const searchButton = document.getElementById('searchLabelBtn');
+const tableContainer = document.querySelector('.table-container'); // Table container to control its display
+
+// Function to enforce only numbers in the search input field
+searchInput.addEventListener('input', function(event) {
+    // Remove any non-numeric characters from the input value
+    searchInput.value = searchInput.value.replace(/[^0-9]/g, '');
+    toggleSearchButton(); // Re-check button state
+});
+
+// Function to toggle the search button based on input validation
+function toggleSearchButton() {
+    const searchValue = searchInput.value.trim();
+    // Enable button only if searchValue is non-empty and contains only digits
+    searchButton.disabled = !(searchValue && /^[0-9]+$/.test(searchValue));
+}
+
+// Attach input event listener to search input field
+searchInput.addEventListener('input', toggleSearchButton);
+
+// Initial toggle check to disable the button on load
+toggleSearchButton();
+
+// Search button click event to fetch and search labels
+searchButton.addEventListener('click', function() {
+    const searchValue = searchInput.value.trim();
 
     // Clear search input
-    document.getElementById('searchLabel').value = '';
-
-    if (!searchValue) return;
+    searchInput.value = '';
+    toggleSearchButton(); // Disable the button again after clearing
 
     // Fetch and search label data from the JSON file
     fetch('/json/labelM.json')
@@ -85,6 +110,7 @@ document.getElementById('searchLabelBtn').addEventListener('click', function() {
                 // Add found label to the searchedLabels array
                 searchedLabels.push(label);
                 renderTable();
+                tableContainer.style.display = 'block'; // Show the table after successful search
             } else {
                 alert('Label ID not found');
             }
@@ -111,7 +137,5 @@ function renderTable() {
         tableBody.innerHTML += row;
     });
 }
-
-// Load any necessary initial data if needed here (optional)
 </script>
 @endsection
