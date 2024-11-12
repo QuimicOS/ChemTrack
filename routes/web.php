@@ -243,15 +243,39 @@ Route::middleware('auth')->group(function () {
 Route::get('/labels/last7days', [LabelController::class, 'countLabelsLast7Days']);
 Route::get('/labels/weight', [LabelController::class, 'calculateTotalWeight']); 
 Route::get('/labels/volume', [LabelController::class, 'calculateTotalVolume']); 
+////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
 
 Route::get('/users/new-members', [UserController::class, 'countNewMembersLast30Days']);
+// Route::get('/users', [UserController::class, 'getUserDetails']);
+////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+
+
+
+
+
+
+
+
+//For edit label
+Route::get('/labels/{id}', [LabelController::class, 'edit']); 
+Route::put('/updateLabel/{id}', [LabelController::class, 'update']);
 
 
 
 // Search Label
 Route::get('/getAdminLabels/{id}', action: [LabelController::class, 'show']);   // GET a label by ID
+
+
+Route::put('/invalid/{id}', action: [LabelController::class, 'invalidateLabel']); 
 
 
 require __DIR__.'/auth.php';

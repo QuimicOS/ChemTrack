@@ -30,13 +30,11 @@ class Label extends Model
     ];
 
 
-    // Custom method to fetch User by created_by (email)
-    public function getUser()
-    {
-        return User::where('email', $this->created_by)
-        ->where('department',$this->department)
-        ->first();
-    }
+     // Define the user relationship
+     public function user()
+     {
+         return $this->belongsTo(User::class, 'created_by', 'email');
+     }
 
 
 
@@ -56,12 +54,8 @@ class Label extends Model
 
 
     // Relationship with Chemicals (Many-to-Many)
-    public function chemicals()
-    {
-        return $this->belongsToMany(Chemical::class, 'label_chemical', 'label_id', 'chemical_id')
-                    ->withPivot('percentage'); // For storing the percentage in the pivot table
-    }
 
+    
   
 
 
