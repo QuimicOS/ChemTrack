@@ -18,9 +18,9 @@ class Chemical extends Model
     ];
 
     // INVERSE RELATIONSHIPS
-    public function pickupRequests()
+    public function user()
     {
-    return $this->hasMany(PickupRequest::class, 'chemical_id');
+    return $this->hasMany(User::class, 'user_id');
     }
 
     public function notification()
@@ -28,11 +28,9 @@ class Chemical extends Model
         return $this->belongsTo(Notification::class, 'chemical_id');
     }
 
-
-    public function labels(){
-        return $this->belongsToMany(Label::class, 'label_chemical', 'chemical_id', 'label_id')
-        ->withPivot('chemical_name', 'cas_number', 'percentage')
-        ->withTimestamps();
+    public function label()
+    {
+        return $this->belongsTo(Label::class, 'label_id');
     }
 
     

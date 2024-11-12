@@ -12,7 +12,7 @@ class PickupRequest extends Model
     protected $table = 'pickup';
 
     protected $fillable = [
-        'pickup_date',
+        'completion_date',
         'status_of_pickup',
         'timeframe',
         'completion_method'
@@ -22,16 +22,6 @@ class PickupRequest extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
-    }
-
-    public function chemical()
-    {
-        return $this->belongsTo(Chemical::class, 'chemical_id');
-    }
-
-    public function laboratory()
-    {
-        return $this->belongsTo(Laboratory::class, 'lab_id');
     }
 
     public function label()
