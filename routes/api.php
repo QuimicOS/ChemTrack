@@ -47,6 +47,7 @@ Route::put('/chemicalInvalidate', [ChemicalController::class, 'deleteChemical'])
 Route::put('/chemicalModify', [ChemicalController::class, 'editChemical']); 
 Route::get('/chemicalCreatedCount', [ChemicalController::class, 'chemicalsMadeThisMonth']); 
 Route::get('/chemicalCasNumber', [ChemicalController::class, 'getCasNumber']); 
+Route::get('/chemicalSearch', [ChemicalController::class, 'searchChemicalName']);
 // ------------------------------------------------------------------------------------------------------
 
 // -----------------------------------Notification Routes------------------------------------------------

@@ -78,24 +78,33 @@ class ChemicalController extends Controller
 // -------------------------------------------FRONTEND METHODS-------------------------------------------
 // ------------------------------------------------------------------------------------------------------ 
 
-    // CREATE A NEW CHEMICAL    
-    public function addChemical(Request $request) 
-    {
-        $validator = Validator::make($request->all(), [
-            'chemical_name' => 'required|string|max:255',
-            'cas_number' => 'required|string|max:255',
-        ]);
-    
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-    
-        $validatedData = $validator->validated();
-    
-        $chemical = Chemical::create(array_merge($validatedData, ['status_of_chemical' => '1']));
-    
-        return response()->json($chemical, 201);
-    }   
+// CREATE A NEW CHEMICAL    
+public function addChemical(Request $request) 
+{
+    $validator = Validator::make($request->all(), [
+        'chemical_name' => 'required|string|max:255',
+        'cas_number' => 'required|string|max:255',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
+
+    $validatedData = $validator->validated();
+
+    $existingChemical = Chemical::where('chemical_name', $validatedData['chemical_name'])
+        ->where('cas_number', $validatedData['cas_number'])
+        ->first();
+
+    if ($existingChemical) {
+        return response()->json(['message' => 'Chemical Already Exists.'], 409);
+    }
+
+    $chemical = Chemical::create(array_merge($validatedData, ['status_of_chemical' => '1']));
+
+    return response()->json($chemical, 201);
+}
+  
     
     // CHANGE STATUS TO "INVALID"
     public function deleteChemical(Request $request) 
@@ -142,6 +151,30 @@ class ChemicalController extends Controller
     
         return response()->json(['chemical' => $chemical], 200);
     }
+
+    // RETURNS ALL CHEMICALS WITH GIVEN NAME
+    public function searchChemicalName(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'chemical_name' => 'required|string|max:255',
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+    
+        $validatedData = $validator->validated();
+    
+        $chemicals = Chemical::where('chemical_name', $validatedData['chemical_name'])
+            ->where('status', 1) 
+            ->get(['chemical_name', 'cas_number']);
+    
+        if ($chemicals->isEmpty()) {
+            return response()->json(['message' => 'No active chemicals found with the specified name.'], 404);
+        }
+    
+        return response()->json($chemicals, 200);
+    }    
 
     //COUNTS ALL CHEMICALS MADE THIS Month
     public function chemicalsMadeThisMonth() 
