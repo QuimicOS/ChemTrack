@@ -9,15 +9,14 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
-        Schema::create('pickup', function (Blueprint $table) {
+        Schema::create('notification', function (Blueprint $table) {
             $table->id();
-            $table->date('request_date');
-            $table->date('pickup_date');
-            $table->string('status_of_pickup',255);
-            $table->string('timeframe',255);
-            $table->string('completion_method',255);
+            $table->string('send_to', 255);
+            $table->tinyInteger('notification_type');
+            $table->tinyInteger('status_of_notification')->default(1);
+            $table->string('message', 255);
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pickup');
+        Schema::dropIfExists('new_notification');
     }
 };
