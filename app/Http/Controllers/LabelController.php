@@ -90,25 +90,68 @@ public function show(Request $request, $id)
 
 
 
+//////////////////// EDIT LABEL FRONT END////////////////////////////////////
 
     /////////////////// a label by ID /////////////////////////////////////////
-    public function edit($id)
+    public function getLabelById($id)
     {
-        $label = Label::with(['user' => function($query) {
-                        $query->select('email');
-                    }, 'chemicals' => function($query) {
-                        $query->select('chemical_name', 'cas_number', 'percentage');
-                    }])
-                    ->where('label_id', $id)
-                    ->first(['label_id', 'units', 'quantity']);
+        // Retrieve the label by label_id
+        $label = Label::where('label_id', $id)->first();
     
+        // Check if the label exists
         if (!$label) {
             return response()->json(['error' => 'Label not found'], 404);
         }
     
+        // Return label data
         return response()->json($label, 200);
     }
     
+    
+    public function updateLabel(Request $request, $id)
+    {
+        // Retrieve the label by label_id
+        $label = Label::where('label_id', $id)->first();
+        
+        // Check if the label exists
+        if (!$label) {
+            return response()->json(['error' => 'Label not found'], 404);
+        }
+    
+        // Validate the request data
+        $request->validate(Label::$LabelPutRules);
+    
+        // Update label with validated data
+        $label->update($request->all());
+    
+        // Return a success message
+        return response()->json(['success' => 'Label updated successfully'], 200);
+    }
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     // //update a label if a specified user is attached to a specified lab

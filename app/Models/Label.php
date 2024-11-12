@@ -13,6 +13,21 @@ class Label extends Model
     use HasFactory;
     protected $table = 'label';
 
+
+
+
+
+
+    const STATUS_INVALID = 0;
+    const STATUS_PENDING = 1;
+    const STATUS_ACCEPTED = 2;
+
+    public static $statuses = [
+        self::STATUS_INVALID => 'INVALID',
+        self::STATUS_PENDING => 'Pending',
+        self::STATUS_ACCEPTED => 'Accepted'
+    ];
+
     // Fillable fields for mass assignment (adjusted to match your table columns)
     protected $fillable = [
         'label_id', 
@@ -25,9 +40,11 @@ class Label extends Model
         'principal_investigator', 
         'quantity', 
         'units', 
-        'status', 
+        'status_of_label', 
         'message'
     ];
+
+
 
 
      // Define the user relationship
@@ -53,7 +70,7 @@ class Label extends Model
 
 
 
-    // Relationship with Chemicals (Many-to-Many)
+    
 
     
   
@@ -71,14 +88,23 @@ class Label extends Model
         'solution_percentage' => 'required|numeric',
         'label_size' => 'required|string',
         'units' => 'required|string',
-        'status_of_label' => 'required|string',
+        'status_of_label' => 'required|integer|min:0|max:2',
         'message' => 'required|string',
     ];
 
     public static $LabelPutRules = [
 
-        'quantity' => 'required|numeric',
-        'units' => 'required|string',
+        'created_by' => 'required|email',
+        'department' => 'required|string|max:255',
+        'building' => 'required|string|max:255',
+        'room_number' => 'required|string|max:255',
+        'lab_name' => 'required|string|max:255',
+        'date_created' => 'required|date',
+        'principal_investigator' => 'required|string|max:255',
+        'quantity' => 'required|integer',
+        'units' => 'required|string|max:10',
+        'status_of_label' => 'required|string|max:50',
+        'message' => 'nullable|string|max:255'
 
     ];
 

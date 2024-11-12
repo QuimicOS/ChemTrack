@@ -3,6 +3,9 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Models\Label;
+
+
 
 return new class extends Migration
 {
@@ -29,7 +32,7 @@ return new class extends Migration
             $table->string('label_size',255); 
             $table->integer('quantity'); // Quantity of the substance
             $table->string('units'); // Units of measurement (e.g., L, mL)
-            $table->string('status_of_label');
+            $table->tinyInteger('status_of_label')->default(Label::STATUS_PENDING);
             $table->text('message')->nullable(); // Message field (optional)
             $table->timestamps();
             
