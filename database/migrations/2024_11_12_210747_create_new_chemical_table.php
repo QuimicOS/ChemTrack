@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('chemical', function (Blueprint $table) {
-            // Foreign key to 'users' table
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->foreign('user_id')
-                  ->references('id')->on('users')
-                  ->onDelete('set null'); // Set to null if user is deleted
+        Schema::create('chemical', function (Blueprint $table) {
+            $table->id();
+            $table->string('chemical_name', 255);
+            $table->string('cas_number', 255);
+            $table->tinyInteger('status_of_chemical')->default(1); 
+            $table->timestamps();
         });
     }
 
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('new_chemical');
     }
 };

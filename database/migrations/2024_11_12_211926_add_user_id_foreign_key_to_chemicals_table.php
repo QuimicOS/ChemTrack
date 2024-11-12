@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('notification', function (Blueprint $table) {
-            $table->string('notification_type',255);
+        Schema::table('chemical', function (Blueprint $table) {
+            $table->unsignedBigInteger('user_id');
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 
@@ -21,6 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notification');
+        Schema::table('chemicals', function (Blueprint $table) {
+            //
+        });
     }
 };

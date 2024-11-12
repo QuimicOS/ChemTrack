@@ -9,15 +9,14 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
         Schema::create('pickup', function (Blueprint $table) {
             $table->id();
-            $table->date('request_date');
-            $table->date('pickup_date');
-            $table->string('status_of_pickup',255);
-            $table->string('timeframe',255);
-            $table->string('completion_method',255);
+            $table->string('timeframe', 255);
+            $table->string('completion_method', 255)->nullable();
+            $table->date('completion_date')->nullable();
+            $table->tinyInteger('status_of_pickup')->default(2); 
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pickup');
+        Schema::dropIfExists('new_pickup');
     }
 };

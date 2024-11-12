@@ -78,32 +78,32 @@ class ChemicalController extends Controller
 // -------------------------------------------FRONTEND METHODS-------------------------------------------
 // ------------------------------------------------------------------------------------------------------ 
 
-// CREATE A NEW CHEMICAL    
-public function addChemical(Request $request) 
-{
-    $validator = Validator::make($request->all(), [
-        'chemical_name' => 'required|string|max:255',
-        'cas_number' => 'required|string|max:255',
-    ]);
+    // CREATE A NEW CHEMICAL    
+    public function addChemical(Request $request) 
+    {
+        $validator = Validator::make($request->all(), [
+            'chemical_name' => 'required|string|max:255',
+            'cas_number' => 'required|string|max:255',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $validatedData = $validator->validated();
+
+        $existingChemical = Chemical::where('chemical_name', $validatedData['chemical_name'])
+            ->where('cas_number', $validatedData['cas_number'])
+            ->first();
+
+        if ($existingChemical) {
+            return response()->json(['message' => 'Chemical Already Exists.'], 409);
+        }
+
+        $chemical = Chemical::create(array_merge($validatedData, ['status_of_chemical' => '1']));
+
+        return response()->json($chemical, 201);
     }
-
-    $validatedData = $validator->validated();
-
-    $existingChemical = Chemical::where('chemical_name', $validatedData['chemical_name'])
-        ->where('cas_number', $validatedData['cas_number'])
-        ->first();
-
-    if ($existingChemical) {
-        return response()->json(['message' => 'Chemical Already Exists.'], 409);
-    }
-
-    $chemical = Chemical::create(array_merge($validatedData, ['status_of_chemical' => '1']));
-
-    return response()->json($chemical, 201);
-}
   
     
     // CHANGE STATUS TO "INVALID"

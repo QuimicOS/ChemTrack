@@ -203,7 +203,7 @@ class PickupRequestController extends Controller
         if (isset($validatedData['status_of_pickup'])) {
             $query->where('status_of_pickup', $validatedData['status_of_pickup']);
         } else {
-            $query->orderByRaw("FIELD(status_of_pickup, 2, 1)"); 
+            $query->orderByRaw("FIELD(status_of_pickup, 3, 2, 1)"); 
         }
 
         if (!empty($validatedData['completion_method'])) {
@@ -224,7 +224,7 @@ class PickupRequestController extends Controller
             return [
                 'Pickup Request ID' => $pickup->id,
                 'Label ID' => $pickup->label_id,
-                'Requested By' => $pickup->label->user->email ?? 'N/A',
+                'Requested By' => $pickup->label->laboratory->professor_investigator ?? 'N/A',
                 'Request Date' => $pickup->created_at->format('Y-m-d'), 
                 'Chemicals' => $pickup->label->chemical->chemical_name ?? 'N/A',
                 'Building Name' => $pickup->label->laboratory->building_name ?? 'N/A',
@@ -243,7 +243,7 @@ class PickupRequestController extends Controller
                 'pickup_due' => $sixMonthsFromStart->format('M d, Y')
             ];
         })
-        ->sortBy('next_pickup_due')
+        ->sortBy('pickup_due')
         ->values();
 
         return response()->json([
