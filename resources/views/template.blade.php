@@ -190,7 +190,7 @@
             <a href="{{ url('aboutUs') }}" class="menu-button">
                 <div class="menu-item">About Us</div>
             </a>
-            <a href="{{ url('loginTemp') }}" class="btn btn-outline-light mt-4">Login</a>
+            <a href="{{ url('loginTemp') }}" class="btn btn-primary">Login</a>
         </div>
     </div>
 

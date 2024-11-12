@@ -370,69 +370,135 @@
         }
     }
     
-    // Generate PDF document
-    function generatePDF(labelData) {
-        const { jsPDF } = window.jspdf;
+// Generate PDF document
+function generatePDF(labelData) {
+    const { jsPDF } = window.jspdf;
 
-        let doc;
-        let width, height;
-        if (labelData.label_size === "Small") {
-            width = 25.4;
-            height = 25.4;
-            doc = new jsPDF({ unit: "mm", format: [width, height] });
-            doc.setFontSize(5);
-        } else if (labelData.label_size === "Medium") {
-            width = 76.2;
-            height = 50.8;
-            doc = new jsPDF({ unit: "mm", format: [width, height] });
-            doc.setFontSize(8);
-        } else if (labelData.label_size === "Large") {
-            width = 152.4;
-            height = 101.6;
-            doc = new jsPDF({ unit: "mm", format: [width, height] });
-            doc.setFontSize(10);
-        }
+    const pageWidth = 215.9;  // 8.5 inches in mm
+    const pageHeight = 279.4; // 11 inches in mm
+    let labelHeight, labelWidth, offsetX, offsetY, fontSize, lineSpacing, tableColumnSpacing, additionalSpacing;
 
-        // Center-aligned text for Label Information
-        const centerX = width / 2;
-        let y = 10;
-        doc.text("UNWANTED MATERIAL", centerX, 5, { align: "center" });
-        doc.text(`Label ID: ${labelData.label_id || 'N/A'}`, centerX, y, { align: "center" });
-        y += 4;
-        doc.text(`Date: ${labelData.date_created}`, centerX, y, { align: "center" });
-        y += 4;
-        doc.text(`Created by: ${labelData.created_by}`, centerX, y, { align: "center" });
-        y += 4;
-        doc.text(`Room #: ${labelData.room_number}`, centerX, y, { align: "center" });
+    // Initialize the PDF with A4 (8.5 x 11 inch) dimensions
+    let doc = new jsPDF({ unit: "mm", format: [pageWidth, pageHeight] });
 
-        // Generates table headers and layout
-        y += 6;
-        const tableWidth = 50;
-        const startX = centerX - tableWidth / 2;
-        const rowHeight = 4;
-        const colWidths = [20, 5, 20];
+    if (labelData.label_size === "Small") {
+        labelHeight = 25.4; // 1 inch (Height)
+        labelWidth = 25.4;  // 1 inch (Width)
+        offsetX = (pageWidth - labelWidth) / 2;  // Centering content horizontally
+        offsetY = (pageHeight - labelHeight) / 2;  // Centering content vertically
+        fontSize = 4;  // Smaller font size for small label
+        lineSpacing = 2.5; // Compact line spacing
+        tableColumnSpacing = { chemical: 2, cas: 12, percent: 20 };
+        additionalSpacing = 1; // Reduced space between text and table
 
-        doc.text("Chemical", startX + colWidths[0] / 2, y, { align: "center" });
-        doc.text("%", startX + colWidths[0] + colWidths[1] / 2, y, { align: "center" });
-        doc.text("CAS #", startX + colWidths[0] + colWidths[1] + colWidths[2] / 2, y, { align: "center" });
+    } else if (labelData.label_size === "Medium") {
+        labelHeight = 76.2; // 3 inches (Height)
+        labelWidth = 50.8;  // 2 inches (Width)
+        offsetX = (pageWidth - labelWidth) / 2;
+        offsetY = (pageHeight - labelHeight) / 2;
+        fontSize = 6; // Moderate font size
+        lineSpacing = 4.5;  // Medium line spacing
+        tableColumnSpacing = { chemical: 2, cas: 20, percent: 34 };
+        additionalSpacing = 2;
 
-        y += 2;
-        doc.line(startX, y, startX + tableWidth, y);
-        doc.line(startX, y, startX, y + rowHeight * 2);
-        doc.line(startX + colWidths[0], y, startX + colWidths[0], y + rowHeight * 2);
-        doc.line(startX + colWidths[0] + colWidths[1], y, startX + colWidths[0] + colWidths[1], y + rowHeight * 2);
-        doc.line(startX + tableWidth, y, startX + tableWidth, y + rowHeight * 2);
+    } else if (labelData.label_size === "Large") {
+        labelHeight = 152.4; // 6 inches (Height)
+        labelWidth = 101.6; // 4 inches (Width)
+        offsetX = (pageWidth - labelWidth) / 2;
+        offsetY = (pageHeight - labelHeight) / 2;
+        fontSize = 9; // Larger font size for readability
+        lineSpacing = 7.5;  // Generous line spacing for large label
+        tableColumnSpacing = { chemical: 5, cas: 50, percent: 80 };
+        additionalSpacing = 6; // Extra spacing for larger label
 
-        // Loops over chemicals to display data rows
-        labelData.chemicals.slice(0, 2).forEach((chemical, index) => {
-            y += rowHeight;
-            doc.text(chemical.chemical_name, startX + colWidths[0] / 2, y, { align: "center" });
-            doc.text(String(chemical.percentage), startX + colWidths[0] + colWidths[1] / 2, y, { align: "center" });
-            doc.text(chemical.cas_number, startX + colWidths[0] + colWidths[1] + colWidths[2] / 2, y, { align: "center" });
-            doc.line(startX, y + rowHeight, startX + tableWidth, y + rowHeight);
-        });
-
-        doc.save(`label_${labelData.label_id || 'N/A'}.pdf`);
     }
+
+    // Draw border around the label
+    doc.rect(offsetX, offsetY, labelWidth, labelHeight);
+
+    // Label Header
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(fontSize + 1);  // Slightly larger for the header
+    doc.text("UNWANTED MATERIAL", offsetX + labelWidth / 2, offsetY + fontSize + 2, { align: "center" });
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(fontSize);  // Set back to standard font size
+
+    // Main information with dynamic line spacing
+    let contentY = offsetY + fontSize + 5;
+    doc.text(`Label ID:`, offsetX + 4, contentY);
+    doc.setFont("Helvetica", "bold");
+    doc.text(labelData.label_id || 'N/A', offsetX + 25, contentY);
+    doc.setFont("Helvetica", "normal");
+
+    contentY += lineSpacing;
+    doc.text(`Date:`, offsetX + 4, contentY);
+    doc.setFont("Helvetica", "bold");
+    doc.text(labelData.date_created, offsetX + 25, contentY);
+    doc.setFont("Helvetica", "normal");
+
+    contentY += lineSpacing;
+    doc.text(`Created by:`, offsetX + 4, contentY);
+    doc.setFont("Helvetica", "bold");
+    doc.text(labelData.created_by, offsetX + 25, contentY);
+    doc.setFont("Helvetica", "normal");
+
+    contentY += lineSpacing;
+    doc.text(`Room #:`, offsetX + 4, contentY);
+    doc.setFont("Helvetica", "bold");
+    doc.text(labelData.room_number, offsetX + 25, contentY);
+    doc.setFont("Helvetica", "normal");
+
+    if (labelData.label_size !== "Small") {
+        contentY += lineSpacing;
+        doc.text(`Professor Investigator:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(labelData.principal_investigator, offsetX + 35, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Department:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(labelData.department, offsetX + 25, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Building:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(labelData.building, offsetX + 25, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Stored:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(`${labelData.stored} ${labelData.units}`, offsetX + 25, contentY);
+        doc.setFont("Helvetica", "normal");
+    }
+
+    // Space between text and table
+    contentY += lineSpacing + additionalSpacing;
+
+    // Chemical Table Header
+    doc.setFont("Helvetica", "bold");
+    doc.text("Chemical", offsetX + tableColumnSpacing.chemical, contentY);
+    doc.text("CAS #", offsetX + tableColumnSpacing.cas, contentY);
+    doc.text("%", offsetX + tableColumnSpacing.percent, contentY);
+    doc.setFont("Helvetica", "normal");
+
+    // Draw a line under the table header
+    contentY += 1;
+    doc.line(offsetX + 2, contentY, offsetX + labelWidth - 2, contentY);
+
+    // Chemical Table Content - Adjust for each size
+    labelData.chemicals.slice(0, labelData.label_size === "Small" ? 2 : labelData.label_size === "Medium" ? 5 : 8).forEach((chemical) => {
+        contentY += lineSpacing;
+        doc.text(chemical.chemical_name, offsetX + tableColumnSpacing.chemical, contentY);
+        doc.text(chemical.cas_number, offsetX + tableColumnSpacing.cas, contentY);
+        doc.text(String(chemical.percentage), offsetX + tableColumnSpacing.percent, contentY);
+    });
+
+    doc.save(`label_${labelData.label_id || 'N/A'}.pdf`);
+}
+
+
 </script>
 @endsection
