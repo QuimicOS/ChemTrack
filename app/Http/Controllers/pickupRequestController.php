@@ -177,80 +177,80 @@ class PickupRequestController extends Controller
         ], 200);
     }
 
-// Searches Pickup Requests by Laboratory, Status, and Completion Method    
-public function searchPickupRequests(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'building_name' => 'nullable|string', 
-        'status_of_pickup' => 'nullable|integer|in:0,1,2,3',
-        'completion_method' => 'nullable|string|in:Clean Out,Regular'
-    ]);
+    // Searches Pickup Requests by Laboratory, Status, and Completion Method    
+    public function searchPickupRequests(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'building_name' => 'nullable|string', 
+            'status_of_pickup' => 'nullable|integer|in:0,1,2,3',
+            'completion_method' => 'nullable|string|in:Clean Out,Regular'
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $validatedData = $validator->validated();
+
+        $query = PickupRequest::where('status_of_pickup', '!=', 0); 
+
+        if (!empty($validatedData['building_name'])) {
+            $query->whereHas('label.laboratory', function ($query) use ($validatedData) {
+                $query->where('building_name', $validatedData['building_name']);
+            });
+        }
+
+        if (isset($validatedData['status_of_pickup'])) {
+            $query->where('status_of_pickup', $validatedData['status_of_pickup']);
+        } else {
+            $query->orderByRaw("FIELD(status_of_pickup, 2, 1)"); 
+        }
+
+        if (!empty($validatedData['completion_method'])) {
+            $query->where('completion_method', $validatedData['completion_method']);
+        }
+
+        $pickupRequests = $query->with(['label.laboratory', 'label.chemical', 'label.user'])->get();
+
+        if ($pickupRequests->isEmpty()) {
+            return response()->json(['message' => 'No pickup requests found for the specified criteria.'], 404);
+        }
+
+        $totalCount = $pickupRequests->count();
+
+        $formattedPickupRequests = $pickupRequests->map(function ($pickup) {
+            $sixMonthsFromStart = Carbon::parse($pickup->label->accumulation_start_date)->addMonths(6);
+            
+            return [
+                'Pickup Request ID' => $pickup->id,
+                'Label ID' => $pickup->label_id,
+                'Requested By' => $pickup->label->user->email ?? 'N/A',
+                'Request Date' => $pickup->created_at->format('Y-m-d'), 
+                'Chemicals' => $pickup->label->chemical->chemical_name ?? 'N/A',
+                'Building Name' => $pickup->label->laboratory->building_name ?? 'N/A',
+                'Room Number' => $pickup->label->laboratory->room_number ?? 'N/A',
+                'Quantity' => $pickup->label->quantity . ' ' . $pickup->label->units,
+                'Container Size' => $pickup->label->container_size,
+                'Timeframe' => $pickup->timeframe,
+                'Status' => match($pickup->status_of_pickup) {
+                    0 => 'Invalid',
+                    1 => 'Completed',
+                    2 => 'Pending',
+                    3 => 'Overdue',
+                    default => 'Unknown'
+                },
+                'Completion Method' => $pickup->completion_method ?? 'N/A',
+                'pickup_due' => $sixMonthsFromStart->format('M d, Y')
+            ];
+        })
+        ->sortBy('next_pickup_due')
+        ->values();
+
+        return response()->json([
+            'total_reports' => $totalCount,
+            'pickup_requests' => $formattedPickupRequests
+        ], 200);
     }
-
-    $validatedData = $validator->validated();
-
-    $query = PickupRequest::where('status_of_pickup', '!=', 0); 
-
-    if (!empty($validatedData['building_name'])) {
-        $query->whereHas('label.laboratory', function ($query) use ($validatedData) {
-            $query->where('building_name', $validatedData['building_name']);
-        });
-    }
-
-    if (isset($validatedData['status_of_pickup'])) {
-        $query->where('status_of_pickup', $validatedData['status_of_pickup']);
-    } else {
-        $query->orderByRaw("FIELD(status_of_pickup, 2, 1)"); 
-    }
-
-    if (!empty($validatedData['completion_method'])) {
-        $query->where('completion_method', $validatedData['completion_method']);
-    }
-
-    $pickupRequests = $query->with(['label.laboratory', 'label.chemical', 'label.user'])->get();
-
-    if ($pickupRequests->isEmpty()) {
-        return response()->json(['message' => 'No pickup requests found for the specified criteria.'], 404);
-    }
-
-    $totalCount = $pickupRequests->count();
-
-    $formattedPickupRequests = $pickupRequests->map(function ($pickup) {
-        $sixMonthsFromStart = Carbon::parse($pickup->label->accumulation_start_date)->addMonths(6);
-        
-        return [
-            'Pickup Request ID' => $pickup->id,
-            'Label ID' => $pickup->label_id,
-            'Requested By' => $pickup->label->user->email ?? 'N/A',
-            'Request Date' => $pickup->created_at->format('Y-m-d'), 
-            'Chemicals' => $pickup->label->chemical->chemical_name ?? 'N/A',
-            'Building Name' => $pickup->label->laboratory->building_name ?? 'N/A',
-            'Room Number' => $pickup->label->laboratory->room_number ?? 'N/A',
-            'Quantity' => $pickup->label->quantity . ' ' . $pickup->label->units,
-            'Container Size' => $pickup->label->container_size,
-            'Timeframe' => $pickup->timeframe,
-            'Status' => match($pickup->status_of_pickup) {
-                0 => 'Invalid',
-                1 => 'Completed',
-                2 => 'Pending',
-                3 => 'Overdue',
-                default => 'Unknown'
-            },
-            'Completion Method' => $pickup->completion_method ?? 'N/A',
-            'pickup_due' => $sixMonthsFromStart->format('M d, Y')
-        ];
-    })
-    ->sortBy('next_pickup_due')
-    ->values();
-
-    return response()->json([
-        'total_reports' => $totalCount,
-        'pickup_requests' => $formattedPickupRequests
-    ], 200);
-}
 
     
     // COUNT PICKUP REQUESTS WITH PENDING STATUS
@@ -301,36 +301,36 @@ public function searchPickupRequests(Request $request)
         return response()->json($data, 200);
     }
 
-// RETURNS PICKUP REQUEST STATUS
-public function getPickupStatus(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'pickup_id' => 'required|integer|exists:pickup,id', 
-    ]);
+    // RETURNS PICKUP REQUEST STATUS
+    public function getPickupStatus(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'pickup_id' => 'required|integer|exists:pickup,id', 
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $validatedData = $validator->validated();
+
+        $pickupRequest = PickupRequest::find($validatedData['pickup_id']);
+
+        if (!$pickupRequest) {
+            return response()->json(['message' => 'Pickup request not found'], 404);
+        }
+
+        $statusNames = [
+            0 => 'Invalid',
+            1 => 'Completed',
+            2 => 'Pending',
+            3 => 'Overdue'
+        ];
+
+        $statusName = $statusNames[$pickupRequest->status_of_pickup] ?? 'Unknown';
+
+        return response()->json(['status' => $statusName], 200);
     }
-
-    $validatedData = $validator->validated();
-
-    $pickupRequest = PickupRequest::find($validatedData['pickup_id']);
-
-    if (!$pickupRequest) {
-        return response()->json(['message' => 'Pickup request not found'], 404);
-    }
-
-    $statusNames = [
-        0 => 'Invalid',
-        1 => 'Completed',
-        2 => 'Pending',
-        3 => 'Overdue'
-    ];
-
-    $statusName = $statusNames[$pickupRequest->status_of_pickup] ?? 'Unknown';
-
-    return response()->json(['status' => $statusName], 200);
-}
 
   
 }
