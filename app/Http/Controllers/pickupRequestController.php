@@ -8,7 +8,7 @@ use App\Models\Label;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
-class PickupRequestController extends Controller
+class pickupRequestController extends Controller
 {
 
 // ------------------------------------------------------------------------------------------------------
