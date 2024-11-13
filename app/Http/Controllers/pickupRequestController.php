@@ -35,7 +35,7 @@ class pickupRequestController extends Controller
     public function create(Request $request) //POST
     {
         $validatedData = $request->validate([
-            'pickup_date' => 'required|date',
+            'completion_date' => 'required|date',
             'status_of_pickup' => 'required|integer|in:0,1,2,3',
             'timeframe' => 'required|string|max:255',
             'completion_method' => 'required|string|max:255'
@@ -56,7 +56,7 @@ class pickupRequestController extends Controller
         }
     
         $validatedData = $request->validate([
-            'pickup_date' => 'required|date',
+            'completion_date' => 'required|date',
             'status_of_pickup' => 'required|integer|in:0,1,2,3', 
             'timeframe' => 'required|string|max:255',
             'completion_method' => 'required|string|max:255',
@@ -111,7 +111,7 @@ class pickupRequestController extends Controller
             $validatedData,
             [
                 'status_of_pickup' => 2, 
-                'pickup_date' => null,
+                'completion_date' => null,
                 'completion_method' => null,
             ]
         ));
@@ -162,7 +162,7 @@ class pickupRequestController extends Controller
         }
 
         $pickupRequest->status_of_pickup = 1;
-        $pickupRequest->pickup_date = now(); 
+        $pickupRequest->completion_date = now(); 
         $pickupRequest->completion_method = $validatedData['completion_method'];
         $pickupRequest->save();
     
@@ -294,7 +294,7 @@ class pickupRequestController extends Controller
             'Room Number' => $pickupRequest->laboratory ? $pickupRequest->laboratory->room_number : null,
             'Container Size' => $pickupRequest->label ? $pickupRequest->label->container_size : null,
             'Request Date' => $pickupRequest->request_date,
-            'Pickup Date' => $pickupRequest->pickup_date,
+            'Pickup Date' => $pickupRequest->completion_date,
             'Status' => $pickupRequest->status_of_pickup,
         ];
     
