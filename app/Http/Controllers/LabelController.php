@@ -93,20 +93,6 @@ public function show(Request $request, $id)
 //////////////////// EDIT LABEL FRONT END////////////////////////////////////
 
     /////////////////// a label by ID /////////////////////////////////////////
-    public function getLabelById($id)
-    {
-        // Retrieve the label by label_id
-        $label = Label::where('label_id', $id)->first();
-    
-        // Check if the label exists
-        if (!$label) {
-            return response()->json(['error' => 'Label not found'], 404);
-        }
-    
-        // Return label data
-        return response()->json($label, 200);
-    }
-    
     
     public function updateLabel(Request $request, $id)
     {
@@ -138,6 +124,35 @@ public function show(Request $request, $id)
 
 
 
+
+    //////////////////// Search LABEL FRONT END////////////////////////////////////
+
+    /////////////////// a label by ID /////////////////////////////////////////
+    public function searchLabelById($id)
+    {
+        // Retrieve the label by label_id
+        $label = DB::table('label')
+            ->where('label_id', $id)
+            ->first();
+    
+        // Check if the label exists
+        if (!$label) {
+            return response()->json(['error' => 'Label not found'], 404);
+        }
+    
+        // Retrieve related contents for the label
+        $contents = DB::table(table: 'contents')
+            ->where('label_id', $id)
+            ->select('chemical_name', 'cas_number', 'percentage')
+            ->get();
+    
+        // Combine label data with contents
+        $labelData = (array) $label;
+        $labelData['contents'] = $contents;
+    
+        // Return label data with contents
+        return response()->json($labelData, 200);
+    }
 
 
 
@@ -186,7 +201,7 @@ public function show(Request $request, $id)
 
 
 
-//// FOR EDITLABEL
+//// ////////////////////////////////////FOR EDITLABEL
     public function update(Request $request, $id)
     {
         // Validate input data
@@ -233,6 +248,7 @@ public function show(Request $request, $id)
 
 
 
+/////////////////////////////////////// CREATE LABEL//////////////////////////////////////////////////////
 
 
 
@@ -255,11 +271,6 @@ public function show(Request $request, $id)
     }
 
 
-
-
-
-
-
     //change the label TO PENDING
     public function updateLabelStatusPending($id){
         $label = Label::find($id);
@@ -272,19 +283,6 @@ public function show(Request $request, $id)
 
 
     }
-
-
-
-
-
-
-
-
-
-
-
-
-    
 
     //change the label TO COMPLETED
     public function updateLabelStatusCompleted($id){
@@ -316,29 +314,30 @@ public function show(Request $request, $id)
 
 
     // change status to invalid, need to add the message to explain why the invalidation
-    public function invalidateLabel(Request $request, $id){
-        //ask the user message
+    public function invalidateLabel(Request $request, $id)
+    {
+        // Validate the provided message
         $request->validate([
             'message' => 'required|string|max:255'
         ]);
-
-
-        $label = Label::where('label_id',$id)->first();
-        if (!$label) {
-            return response()->json(['error' => 'Label not found'], 404);
-        }
-
-        $label->update([
-            'status_of_label' => 'INVALID',
+    
+        $updatedRows = DB::table('label')
+        ->where('label_id', $id)
+        ->update([
+            'status_of_label' => 0, // Assuming 0 is the STATUS_INVALID
             'message' => $request->message
-        
         ]);
+
+    if ($updatedRows) {
         return response()->json([
             'success' => 'Label updated successfully to Invalid',
             'message' => $request->message
-        ]);
-
+        ], 200);
+    } else {
+        return response()->json(['error' => 'Failed to update label or label not found'], 500);
     }
+    }
+    
 
 
 
@@ -567,38 +566,28 @@ public function calculateTotalVolume()
  
 
 ////////////////////UNWANTED MATERIAL SUMMARY////////////////////////////// NO QUIERO SABER DE ELLA, pregunbtarle a victor
-public function unwantedMaterialSummary(Request $request)
-{
-    // Validate the request to ensure correct data types
-    $request->validate([
-        'start_date' => 'nullable|date',
-        'end_date' => 'nullable|date',
-        'chemical_name' => 'nullable|string',
-    ]);
+    public function unwantedMaterialSummary(Request $request)
+    {
+        $query = Label::query();
 
-    // Start building the query
-    $query = DB::table('label')
-                ->join('chemicals', 'label.chemical_id', '=', 'chemicals.id')
-                ->select('chemicals.chemical_name','label.units', DB::raw('SUM(label.quantity) as total_quantity'))
-                ->groupBy('chemicals.chemical_name,label.units')
-                ->orderBy('chemicals.chemical_name', 'asc');
+        // Filter by date range if provided
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('date_created', [$request->start_date, $request->end_date]);
+        }
 
-    // Apply date range filter using 'created_at' if provided
-    if ($request->start_date && $request->end_date) {
-        $query->whereBetween('label.created_at', [$request->start_date, $request->end_date]);
+        // Filter by chemical name if provided
+        if ($request->filled('chemical_name')) {
+            $query->where('chemical_name', $request->chemical_name);
+        }
+
+        // Group by chemical_name and calculate sum of quantity
+        $results = $query->select('chemical_name', DB::raw('SUM(quantity) as total_quantity'))
+                        ->groupBy('chemical_name')
+                        ->get();
+
+        return response()->json($results, 200);
     }
 
-    // Apply chemical name filter if provided
-    if ($request->chemical_name) {
-        $query->where('chemicals.chemical_name', 'like', '%' . $request->chemical_name . '%');
-    }
-
-    // Execute the query and get the summary
-    $summary = $query->get();
-
-    // Return the summary as a JSON response
-    return response()->json($summary);
-}
 
 
 

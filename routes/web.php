@@ -4,6 +4,8 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LabelController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AuthController;
+
 
 
 Route::get('/', function () {
@@ -11,13 +13,13 @@ Route::get('/', function () {
 });
 
 /// LOGIN ENDPOINT
-// Route::get('/saml/login', function () {
-//     // Redirect to the actual Sign-On URL provided by  IdP
-//     return redirect('http://chemtrack.test/saml2/4fb05276-8140-4bab-a71f-4c1fcf859686/login'); // Replace with the actual URL
-// })->name('saml.login');
+Route::get('/saml/login', function () {
+    // Redirect to the actual Sign-On URL provided by  IdP
+    return redirect('http://chemtrack.test/saml2/4fb05276-8140-4bab-a71f-4c1fcf859686/login'); // Replace with the actual URL
+})->name('saml.login');
 
 
-
+// web.php
 
 
 
@@ -265,15 +267,37 @@ Route::get('/users/new-members', [UserController::class, 'countNewMembersLast30D
 
 
 
-//For edit label
-Route::get('/labels/{id}', [LabelController::class, 'edit']); 
-Route::put('/updateLabel/{id}', [LabelController::class, 'update']);
+//For EDIT LABEL
+Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
+Route::put('/labels/{id}', [LabelController::class, 'updateLabel']);
 
 
 
-// Search Label
-Route::get('/getAdminLabels/{id}', action: [LabelController::class, 'show']);   // GET a label by ID
 
+
+
+//search label
+Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//For INVALIDATE LABEL
 
 Route::put('/invalid/{id}', action: [LabelController::class, 'invalidateLabel']); 
 

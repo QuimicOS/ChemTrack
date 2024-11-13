@@ -20,12 +20,12 @@ class Label extends Model
 
     const STATUS_INVALID = 0;
     const STATUS_PENDING = 1;
-    const STATUS_ACCEPTED = 2;
+    const STATUS_COMPLETED = 2;
 
     public static $statuses = [
         self::STATUS_INVALID => 'INVALID',
         self::STATUS_PENDING => 'Pending',
-        self::STATUS_ACCEPTED => 'Accepted'
+        self::STATUS_COMPLETED => 'Completed'
     ];
 
     // Fillable fields for mass assignment (adjusted to match your table columns)
@@ -37,6 +37,7 @@ class Label extends Model
         'room_number', 
         'lab_name', 
         'date_created', 
+        'container_size',
         'principal_investigator', 
         'quantity', 
         'units', 
@@ -81,15 +82,19 @@ class Label extends Model
     ];
 
     public static $LabelPostRules = [
-        'chemical_name' => 'required|string|max:255',
-        'accumulation_start_date' => 'required|date',
-        'container_size' => 'required|numeric',
-        'quantity' => 'required|numeric',
-        'solution_percentage' => 'required|numeric',
-        'label_size' => 'required|string',
-        'units' => 'required|string',
-        'status_of_label' => 'required|integer|min:0|max:2',
-        'message' => 'required|string',
+        'created_by' => 'required|email',
+        'department' => 'required|string|max:255',
+        'building' => 'required|string|max:255',
+        'room_number' => 'required|string|max:255',
+        'lab_name' => 'required|string|max:255',
+        'date_created' => 'required|date',
+        'principal_investigator' => 'required|string|max:255',
+        'container_size' => 'required|integer',
+        'label_size' => 'required|string|max:255',
+        'quantity' => 'required|integer',
+        'units' => 'required|string|max:10',
+        'status_of_label' => 'required|integer|max:50',
+        'message' => 'nullable|string|max:255'
     ];
 
     public static $LabelPutRules = [
