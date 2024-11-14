@@ -1,7 +1,7 @@
 @extends('admin.templateAdmin')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
 @section('title', 'Edit Label - ChemTrack')
-
 @section('content')
 <style>
     .content-area {
@@ -147,81 +147,89 @@
 @section('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 <script>
-    // Initialize variable to store the row to be removed and label data
-    let rowToRemove;
-    let labelData = {};  // Store the fetched label data here
-
+    // Initialize variables for form sections and label data
+    let labelData = {};  // Stores the fetched label data
+    const crsfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     // Hide form sections initially
     document.querySelector('.form-section').style.display = 'none';
     document.querySelector('.table-section').style.display = 'none';
     document.querySelector('.submit-section').style.display = 'none';
-    document.getElementById('units').addEventListener('change', checkFormValidity);
-    document.getElementById('labelSize').addEventListener('change', checkFormValidity);
 
-    // Fetch and populate the form from JSON
-    function loadLabelData(labelId) {
-        fetch(`/json/labelData${labelId}.json`)
-            .then(response => response.json())
-            .then(data => {
-                labelData = data; // Store fetched data
-                document.getElementById('labelID').value = data.label_id;
-                document.getElementById('editedBy').value = data.edited_by;
-                document.getElementById('stored').value = data.stored_quantity;
-                document.getElementById('units').value = data.units;
+ // Fetch and populate form with label data
+function loadLabelData(labelId) {
+    // Fetch label data from backend
+    fetch(`/label/${labelId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error); // Display error if label not found
+                return;
+            }
 
-                // Clear existing table rows
-                const tableBody = document.getElementById('chemicalTable').getElementsByTagName('tbody')[0];
-                tableBody.innerHTML = '';
+            labelData = data; // Store fetched data
+            document.getElementById('labelID').value = data.label_id;
+            document.getElementById('editedBy').value = data.created_by;
+            document.getElementById('stored').value = data.quantity;
+            document.getElementById('units').value = data.units;
+            document.getElementById('labelSize').value = data.label_size;
 
-                // Populate chemical data rows
-                data.chemicals.forEach(chemical => {
+            // Clear existing table rows and populate with chemicals if available
+            const tableBody = document.getElementById('chemicalTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = ''; // Clear previous rows
+            if (data.contents && data.contents.length > 0) {
+                data.contents.forEach(content => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td><input type="text" class="form-control chemical-name" value="${chemical.chemical_name}" /></td>
-                        <td><input type="text" class="form-control cas-number" value="${chemical.cas_number}" /></td>
-                        <td><input type="text" class="form-control percentage" value="${chemical.percentage}" oninput="validatePercentageInput(this)" /></td>
+                        <td><input type="text" class="form-control chemical-name" value="${content.chemical_name}" /></td>
+                        <td><input type="text" class="form-control cas-number" value="${content.cas_number}" /></td>
+                        <td><input type="text" class="form-control percentage" value="${content.percentage}" oninput="validatePercentageInput(this)" /></td>
                         <td><button class="btn btn-danger removeRow" data-bs-toggle="modal" data-bs-target="#removeModal" onclick="setRemoveModal(this)">Remove</button></td>
                     `;
                     tableBody.appendChild(row);
                 });
+            } else {
+                alert('No chemicals found for this label.'); // Alert if no chemicals are present
+            }
 
-                // Show form sections after populating
-                document.querySelector('.form-section').style.display = 'block';
-                document.querySelector('.table-section').style.display = 'block';
-                document.querySelector('.submit-section').style.display = 'block';
+            // Show form sections after data is populated
+            document.querySelector('.form-section').style.display = 'block';
+            document.querySelector('.table-section').style.display = 'block';
+            document.querySelector('.submit-section').style.display = 'block';
 
-                checkFormValidity(); // Validate form after loading data
-            })
-            .catch(error => {
-                alert('Label ID not found'); // Alert if label data not found
-            });
-    }
+            checkFormValidity(); // Validate form after loading data
+        })
+        .catch(error => {
+            alert('Error fetching label data');
+            console.error(error);
+        });
+}
 
-    // Validate stored quantity (numeric only)
-    function validateStoredInput() {
-        const storedInput = document.getElementById("stored");
-        const errorMessage = document.getElementById("storedError");
-        const isValid = /^\d*\.?\d*$/.test(storedInput.value); // Test for numeric values
-
-        errorMessage.style.display = isValid ? "none" : "block";
-        checkFormValidity();
-    }
 
     // Enable/disable search button based on Label ID input
     document.getElementById('labelID').addEventListener('input', function () {
         const labelID = document.getElementById('labelID').value;
-        const isNumeric = /^\d+$/.test(labelID); // Check if input is numeric
+        const isNumeric = /^\d+$/.test(labelID);
         document.getElementById('searchButton').disabled = !isNumeric;
-        document.getElementById('labelID').classList.toggle('is-invalid', !isNumeric); // Toggle invalid class
+        document.getElementById('labelID').classList.toggle('is-invalid', !isNumeric);
     });
 
     // Search label data when clicking the search button
     document.getElementById('searchButton').addEventListener('click', function () {
         const labelID = document.getElementById('labelID').value;
-        loadLabelData(labelID); // Call function to load data
+        loadLabelData(labelID); // Load data for editing
     });
 
-    // Validate that the percentage field is numeric only
+    // Validate stored quantity (numeric only)
+    function validateStoredInput() {
+        const storedInput = document.getElementById("stored");
+        const errorMessage = document.getElementById("storedError");
+        const isValid = /^\d*\.?\d*$/.test(storedInput.value);
+
+        errorMessage.style.display = isValid ? "none" : "block";
+        checkFormValidity();
+    }
+
+    // Validate percentage input (numeric only)
     function validatePercentageInput(input) {
         input.classList.toggle('is-invalid', !/^\d*\.?\d*$/.test(input.value));
         checkFormValidity();
@@ -235,23 +243,63 @@
         const labelSize = document.getElementById('labelSize').value;
         let allRowsValid = true;
 
-        // Validate each row
         chemicalRows.forEach(row => {
             const chemicalName = row.querySelector('.chemical-name').value.trim();
             const casNumber = row.querySelector('.cas-number').value.trim();
             const percentage = row.querySelector('.percentage').value.trim();
             const isValidPercentage = /^\d*\.?\d*$/.test(percentage);
 
-            // Set validity flag if any row is invalid
             if (!chemicalName || !casNumber || !isValidPercentage) {
                 allRowsValid = false;
             }
         });
 
-        // Enable/disable update button based on overall form validity
         const updateButton = document.getElementById('updateLabel');
         updateButton.disabled = !stored || !/^\d*\.?\d*$/.test(stored) || units === "Select units" || labelSize === "Select label size" || !allRowsValid;
     }
+
+    // Update label data when clicking the Update button
+    document.getElementById('updateLabel').addEventListener('click', function () {
+        const labelID = document.getElementById('labelID').value;
+        const updatedData = {
+            quantity: document.getElementById('stored').value,
+            units: document.getElementById('units').value,
+            label_size: document.getElementById('labelSize').value,
+            chemicals: Array.from(document.querySelectorAll('#chemicalTable tbody tr')).map(row => ({
+                chemical_name: row.querySelector('.chemical-name').value,
+                cas_number: row.querySelector('.cas-number').value,
+                percentage: row.querySelector('.percentage').value
+            }))
+        };
+
+        // Send updated data to backend
+        fetch(`/editLabel/${labelID}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': crsfToken
+
+            },
+            body: JSON.stringify(updatedData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to update label: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('Label updated successfully!');
+            } else {
+                alert(data.error || 'Failed to update label');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating label:', error);
+            alert('Error updating label');
+        });
+    });
 
     // Add row functionality for chemicals
     document.getElementById('addRow').addEventListener('click', function () {
@@ -267,69 +315,6 @@
         checkFormValidity();
     });
 
-    // Prepare JSON and PDF download after updating label
-    document.getElementById('updateLabel').addEventListener('click', function () {
-        // Collect updated data
-        alert('Label updated Sucessfully');
-        labelData.stored_quantity = document.getElementById('stored').value;
-        labelData.units = document.getElementById('units').value;
-        labelData.label_size = document.getElementById('labelSize').value;
-        labelData.chemicals = [];
-
-        // Collect updated chemical data from table
-        document.querySelectorAll('#chemicalTable tbody tr').forEach(row => {
-            const chemicalName = row.querySelector('.chemical-name').value;
-            const casNumber = row.querySelector('.cas-number').value;
-            const percentage = row.querySelector('.percentage').value;
-
-            labelData.chemicals.push({
-                chemical_name: chemicalName,
-                cas_number: casNumber,
-                percentage: percentage
-            });
-        });
-
-        // Generate and download JSON file
-        const jsonData = JSON.stringify(labelData, null, 2);
-        const blob = new Blob([jsonData], { type: 'application/json' });
-        const jsonLink = document.createElement('a');
-        jsonLink.href = URL.createObjectURL(blob);
-        jsonLink.download = `updatedLabel_${labelData.label_id}.json`;
-        jsonLink.click();
-
-        // Generate PDF
-        generatePDF(labelData);
-    });
-
-    // Generate PDF function
-    function generatePDF(data) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        // Add label information and table headers
-        doc.text(`Label ID: ${data.label_id}`, 10, 10);
-        doc.text(`Stored Quantity: ${data.stored_quantity}`, 10, 20);
-        doc.text(`Units: ${data.units}`, 10, 30);
-        doc.text(`Label Size: ${data.label_size}`, 10, 40);
-
-        // Chemical table headers
-        let y = 50;
-        doc.text("Chemical Name", 10, y);
-        doc.text("CAS Number", 60, y);
-        doc.text("Percentage", 110, y);
-        y += 10;
-
-        // Add each chemical row
-        data.chemicals.forEach(chemical => {
-            doc.text(chemical.chemical_name, 10, y);
-            doc.text(chemical.cas_number, 60, y);
-            doc.text(chemical.percentage, 110, y);
-            y += 10;
-        });
-
-        doc.save(`label_${data.label_id}.pdf`); // Save PDF with label ID
-    }
-
     // Set modal with row info and assign the row to be removed
     function setRemoveModal(button) {
         const row = button.closest('tr');
@@ -337,7 +322,6 @@
         const casNumber = row.querySelector('.cas-number').value;
         const percentage = row.querySelector('.percentage').value;
 
-        // Populate modal with row data
         document.getElementById('modalChemicalName').textContent = chemicalName;
         document.getElementById('modalCASNumber').textContent = casNumber;
         document.getElementById('modalPercentage').textContent = percentage;
@@ -347,26 +331,13 @@
     // Confirm removal of row on modal confirmation
     document.getElementById('confirmRemove').addEventListener('click', function () {
         if (rowToRemove) {
-            rowToRemove.remove(); // Remove row from table
+            rowToRemove.remove();
             rowToRemove = null;
             const modal = bootstrap.Modal.getInstance(document.getElementById('removeModal'));
-            modal.hide(); // Close modal
+            modal.hide();
             checkFormValidity();
         }
     });
-
-    // Restrict Label ID input to numbers only
-    document.getElementById('labelID').addEventListener('input', function (e) {
-        // Only allow numeric characters
-        this.value = this.value.replace(/\D/g, '');
-        checkSearchButtonState();
-    });
-
-    function checkSearchButtonState() {
-        const labelID = document.getElementById('labelID').value;
-        const isNumeric = /^\d+$/.test(labelID); // Check if input is numeric
-        document.getElementById('searchButton').disabled = !isNumeric;
-        document.getElementById('labelID').classList.toggle('is-invalid', !isNumeric); // Toggle invalid class
-    }
 </script>
+
 @endsection

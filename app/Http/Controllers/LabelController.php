@@ -93,26 +93,47 @@ public function show(Request $request, $id)
 //////////////////// EDIT LABEL FRONT END////////////////////////////////////
 
     /////////////////// a label by ID /////////////////////////////////////////
-    
     public function updateLabel(Request $request, $id)
-    {
-        // Retrieve the label by label_id
-        $label = Label::where('label_id', $id)->first();
-        
-        // Check if the label exists
-        if (!$label) {
-            return response()->json(['error' => 'Label not found'], 404);
-        }
+{
+    // Retrieve the label by label_id
+    $label = Label::where('label_id', $id)->first();
     
-        // Validate the request data
-        $request->validate(Label::$LabelPutRules);
-    
-        // Update label with validated data
-        $label->update($request->all());
-    
-        // Return a success message
-        return response()->json(['success' => 'Label updated successfully'], 200);
+    // Check if the label exists
+    if (!$label) {
+        return response()->json(['error' => 'Label not found'], 404);
     }
+
+    // Validate the request data, including contents
+    $request->validate([
+        ...Label::$LabelPutRules,
+        'chemicals' => 'required|array', // Ensure chemicals array is provided
+        'chemicals.*.chemical_name' => 'required|string',
+        'chemicals.*.cas_number' => 'required|string',
+        'chemicals.*.percentage' => 'required|numeric|min:0|max:100'
+    ]);
+
+    // Update label with validated data
+    $label->update($request->all());
+
+    // Clear previous contents for this label
+    DB::table('contents')->where('label_id', $id)->delete();
+
+    // Insert updated chemicals into contents table
+    $chemicals = $request->input('chemicals');
+    foreach ($chemicals as $chemical) {
+        DB::table('contents')->insert([
+            'label_id' => $id,
+            'chemical_name' => $chemical['chemical_name'],
+            'cas_number' => $chemical['cas_number'],
+            'percentage' => $chemical['percentage'],
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+    }
+
+    // Return a success message
+    return response()->json(['success' => 'Label and contents updated successfully'], 200);
+}
     
 
 
@@ -168,77 +189,6 @@ public function show(Request $request, $id)
 
 
 
-
-    // //update a label if a specified user is attached to a specified lab
-    // public function update(Request $request, $id)
-    // {
-    //     // Find the label by its ID
-    //     $label = Label::find($id);
-    //     if (!$label) {
-    //         return response()->json(['error' => 'Label not found'], 404);
-    //     }
-    
-    //     // Get the authenticated user and their associated lab
-    //     $user = Auth::user();
-    //     $userLabId = $user->lab_id; // Assuming `laboratories_id` is the column linking user to their lab
-    
-    //     // Check if the label's lab matches the user's lab
-    //     if ($label->lab_id !== $userLabId) { 
-    //         return response()->json(['error' => 'Unauthorized: You do not have permission to edit this label'], 403);
-    //     }
-    
-    //     // Validate input and update the label (add your validation rules as needed)
-    //     $request->validate(Label::$LabelPutRules);
-    
-    //     $label->update($request->all());
-    
-    //     return response()->json([
-    //         'message' => 'Label updated successfully',
-    //         'label' => $label
-    //     ], 200);
-    // }
-
-
-
-
-//// ////////////////////////////////////FOR EDITLABEL
-    public function update(Request $request, $id)
-    {
-        // Validate input data
-        $validatedData = $request->validate([
-            'units' => 'required|string|max:10',
-            'quantity' => 'required|integer|min:0',
-            'chemicals' => 'required|array',
-            'chemicals.*.chemical_id' => 'required|integer|exists:chemicals,id',
-            'chemicals.*.chemical_name' => 'required|string|max:255',
-            'chemicals.*.cas_number' => 'required|string|max:50',
-            'chemicals.*.percentage' => 'required|integer|min:0|max:100'
-        ]);
-    
-        // Find the label by ID
-        $label = Label::find($id);
-        if (!$label) {
-            return response()->json(['error' => 'Label not found'], 404);
-        }
-    
-        // Update label's units and quantity
-        $label->update([
-            'units' => $validatedData['units'],
-            'quantity' => $validatedData['quantity']
-        ]);
-    
-        // Update chemicals associated with the label
-        $label->chemicals()->detach(); // Remove existing chemicals
-        foreach ($validatedData['chemicals'] as $chemicalData) {
-            $label->chemicals()->attach($chemicalData['chemical_id'], [
-                'chemical_name' => $chemicalData['chemical_name'],
-                'cas_number' => $chemicalData['cas_number'],
-                'percentage' => $chemicalData['percentage']
-            ]);
-        }
-    
-        return response()->json(['success' => 'Label updated successfully'], 200);
-    }
     
 
 
@@ -312,7 +262,7 @@ public function show(Request $request, $id)
 
 
 
-
+///////////////////// INVALID A LABEL??????????????????????????????
     // change status to invalid, need to add the message to explain why the invalidation
     public function invalidateLabel(Request $request, $id)
     {
@@ -566,27 +516,34 @@ public function calculateTotalVolume()
  
 
 ////////////////////UNWANTED MATERIAL SUMMARY////////////////////////////// NO QUIERO SABER DE ELLA, pregunbtarle a victor
-    public function unwantedMaterialSummary(Request $request)
-    {
-        $query = Label::query();
 
-        // Filter by date range if provided
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('date_created', [$request->start_date, $request->end_date]);
+
+public function unwantedMaterialSummary(Request $request)
+{
+    try {
+        // Check if a chemical name is provided
+        if (!$request->filled('chemical_name')) {
+            return response()->json(['error' => 'Chemical name is required'], 400);
         }
 
-        // Filter by chemical name if provided
-        if ($request->filled('chemical_name')) {
-            $query->where('chemical_name', $request->chemical_name);
-        }
+        $chemicalName = $request->chemical_name;
 
-        // Group by chemical_name and calculate sum of quantity
-        $results = $query->select('chemical_name', DB::raw('SUM(quantity) as total_quantity'))
-                        ->groupBy('chemical_name')
-                        ->get();
+        // Base query on the Label model and join with the contents table
+        $results = Label::join('contents', 'labels.label_id', '=', 'contents.label_id')
+            ->where('contents.chemical_name', $chemicalName) // Filter by chemical name
+            ->select('contents.chemical_name', DB::raw('SUM(labels.quantity) as total_quantity'))
+            ->groupBy('contents.chemical_name')
+            ->get();
 
         return response()->json($results, 200);
+
+    } catch (\Exception $e) {
+        // Log any errors for debugging
+        \Log::error("Unwanted Material Summary Error: " . $e->getMessage());
+        return response()->json(['error' => 'Internal Server Error'], 500);
     }
+}
+
 
 
 

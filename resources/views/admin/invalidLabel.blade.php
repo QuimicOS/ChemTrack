@@ -144,36 +144,45 @@
     }
 
     // Invalidate label and download JSON with invalidation info
-    function invalidateLabel() {
-        const labelID = document.getElementById('labelID').value;
-        
-        // Create JSON data
-        const jsonData = JSON.stringify({
-            label_id: labelID,
-            label_status: "INVALID",
-            message: "Label has been invalidated due to " + document.getElementById('reason').value
-        });
+// Invalidate label and send PUT request to backend
+function invalidateLabel() {
+    const labelID = document.getElementById('labelID').value;
+    const reason = document.getElementById('reason').value;
 
-        // Create a Blob from the JSON data and download it
-        const blob = new Blob([jsonData], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `invalidate_label_${labelID}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+    // Create the JSON data to send
+    const jsonData = {
+        message: reason
+    };
 
-        // Display success message
-        alert('Label has been successfully invalidated!');
+    // Send PUT request to backend
+    fetch(`/invalid/${labelID}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': `Bearer ${localStorage.getItem('token')}` // Include token if using token authentication
+        },
+        body: JSON.stringify(jsonData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Label has been successfully invalidated!');
 
-        // Close the modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('invalidateModal'));
-        modal.hide();
+            // Close modal and reset form
+            const modal = bootstrap.Modal.getInstance(document.getElementById('invalidateModal'));
+            modal.hide();
+            document.getElementById('labelID').value = '';
+            document.getElementById('reason').value = '';
+            validateForm(); // Disable button after reset
+        } else {
+            alert(data.error || 'An error occurred while invalidating the label.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while invalidating the label.');
+    });
+}
 
-        // Clear the form fields
-        document.getElementById('labelID').value = '';
-        document.getElementById('reason').value = '';
-        validateForm();  // Recheck form validity to disable the Invalidate button
-    }
 </script>
 @endsection

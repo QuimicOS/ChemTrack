@@ -15,7 +15,7 @@ Route::get('/', function () {
 /// LOGIN ENDPOINT
 Route::get('/saml/login', function () {
     // Redirect to the actual Sign-On URL provided by  IdP
-    return redirect('http://chemtrack.test/saml2/4fb05276-8140-4bab-a71f-4c1fcf859686/login'); // Replace with the actual URL
+    return redirect('http://chemtrack.test/saml2/de46364b-e680-400d-97f6-e7416066552b/login'); // Replace with the actual URL
 })->name('saml.login');
 
 
@@ -269,7 +269,8 @@ Route::get('/users/new-members', [UserController::class, 'countNewMembersLast30D
 
 //For EDIT LABEL
 Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
-Route::put('/labels/{id}', [LabelController::class, 'updateLabel']);
+
+Route::post('/editLabel/{id}', [LabelController::class, 'updateLabel'])->withoutMiddleware('auth');
 
 
 
@@ -289,6 +290,8 @@ Route::get('/label/{id}', [LabelController::class, 'searchLabelById']);
 
 
 
+//Summary
+Route::get('/unwanted-material-summary', [LabelController::class, 'unwantedMaterialSummary']);
 
 
 

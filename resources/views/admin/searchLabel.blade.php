@@ -162,84 +162,104 @@
     </table>
   </div>
 
-  <script>
-    // Only allow numeric input in Label ID field
-    document.getElementById('labelID').addEventListener('keydown', function (event) {
-      const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"];
-      const isNumeric = /^[0-9]$/.test(event.key);
+<script>
+  // Only allow numeric input in Label ID field
+  document.getElementById('labelID').addEventListener('keydown', function (event) {
+    const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"];
+    const isNumeric = /^[0-9]$/.test(event.key);
 
-      if (!isNumeric && !allowedKeys.includes(event.key)) {
-        event.preventDefault();
-      }
-    });
-
-    // Enable or disable the search button based on Label ID input
-    document.getElementById('labelID').addEventListener('input', function () {
-      const labelID = document.getElementById('labelID').value;
-
-      // Check if the input is numeric only
-      const isNumeric = /^\d+$/.test(labelID);
-      
-      // Disable search button if the input is empty or contains non-numeric characters
-      document.getElementById('searchButton').disabled = !isNumeric;
-
-      // Toggle invalid class based on input validity
-      if (!isNumeric) {
-        document.getElementById('labelID').classList.add('is-invalid');
-      } else {
-        document.getElementById('labelID').classList.remove('is-invalid');
-      }
-    });
-
-    // Handle search button click to load and display label data
-    document.getElementById('searchButton').addEventListener('click', function () {
-      const labelID = document.getElementById('labelID').value;
-
-
-      fetch(`/api/getAdminLabels/${labelID}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Label not found');
-            }
-            return response.json(); // Ensure the response is parsed as JSON
-        })
-        .then(data => {
-          // Populate form fields with the data from JSON
-          document.getElementById('createdBy').value = data.created_by;
-          document.getElementById('department').value = data.department;
-          document.getElementById('building').value = data.building;
-          document.getElementById('roomNumber').value = data.room_number;
-          document.getElementById('labName').value = data.lab_name;
-          document.getElementById('dateCreated').value = data.date_created;
-          document.getElementById('principalInvestigator').value = data.principal_investigator;
-          document.getElementById('quantity').value = data.quantity + " " + data.units;
-          document.getElementById('status').value = data.status;
-          document.getElementById('message').value = data.message;
-
-            // Show the form and table sections
-            document.querySelector('.form-section').style.display = 'block';
-            document.querySelector('.table-container').style.display = 'block';
-
-            // Clear the table first
-            const tableBody = document.querySelector('tbody');
-            tableBody.innerHTML = '';
-
-          // Populate the table with chemicals from JSON data
-          data.chemicals.forEach(chemical => {
-            const row = `
-              <tr>
-                <td>${chemical.chemical_name}</td>
-                <td>${chemical.cas_number}</td>
-                <td>${chemical.percentage}%</td>
-              </tr>
-            `;
-            tableBody.innerHTML += row;
-          });
-        })
-        .catch(error => {
-            console.error('Error fetching label:', error);
-            alert('Label not found or an error occurred.');
-    });
+    if (!isNumeric && !allowedKeys.includes(event.key)) {
+      event.preventDefault();
+    }
   });
-  </script>
+
+  // Enable or disable the search button based on Label ID input
+  document.getElementById('labelID').addEventListener('input', function () {
+    const labelID = document.getElementById('labelID').value;
+
+    // Check if the input is numeric only
+    const isNumeric = /^\d+$/.test(labelID);
+    
+    // Disable search button if the input is empty or contains non-numeric characters
+    document.getElementById('searchButton').disabled = !isNumeric;
+
+    // Toggle invalid class based on input validity
+    if (!isNumeric) {
+      document.getElementById('labelID').classList.add('is-invalid');
+    } else {
+      document.getElementById('labelID').classList.remove('is-invalid');
+    }
+  });
+
+  // Handle search button click to load and display label data
+  document.getElementById('searchButton').addEventListener('click', function () {
+    const labelID = document.getElementById('labelID').value;
+
+    fetch(`/label/${labelID}`)
+      .then(response => {
+          if (!response.ok) {
+              throw new Error('Label not found');
+          }
+          return response.json(); // Ensure the response is parsed as JSON
+      })
+      .then(data => {
+        // Populate form fields with the data from JSON
+        document.getElementById('createdBy').value = data.created_by;
+        document.getElementById('department').value = data.department;
+        document.getElementById('building').value = data.building;
+        document.getElementById('roomNumber').value = data.room_number;
+        document.getElementById('labName').value = data.lab_name;
+        document.getElementById('dateCreated').value = data.date_created;
+        document.getElementById('principalInvestigator').value = data.principal_investigator;
+        document.getElementById('quantity').value = data.quantity + " " + data.units;
+        document.getElementById('status').value = getStatusText(data.status_of_label);
+        document.getElementById('containerCapacity').value = data.container_size; 
+        document.getElementById('message').value = data.message;
+
+        // Show the form and table sections
+        document.querySelector('.form-section').style.display = 'block';
+        document.querySelector('.table-container').style.display = 'block';
+
+        // Clear the table first
+        const tableBody = document.querySelector('tbody');
+        tableBody.innerHTML = '';
+
+        // Populate the table with chemicals from JSON data
+        if (data.contents && data.contents.length > 0) {
+            data.contents.forEach(content => {
+              const row = `
+                <tr>
+                  <td>${content.chemical_name}</td>
+                  <td>${content.cas_number}</td>
+                  <td>${content.percentage}%</td>
+                </tr>
+              `;
+              tableBody.innerHTML += row;
+            });
+        } else {
+          alert('No chemicals found for this label.');
+        }
+        
+      })
+      .catch(error => {
+          console.error('Error fetching label:', error);
+          alert('Label not found or an error occurred.');
+      });
+  });
+
+  function getStatusText(status_of_label) {
+    switch (status_of_label) {
+      case 0:
+        return 'Invalid';
+      case 1:
+        return 'Pending';
+      case 2:
+        return 'Completed';
+      default:
+        return 'Unknown';
+    }
+  }
+</script>
+
+
 @endsection
