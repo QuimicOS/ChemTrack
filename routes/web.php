@@ -4,22 +4,13 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LabelController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LaboratoryController;
 
 
 
 Route::get('/', function () {
     return view('home');
 });
-
-/// LOGIN ENDPOINT
-Route::get('/saml/login', function () {
-    // Redirect to the actual Sign-On URL provided by  IdP
-    return redirect('http://chemtrack.test/saml2/de46364b-e680-400d-97f6-e7416066552b/login'); // Replace with the actual URL
-})->name('saml.login');
-
-
-// web.php
 
 
 
@@ -297,12 +288,47 @@ Route::get('/unwanted-material-summary', [LabelController::class, 'unwantedMater
 
 
 
+//Memorandum
+Route::get('/unwanted-material-memorandum', [LabelController::class, 'memorandum']);
 
 
 
 //For INVALIDATE LABEL
 
 Route::put('/invalid/{id}', action: [LabelController::class, 'invalidateLabel']); 
+
+
+
+
+
+
+
+
+
+
+
+use Illuminate\Http\Request;
+
+
+Route::get('auth/saml2/arrival', function () {
+    $user = Auth::user();
+    // dd($user);
+    if (!$user) {
+        return redirect()->route('/');
+    }
+
+    switch ($user->role) {
+        case 'Administrator':
+            return redirect()->route('admin.homeAdmin');
+        case 'Professor':
+            return redirect()->route('professor.homeProfessor');
+        case 'Staff':
+            return redirect()->route('staff.homeStaff');
+        default:
+            return redirect()->route('aboutUs');
+    }
+    // return view('welcome');
+})->middleware(['auth']);
 
 
 require __DIR__.'/auth.php';
