@@ -62,30 +62,30 @@ class LabelController extends Controller
 
 
     //this will return only the labels created by the user logged in
-public function show(Request $request, $id)
-{
-    // Check if the user is authenticated
-    $user = Auth::user();
-    if (!$user) {
-        return response()->json(['error' => 'Unauthorized'], 401);
-    }
+// public function show(Request $request, $id)
+// {
+//     // Check if the user is authenticated
+//     $user = Auth::user();
+//     if (!$user) {
+//         return response()->json(['error' => 'Unauthorized'], 401);
+//     }
 
-    // Get the authenticated admin's email
-    $adminEmail = $user->email;
+//     // Get the authenticated admin's email
+//     $adminEmail = $user->email;
 
-    // Find the label by ID where 'created_by' is the authenticated admin's email
-    $label = Label::with(['laboratory', 'chemicals'])
-                  ->where('label_id', $id)
-                  ->where('created_by', $adminEmail) // assuming 'created_by' column stores the admin's email
-                  ->first();
+//     // Find the label by ID where 'created_by' is the authenticated admin's email
+//     $label = Label::with(['laboratory', 'chemicals'])
+//                   ->where('label_id', $id)
+//                   ->where('created_by', $adminEmail) // assuming 'created_by' column stores the admin's email
+//                   ->first();
 
-    // Check if the label exists and is created by this admin
-    if (!$label) {
-        return response()->json(['error' => 'Label not found or access denied'], 404);
-    }
+//     // Check if the label exists and is created by this admin
+//     if (!$label) {
+//         return response()->json(['error' => 'Label not found or access denied'], 404);
+//     }
 
-    return response()->json($label, 200);
-}
+//     return response()->json($label, 200);
+// }
 
 
 
@@ -448,7 +448,7 @@ public function calculateTotalWeight()
     $thirtyDaysAgo = Carbon::now()->subDays(30);
 
     // Get all labels created in the last 30 days
-    $labels = Label::where('created_at', '>=', $thirtyDaysAgo)->get();
+    $labels = Label::where(DB::raw('date(label.date_created / 1000, "unixepoch")'), '>=', $thirtyDaysAgo)->get();
 
     // Initialize variable for total solid weight
     $totalSolidWeight = 0;
@@ -476,7 +476,7 @@ public function calculateTotalVolume()
     $thirtyDaysAgo = Carbon::now()->subDays(30);
 
     // Get all labels created in the last 30 days
-    $labels = Label::where('created_at', '>=', $thirtyDaysAgo)->get();
+    $labels = Label::where(DB::raw('date(label.date_created / 1000, "unixepoch")'), '>=', $thirtyDaysAgo)->get();
 
     // Initialize variable for total liquid volume
     $totalLiquidVolume = 0;
@@ -515,30 +515,41 @@ public function calculateTotalVolume()
 
  
 
-////////////////////UNWANTED MATERIAL SUMMARY////////////////////////////// NO QUIERO SABER DE ELLA, pregunbtarle a victor
+////////////////////UNWANTED MATERIAL SUMMARY////////////////////////////// 
 
+
+//WORKS
 
 public function unwantedMaterialSummary(Request $request)
 {
     try {
-        // Check if a chemical name is provided
-        if (!$request->filled('chemical_name')) {
-            return response()->json(['error' => 'Chemical name is required'], 400);
+        $query = DB::table('label')
+            ->join('contents', 'label.label_id', '=', 'contents.label_id')
+            ->select(
+                'contents.chemical_name',
+                'label.units',
+                DB::raw('SUM(label.quantity * (contents.percentage / 100)) AS total_contributed_quantity'),
+                DB::raw('date(label.date_created / 1000, "unixepoch") AS readable_date')
+
+            );
+
+        // Filter by date range if provided
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween(DB::raw('date(label.date_created / 1000, "unixepoch")'), [$request->start_date, $request->end_date]);
         }
 
-        $chemicalName = $request->chemical_name;
+        // Filter by chemical name if provided
+        if ($request->filled('chemical_name')) {
+            $query->where('contents.chemical_name', $request->chemical_name);
+        }
 
-        // Base query on the Label model and join with the contents table
-        $results = Label::join('contents', 'labels.label_id', '=', 'contents.label_id')
-            ->where('contents.chemical_name', $chemicalName) // Filter by chemical name
-            ->select('contents.chemical_name', DB::raw('SUM(labels.quantity) as total_quantity'))
-            ->groupBy('contents.chemical_name')
-            ->get();
+        $query->groupBy('contents.chemical_name', 'label.units', 'readable_date');
+
+        $results = $query->get();
 
         return response()->json($results, 200);
 
     } catch (\Exception $e) {
-        // Log any errors for debugging
         \Log::error("Unwanted Material Summary Error: " . $e->getMessage());
         return response()->json(['error' => 'Internal Server Error'], 500);
     }
@@ -559,7 +570,7 @@ public function unwantedMaterialSummary(Request $request)
         $today = now();
 
         // Count the labels created in the last 7 days
-        $labelCount = Label::whereBetween('created_at', [$sevenDaysAgo,$today])->count();
+        $labelCount = Label::whereBetween(DB::raw('date(label.date_created / 1000, "unixepoch")'), [$sevenDaysAgo,$today])->count();
 
         // Return the count in a JSON response
         return response()->json(['label_count' => $labelCount],200);
@@ -622,37 +633,34 @@ public function getLabInfoByRoomNumber($roomNumber)
 
 
 //////////////////////////////// MEMORANDUM/////////////////////////////////
-    public function memorandum(Request $request)
-    {
-        $validatedData = $request->validate([
-            'id' => 'nullable|integer', // Optional search by label ID
-            'chemical_name' => 'nullable|string|max:255', // Optional search by chemical name
-            'container_size' => 'nullable|numeric', // Optional search by container size (capacity)
-        ]);
+public function memorandum(Request $request)
+{
+    // Validate the input data
+    $validatedData = $request->validate([
+        'label_id' => 'required|integer', // Mandatory search by label ID
+    ]);
 
-        $query = Label::query();
+    // Fetch the label along with related contents
+    $results = Label::query()
+        ->select('label.label_id', 'label.container_size', 'contents.chemical_name', 'contents.percentage')
+        ->join('contents', 'label.label_id', '=', 'contents.label_id')
+        ->where('label.label_id', $validatedData['label_id']) // Filter by label ID
+        ->get();
 
-        // Filter by ID if provided
-        if ($request->filled('id')) {
-            $query->where('id', $validatedData['id']);
-        }
+    // Return the search results in JSON format
+    return response()->json($results, 200);
+}
 
-        // Filter by chemical name if provided
-        if ($request->filled('chemical_name')) {
-            $query->where('chemical_name', 'like', '%' . $validatedData['chemical_name'] . '%');
-        }
 
-        // Filter by container size (capacity) if provided
-        if ($request->filled('container_size')) {
-            $query->where('container_size', $validatedData['container_size']);
-        }
 
-        // Execute the query and get the results
-        $label = $query->get();
 
-        // Return the search results in JSON format
-        return response()->json($label);
-    }
+
+
+
+
+
+
+
 
 
     //// get the label close to the 6 month mark
@@ -663,7 +671,7 @@ public function getLabInfoByRoomNumber($roomNumber)
         $fiveAndHalfMonthsAgo = Carbon::now()->subMonths(5)->subDays(15);
 
         // Query labels where accumulation_date is between 5 and 5.5 months ago
-        $labels = Label::whereBetween('accumulation_start_date', [$fiveAndHalfMonthsAgo, $fiveMonthsAgo])->get();
+        $labels = Label::whereBetween(DB::raw('date(label.date_created / 1000, "unixepoch")'), [$fiveAndHalfMonthsAgo, $fiveMonthsAgo])->get();
 
         // Return the result
         return response()->json([
