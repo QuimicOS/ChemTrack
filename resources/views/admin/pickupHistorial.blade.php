@@ -1,5 +1,6 @@
 @extends('admin.templateAdmin')
 
+<meta name="csrf-token" content="{{ csrf_token() }}">
 @section('title', 'Pickup Historial - ChemTrack')
 
 @section('content')
@@ -71,10 +72,12 @@
             <label for="statusFilter" class="form-label">Filter by Status:</label>
             <select id="statusFilter" class="form-select">
                 <option value="all">All</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+                <option value="Invalid">Invalid</option>
             </select>
         </div>
+        
 
         <div class="filter-dropdown">
             <label for="typeFilter" class="form-label">Filter by Type:</label>
@@ -112,173 +115,26 @@
                     <th scope="col">Timeframe</th>
                     <th scope="col">Status</th>
                     <th scope="col">Completion Method</th>
+                    <th scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Sample Data Rows without 'Invalid' Status -->
-                <tr data-status="completed" data-type="regular" data-building="Luchetti" data-room="L-203">
-                    <td>00084194</td>
-                    <td>0000953</td>
-                    <td>maria.gomez@upr.edu</td>
-                    <td>2024-10-01</td>
-                    <td>Acetone</td>
-                    <td>Luchetti</td>
-                    <td>L-203</td>
-                    <td>6 Gallons</td>
-                    <td>10 Liters</td>
-                    <td>Monday, 9:00 AM - 12:00 PM</td>
-                    <td>Completed</td>
-                    <td>Regular</td>
-                </tr>
-                <tr data-status="active" data-type="regular" data-building="Johnson" data-room="J-202">
-                    <td>00084196</td>
-                    <td>0000955</td>
-                    <td>ramirez.ana@upr.edu</td>
-                    <td>2024-10-03</td>
-                    <td>Ethyl Alcohol</td>
-                    <td>Johnson</td>
-                    <td>J-202</td>
-                    <td>15 Gallons</td>
-                    <td>20 Liters</td>
-                    <td>Wednesday, 11:00 AM - 2:00 PM</td>
-                    <td>Active</td>
-                    <td>
-                        <div class="d-flex justify-content-between gap-2">
-                            <button class="btn btn-primary" onclick="completePickup('regular', this)">Regular</button>
-                            <button class="btn btn-secondary" onclick="completePickup('cleanout', this)">Clean Out</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr data-status="completed" data-type="cleanout" data-building="Figueroa" data-room="F-101">
-                    <td>00084195</td>
-                    <td>0000954</td>
-                    <td>juan.pablo@upr.edu</td>
-                    <td>2024-10-02</td>
-                    <td>Sodium Hydroxide</td>
-                    <td>Figueroa</td>
-                    <td>F-101</td>
-                    <td>10 Liters</td>
-                    <td>15 Liters</td>
-                    <td>Tuesday, 10:00 AM - 1:00 PM</td>
-                    <td>Completed</td>
-                    <td>Clean Out</td>
-                </tr>
-                <tr data-status="active" data-type="cleanout" data-building="Ramirez" data-room="R-303">
-                    <td>00084197</td>
-                    <td>0000956</td>
-                    <td>john.doe@upr.edu</td>
-                    <td>2024-10-04</td>
-                    <td>Methanol</td>
-                    <td>Ramirez</td>
-                    <td>R-303</td>
-                    <td>8 Gallons</td>
-                    <td>25 Liters</td>
-                    <td>Friday, 8:00 AM - 12:00 PM</td>
-                    <td>Active</td>
-                    <td>
-                        <div class="d-flex justify-content-between gap-2">
-                            <button class="btn btn-primary" onclick="completePickup('regular', this)">Regular</button>
-                            <button class="btn btn-secondary" onclick="completePickup('cleanout', this)">Clean Out</button>
-                        </div>
-                    </td>
-                </tr>
-                <!-- Additional Rows -->
-                <tr data-status="completed" data-type="cleanout" data-building="Franklin" data-room="F-201">
-                    <td>00084199</td>
-                    <td>0000958</td>
-                    <td>peter.parker@upr.edu</td>
-                    <td>2024-10-06</td>
-                    <td>Formaldehyde</td>
-                    <td>Franklin</td>
-                    <td>F-201</td>
-                    <td>5 Gallons</td>
-                    <td>10 Gallons</td>
-                    <td>Tuesday, 1:00 PM - 3:00 PM</td>
-                    <td>Completed</td>
-                    <td>Clean Out</td>
-                </tr>
-                <tr data-status="active" data-type="regular" data-building="Blake" data-room="B-103">
-                    <td>00084200</td>
-                    <td>0000959</td>
-                    <td>lucas.miller@upr.edu</td>
-                    <td>2024-10-07</td>
-                    <td>Acetic Acid</td>
-                    <td>Blake</td>
-                    <td>B-103</td>
-                    <td>20 Liters</td>
-                    <td>50 Liters</td>
-                    <td>Wednesday, 10:00 AM - 1:00 PM</td>
-                    <td>Active</td>
-                    <td>
-                        <div class="d-flex justify-content-between gap-2">
-                            <button class="btn btn-primary" onclick="completePickup('regular', this)">Regular</button>
-                            <button class="btn btn-secondary" onclick="completePickup('cleanout', this)">Clean Out</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr data-status="completed" data-type="cleanout" data-building="Gray" data-room="G-303">
-                    <td>00084202</td>
-                    <td>0000961</td>
-                    <td>mark.taylor@upr.edu</td>
-                    <td>2024-10-09</td>
-                    <td>Chlorine</td>
-                    <td>Gray</td>
-                    <td>G-303</td>
-                    <td>10 Gallons</td>
-                    <td>20 Gallons</td>
-                    <td>Friday, 12:00 PM - 2:00 PM</td>
-                    <td>Completed</td>
-                    <td>Clean Out</td>
-                </tr>
-                <tr data-status="active" data-type="regular" data-building="Newton" data-room="N-101">
-                    <td>00084203</td>
-                    <td>0000962</td>
-                    <td>emily.woods@upr.edu</td>
-                    <td>2024-10-10</td>
-                    <td>Ammonia</td>
-                    <td>Newton</td>
-                    <td>N-101</td>
-                    <td>5 Gallons</td>
-                    <td>10 Gallons</td>
-                    <td>Saturday, 3:00 PM - 6:00 PM</td>
-                    <td>Active</td>
-                    <td>
-                        <div class="d-flex justify-content-between gap-2">
-                            <button class="btn btn-primary" onclick="completePickup('regular', this)">Regular</button>
-                            <button class="btn btn-secondary" onclick="completePickup('cleanout', this)">Clean Out</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr data-status="completed" data-type="regular" data-building="Tesla" data-room="T-302">
-                    <td>00084204</td>
-                    <td>0000963</td>
-                    <td>albert.einstein@upr.edu</td>
-                    <td>2024-10-11</td>
-                    <td>Sulfuric Acid</td>
-                    <td>Tesla</td>
-                    <td>T-302</td>
-                    <td>8 Gallons</td>
-                    <td>15 Gallons</td>
-                    <td>Monday, 9:00 AM - 12:00 PM</td>
-                    <td>Completed</td>
-                    <td>Regular</td>
-                </tr>
-                <!-- Additional rows can be added here if needed -->
+                <!-- Data populated via JavaScript -->
             </tbody>
         </table>
     </div>
 </div>
 
-<!-- Confirmation Modal -->
-<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+<!-- Modal for Completion Confirmation -->
+<div class="modal fade" id="completionModal" tabindex="-1" aria-labelledby="completionModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="confirmationModalLabel">Confirm Completion</h5>
+                <h5 class="modal-title" id="completionModalLabel">Mark Pickup as Completed</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Are you sure you want to mark this pickup as completed?
+                <p>Are you sure you want to mark this pickup as completed?</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -287,6 +143,7 @@
         </div>
     </div>
 </div>
+
 @endsection
 
 @section('scripts')
@@ -296,53 +153,114 @@
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 
 <script>
-    $(document).ready(function() {
-        // Initialize DataTable with custom settings
-        const table = $('#pickupTable').DataTable({
-            "pageLength": 10,
-            "order": [[3, "asc"]],
-            "dom": 'tip', // Hide default search bar, keep pagination
-        });
-
-        // Custom search for Building and Room Number
-        $('#buildingSearch').on('input', function() {
-            table.column(5).search(this.value).draw();
-        });
-
-        $('#roomSearch').on('input', function() {
-            table.column(6).search(this.value).draw();
-        });
-
-        // Custom filter for Status and Type dropdowns
-        $('#statusFilter').on('change', function() {
-            const status = $(this).val();
-            table.column(10).search(status === 'all' ? '' : status).draw();
-        });
-
-        $('#typeFilter').on('change', function() {
-            const type = $(this).val();
-            table.column(11).search(type === 'all' ? '' : type).draw();
-        });
+$(document).ready(function() {
+    // Initialize DataTable and store it in a global variable for reuse
+    window.table = $('#pickupTable').DataTable({
+        "pageLength": 10,
+        "order": [[3, "asc"]],
+        "dom": 'tip'  // Hide default search bar, keep pagination
     });
 
-    let selectedRow = null;
+    // Custom search for Building and Room Number
+    $('#buildingSearch').on('input', function() {
+        window.table.column(5).search(this.value).draw();
+    });
 
-    function completePickup(method, button) {
-        selectedRow = button.closest('tr');
-        $('#confirmationModal').modal('show');
-        $('#confirmCompletionButton').data('method', method);
-    }
+    $('#roomSearch').on('input', function() {
+        window.table.column(6).search(this.value).draw();
+    });
 
-    $('#confirmCompletionButton').on('click', function() {
-        const method = $(this).data('method');
-        if (selectedRow) {
-            $(selectedRow).find('td').eq(10).text('Completed'); // Update status
-            $(selectedRow).find('td').eq(11).text(method.charAt(0).toUpperCase() + method.slice(1)); // Update method
+    // Custom filter for Status dropdown
+    $('#statusFilter').on('change', function() {
+        const status = $(this).val();
+        window.table.column(10).search(status === 'all' ? '' : status).draw();
+    });
 
-            selectedRow.setAttribute('data-status', 'completed');
-            $('#pickupTable').DataTable().draw();
+    // Custom filter for Type (Completion Method) dropdown
+    $('#typeFilter').on('change', function() {
+        const type = $(this).val();
+        window.table.column(11).search(type === 'all' ? '' : type === 'regular' ? 'Regular' : 'Clean Out').draw();
+    });
+
+
+    // Fetch and populate data initially
+    fetchPickupRequests();
+});
+
+function fetchPickupRequests() {
+    fetch('/pickupSearch')
+        .then(response => response.json())
+        .then(data => {
+            populateTable(data.pickup_requests);
+        })
+        .catch(error => {
+            console.error('Error fetching pickup requests:', error);
+            alert('Failed to load pickup requests.');
+        });
+}
+
+function populateTable(data) {
+    // Clear existing data in the table
+    window.table.clear();
+
+    // Populate table with new data
+    data.forEach(request => {
+        const row = [
+            request['Pickup Request ID'] || '-',
+            request['Label ID'] || '-',
+            request['Requested By'] || '-',
+            request['Request Date'] || '-',
+            request['Chemicals'] ? request['Chemicals'].join(', ') : '-',
+            request['Building Name'] || '-',
+            request['Room Number'] || '-',
+            request['Quantity'] || '-',
+            request['Container Size'] || '-',
+            request['Timeframe'] || '-',
+            request['Status'] || '-',
+            request['Completion Method'] || '-',
+            request['Status'] === 'Pending'
+                ? `<button class="btn btn-primary" onclick="showCompletionModal(${request['Pickup Request ID']}, 'Regular')">Regular</button>
+                   <button class="btn btn-secondary" onclick="showCompletionModal(${request['Pickup Request ID']}, 'Clean Out')">Clean Out</button>`
+                : '-'
+        ];
+        window.table.row.add(row);
+    });
+
+    // Redraw the table with new data
+    window.table.draw();
+}
+
+// Function to show confirmation modal
+function showCompletionModal(pickupId, method) {
+    $('#confirmCompletionButton').off('click').on('click', function() {
+        completePickup(pickupId, method);
+        $('#completionModal').modal('hide');
+    });
+    $('#completionModal').modal('show');
+}
+
+function completePickup(pickupId, method) {
+    fetch('/pickupComplete', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ id: pickupId, completion_method: method })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Pickup request marked as completed successfully!');
+            fetchPickupRequests(); // Refresh the table data
+        } else {
+            alert('Failed to complete pickup request.');
         }
-        $('#confirmationModal').modal('hide');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to complete pickup request.');
     });
+}
 </script>
 @endsection

@@ -5,6 +5,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LabelController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LaboratoryController;
+use App\Http\Controllers\pickupRequestController;
+use App\Http\Controllers\LaboratoryController;
+use App\Http\Controllers\ContentController;
+use App\Http\Controllers\chemicalController;
+
 
 
 
@@ -225,8 +230,45 @@ Route::middleware('auth')->group(function () {
 });
 
 
+Route::get('/laboratories', [LaboratoryController::class, 'getAllLabs']);
+Route::get('/laboratories/{room_number}', [LaboratoryController::class, 'getLabByRoomNumber']);
+
+// Chemical Routes
+//Route::get('/chemicals', [ChemicalController::class, 'getAllChemicals']);
+Route::get('/chemicals/{chemical_name}', [ChemicalController::class, 'getCASNumberByChemicalName']);
+Route::get('/chemicals', [ChemicalController::class, 'index']);
 
 
+// Content Routes (For adding chemicals with percentages to a label)
+//Route::post('/contents', [ContentController::class, 'store']);
+
+// Label Routes
+Route::post('/labels', [LabelController::class, 'store'])->name('labels.store');
+Route::post('/contents', [ContentController::class, 'store'])->name('contents.store');
+
+
+
+
+
+
+
+Route::get('/labels/{id}', [LabelController::class, 'show']);
+
+Route::post('/createPickupRequest', [PickupRequestController::class, 'createPickupRequest']);
+
+Route::get('/getPickupRequests', [PickupRequestController::class, 'getAllPickupRequests']);
+
+Route::put('/pickupInvalidate', [PickupRequestController::class, 'invalidatePickupRequest']);
+
+Route::get('/pickupSearch', [PickupRequestController::class, 'searchPickupRequests']);
+
+Route::put('/pickupComplete', [PickupRequestController::class, 'completePickupRequest']);
+
+// Route::middleware(['web', 'auth'])->group(function () {
+//     Route::put('/editLabel/{id}', [LabelController::class, 'updateLabel'])->name('editLabel');
+// });
+
+Route::put('/editLabel/{id}', [LabelController::class, 'updateLabel'])->name('editLabel');
 
 
 
@@ -261,7 +303,7 @@ Route::get('/users/new-members', [UserController::class, 'countNewMembersLast30D
 //For EDIT LABEL
 Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
 
-Route::post('/editLabel/{id}', [LabelController::class, 'updateLabel'])->withoutMiddleware('auth');
+//Route::post('/editLabel/{id}', [LabelController::class, 'updateLabel'])->withoutMiddleware('auth');
 
 
 

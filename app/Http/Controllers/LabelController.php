@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Label;
 use App\Models\Laboratory;
+use App\Models\Content;
 use App\Models\Chemical;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+
 
 use Illuminate\Http\Request;
 // use Illuminate\Support\Facades\Auth;
@@ -27,6 +30,51 @@ class LabelController extends Controller
     }
 
 
+    public function store(Request $request)
+{
+    $validatedData = $request->validate([
+        'label.created_by' => 'required|string',
+        'label.date_created' => 'required|date',
+        'label.department' => 'required|string',
+        'label.building' => 'required|string',
+        'label.room_number' => 'required|string',
+        'label.lab_name' => 'required|string',
+        'label.principal_investigator' => 'required|string',
+        'label.container_size' => 'required|string',
+        'label.quantity' => 'required|numeric',
+        'label.label_size' => 'required|string',
+        'label.units' => 'required|string',
+        'content' => 'array|nullable',
+        'content.*.chemical_name' => 'required_with:content|string',
+        'content.*.cas_number' => 'required_with:content|string',
+        'content.*.percentage' => 'required_with:content|numeric|min:0|max:100',
+    ]);
+
+    DB::beginTransaction();
+    try {
+        // Create the label
+        $labelData = $validatedData['label'];
+        $label = Label::create($labelData);
+
+        // Create associated content
+        if (!empty($validatedData['content'])) {
+            foreach ($validatedData['content'] as $chemical) {
+                Content::create([
+                    'label_id' => $label->label_id,
+                    'chemical_name' => $chemical['chemical_name'],
+                    'cas_number' => $chemical['cas_number'],
+                    'percentage' => $chemical['percentage'],
+                ]);
+            }
+        }
+
+        DB::commit();
+        return response()->json(['success' => true, 'data' => $label], 200);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+}
 
 
 
@@ -94,46 +142,83 @@ class LabelController extends Controller
 
     /////////////////// a label by ID /////////////////////////////////////////
     public function updateLabel(Request $request, $id)
-{
-    // Retrieve the label by label_id
-    $label = Label::where('label_id', $id)->first();
+    {
+        try {
+            // Step 1: Validate the request data
+            $data = $request->validate([
+                'quantity' => 'required|numeric',
+                'units' => 'required|string',
+                'label_size' => 'required|string',
+                'chemicals' => 'required|array',
+                'chemicals.*.chemical_name' => 'required|string',
+                'chemicals.*.cas_number' => 'required|string',
+                'chemicals.*.percentage' => 'required|numeric',
+            ]);
     
-    // Check if the label exists
-    if (!$label) {
-        return response()->json(['error' => 'Label not found'], 404);
+            // Step 2: Update the label itself
+            $label = Label::findOrFail($id);
+            $label->update([
+                'quantity' => $data['quantity'],
+                'units' => $data['units'],
+                'label_size' => $data['label_size']
+            ]);
+    
+            // Step 3: Handle the chemicals in the 'contents' table
+            $submittedCasNumbers = array_column($data['chemicals'], 'cas_number');
+    
+            // Fetch current chemicals linked to the label
+            $currentChemicals = DB::table('contents')
+                ->where('label_id', $id)
+                ->pluck('cas_number', 'id'); // Pluck CAS numbers with their IDs
+    
+            // Determine chemicals to delete
+            $chemicalsToDelete = $currentChemicals->filter(function ($casNumber) use ($submittedCasNumbers) {
+                return !in_array($casNumber, $submittedCasNumbers);
+            });
+    
+            // Delete chemicals that are no longer present in the request
+            if ($chemicalsToDelete->isNotEmpty()) {
+                DB::table('contents')->whereIn('id', $chemicalsToDelete->keys())->delete();
+            }
+    
+            // Step 4: Add or update chemicals
+            foreach ($data['chemicals'] as $chemical) {
+                $existingChemical = DB::table('contents')
+                    ->where('label_id', $id)
+                    ->where('cas_number', $chemical['cas_number'])
+                    ->first();
+    
+                if ($existingChemical) {
+                    // Update existing chemical
+                    DB::table('contents')->where('id', $existingChemical->id)->update([
+                        'chemical_name' => $chemical['chemical_name'],
+                        'percentage' => $chemical['percentage'],
+                        'updated_at' => now(),
+                    ]);
+                } else {
+                    // Insert new chemical
+                    DB::table('contents')->insert([
+                        'label_id' => $id,
+                        'chemical_name' => $chemical['chemical_name'],
+                        'cas_number' => $chemical['cas_number'],
+                        'percentage' => $chemical['percentage'],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+    
+            return response()->json(['success' => true]);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Validation failed', 'messages' => $e->errors()], 422);
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(['error' => 'An error occurred while updating the label'], 500);
+        }
     }
+    
+    
 
-    // Validate the request data, including contents
-    $request->validate([
-        ...Label::$LabelPutRules,
-        'chemicals' => 'required|array', // Ensure chemicals array is provided
-        'chemicals.*.chemical_name' => 'required|string',
-        'chemicals.*.cas_number' => 'required|string',
-        'chemicals.*.percentage' => 'required|numeric|min:0|max:100'
-    ]);
-
-    // Update label with validated data
-    $label->update($request->all());
-
-    // Clear previous contents for this label
-    DB::table('contents')->where('label_id', $id)->delete();
-
-    // Insert updated chemicals into contents table
-    $chemicals = $request->input('chemicals');
-    foreach ($chemicals as $chemical) {
-        DB::table('contents')->insert([
-            'label_id' => $id,
-            'chemical_name' => $chemical['chemical_name'],
-            'cas_number' => $chemical['cas_number'],
-            'percentage' => $chemical['percentage'],
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-    }
-
-    // Return a success message
-    return response()->json(['success' => 'Label and contents updated successfully'], 200);
-}
     
 
 

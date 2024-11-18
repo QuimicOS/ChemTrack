@@ -1,5 +1,6 @@
 @extends('admin.templateAdmin')
 
+<meta name="csrf-token" content="{{ csrf_token() }}">
 @section('title', 'Invalidate Pickup - ChemTrack')
 
 @section('content')
@@ -26,7 +27,7 @@
     .filter-container {
         margin-bottom: 20px;
         display: flex;
-        justify-content: center; /* Center the filter section */
+        justify-content: center;
         gap: 20px;
     }
 </style>
@@ -40,11 +41,13 @@
     <div class="filter-container">
         <div>
             <label for="filterStatus" class="form-label">Filter by Status:</label>
-            <select id="filterStatus" class="form-select w-auto" onchange="filterTable()">
-                <option value="All">All</option>
+            <select id="filterStatus" class="form-select w-auto">
+                <option value="">All</option>
                 <option value="Active">Active</option>
                 <option value="Completed">Completed</option>
                 <option value="Invalid">Invalid</option>
+                <option value="Pending">Pending</option>
+                <option value="Overdue">Overdue</option>
             </select>
         </div>
         <div>
@@ -64,50 +67,13 @@
                     <th scope="col">Room Number</th>
                     <th scope="col">Container Capacity</th>
                     <th scope="col">Pickup Requested</th>
-                    <th scope="col">Pickup Date</th>
+                    <th scope="col">Completion Date</th>
                     <th scope="col">Status</th>
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <tr data-status="Active">
-                    <td>00123</td>
-                    <td>0000953</td>
-                    <td>Acetone</td>
-                    <td>Luchetti</td>
-                    <td>L-203</td>
-                    <td>6 Gallons</td>
-                    <td>2024-10-05</td>
-                    <td>-</td>
-                    <td>Active</td>
-                    <td>
-                        <button class="btn btn-danger" onclick="showModal('00123')">Invalidate</button>
-                    </td>
-                </tr>
-                <tr data-status="Invalid">
-                    <td>00124</td>
-                    <td>0000954</td>
-                    <td>Sodium Hydroxide</td>
-                    <td>Figueroa</td>
-                    <td>F-101</td>
-                    <td>10 Liters</td>
-                    <td>2024-09-20</td>
-                    <td>-</td>
-                    <td>Invalid</td>
-                    <td></td>
-                </tr>
-                <tr data-status="Completed">
-                    <td>00125</td>
-                    <td>0000955</td>
-                    <td>Ethyl Alcohol</td>
-                    <td>Johnson</td>
-                    <td>J-202</td>
-                    <td>20 Liters</td>
-                    <td>2024-09-25</td>
-                    <td>2024-09-30</td>
-                    <td>Completed</td>
-                    <td></td>
-                </tr>
+                <!-- Rows will be populated dynamically via JavaScript -->
             </tbody>
         </table>
     </div>
@@ -139,63 +105,129 @@
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 
 <script>
-    $(document).ready(function() {
-        // Initialize DataTable without default search box
-        const table = $('#pickupTable').DataTable({
-            "pageLength": 10,
-            "order": [[7, "asc"]],
-            "dom": 'tip'  // Hide default search box and only show paging
-        });
+ document.addEventListener("DOMContentLoaded", function() {
+    initializeDataTable();
+    fetchPickupRequests();
+});
 
-        // Custom search by Room Number
-        $('#filterRoom').on('input', function() {
-            table.column(4).search(this.value).draw(); // Room Number is column index 4
-        });
+let selectedPickupID = null;
+
+function initializeDataTable() {
+    $('#pickupTable').DataTable({
+        "pageLength": 10,
+        "order": [[7, "asc"]],
+        "dom": 'tip'  // Hide default search box and only show paging
     });
 
-    // Variable to store selected pickup ID for invalidation
-    let selectedPickupID = null;
+    // Custom search by Room Number
+    $('#filterRoom').on('input', function() {
+        const table = $('#pickupTable').DataTable();
+        table.column(4).search(this.value).draw();
+    });
 
-    // Show modal and set the selected pickup ID
-    function showModal(pickupID) {
-        selectedPickupID = pickupID; // Set selected pickup ID
-        document.getElementById('modalPickupID').textContent = pickupID; // Display pickup ID in modal
-        const modal = new bootstrap.Modal(document.getElementById('invalidateModal'));
-        modal.show();
+    // Custom filter by Status
+    $('#filterStatus').on('change', function() {
+        const table = $('#pickupTable').DataTable();
+        const status = $(this).val();
+        table.column(8).search(status).draw();
+    });
+}
+
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+function fetchPickupRequests() {
+    fetch('/getPickupRequests', { // Updated URL to match the defined route
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data); // Log the data to verify structure
+        populateTable(data);
+    })
+    .catch(error => {
+        console.error('Error fetching pickup requests:', error);
+        alert('Failed to load pickup requests.');
+    });
+}
+
+function populateTable(data) {
+    const table = $('#pickupTable').DataTable();
+    table.clear();
+
+    data.forEach(request => {
+        const chemicalNames = Array.isArray(request["Chemical(s)"])
+            ? request["Chemical(s)"].join(', ')
+            : '-';
+
+        const row = [
+            request["Pickup ID"] || '-',
+            request["Label ID"] || '-',
+            chemicalNames,  // Join array items for Chemical Name
+            request["Building Name"] || '-',
+            request["Room Number"] || '-',
+            `${request["Container Size"] || '-'} ${request.units || ''}`,
+            request["Request Date"] ? new Date(request["Request Date"]).toLocaleDateString() : '-',
+            request["Completion Date"] ? new Date(request["Completion Date"]).toLocaleDateString() : '-',
+            formatStatus(request.Status),
+            request.Status === 2 ? `<button class="btn btn-danger" onclick="showModal('${request["Pickup ID"]}')">Invalidate</button>` : ''
+        ];
+        table.row.add(row);
+    });
+
+    table.draw();
+}
+
+function formatStatus(status) {
+    switch (status) {
+        case 0: return 'Invalid';
+        case 1: return 'Completed';
+        case 2: return 'Pending';
+        case 3: return 'Overdue';
+        default: return 'Unknown';
     }
+}
 
-    // Confirm invalidation of the selected pickup and update the table row
-    function confirmInvalidate() {
-        const tableRows = document.querySelectorAll('#pickupTable tbody tr');
-        
-        // Loop through rows to find the selected pickup ID and update its status
-        tableRows.forEach(row => {
-            const pickupIDCell = row.cells[0].textContent.trim(); // Get the pickup ID cell text
-            if (pickupIDCell === selectedPickupID) {
-                row.setAttribute('data-status', 'Invalid');
-                row.cells[8].textContent = 'Invalid'; // Set status cell text to 'Invalid'
-                row.cells[9].innerHTML = ''; // Remove button content in Actions column
-            }
-        });
-        
-        // Hide the modal after confirmation
-        const modal = bootstrap.Modal.getInstance(document.getElementById('invalidateModal'));
-        modal.hide();
-    }
+function showModal(pickupID) {
+    selectedPickupID = pickupID;
+    document.getElementById('modalPickupID').textContent = pickupID;
+    const modal = new bootstrap.Modal(document.getElementById('invalidateModal'));
+    modal.show();
+}
 
-    // Filter table rows based on the selected status
-    function filterTable() {
-        const filterValue = document.getElementById('filterStatus').value;
-        const rows = document.querySelectorAll('#pickupTable tbody tr');
-
-        rows.forEach(row => {
-            const status = row.getAttribute('data-status');
-            if (filterValue === 'All' || status === filterValue) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    }
+function confirmInvalidate() {
+    fetch('/pickupInvalidate', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ pickup_id: selectedPickupID })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message || 'Pickup request invalidated successfully!');
+            fetchPickupRequests(); // Refresh the table data
+            const modal = bootstrap.Modal.getInstance(document.getElementById('invalidateModal'));
+            modal.hide();
+        } else {
+            alert(data.message || 'Failed to invalidate pickup request.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to invalidate pickup request. Please try again.');
+    });
+}
 </script>
 @endsection
