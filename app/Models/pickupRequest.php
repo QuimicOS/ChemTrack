@@ -15,7 +15,8 @@ class PickupRequest extends Model
         'completion_date',
         'status_of_pickup',
         'timeframe',
-        'completion_method'
+        'completion_method',
+        'label_id'
     ];
 
     // DIRECT RELATIONSHIPS

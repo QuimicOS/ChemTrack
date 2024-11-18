@@ -33,5 +33,9 @@ class Chemical extends Model
         return $this->belongsTo(Label::class, 'label_id');
     }
 
-    
+    public function index()
+{
+    $chemicals = Chemical::all(); // Fetch all chemicals
+    return response()->json($chemicals);
+}
 }

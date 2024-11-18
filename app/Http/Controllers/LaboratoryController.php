@@ -6,6 +6,7 @@ use App\Models\Laboratory;
 use App\Models\User;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class LaboratoryController extends Controller
 {
@@ -15,14 +16,21 @@ class LaboratoryController extends Controller
 
 
         // GET all laboratories
-        public function getAllLabs()
+        // public function getAllLabs()
+        // {
+        //     $labs = Laboratory::all();
+        //     return response()->json($labs);
+        // }
+
+
+        public function index()
         {
-            $labs = Laboratory::all();
-            return response()->json($labs);
+            // Fetch all records from the 'laboratory' table
+            $laboratories = DB::table('laboratory')->get();
+    
+            // Pass the data to a view
+            return view('admin.laboratories.index', compact('laboratories'));
         }
-
-
-
 
 
 
@@ -38,7 +46,26 @@ class LaboratoryController extends Controller
             return response()->json($lab);
         }
     
-
+        public function getAllLabs()
+        {
+            $labs = Laboratory::select('department', 'building_name', 'room_number', 'lab_name', 'professor_investigator')
+                              ->where('lab_status', 'Active') // Optional: only get active labs
+                              ->get();
+    
+            return response()->json($labs);
+        }
+    
+        // Fetch laboratory by room number to autofill lab name and investigator
+        public function getLabByRoomNumber($room_number)
+        {
+            $lab = Laboratory::where('room_number', $room_number)->first();
+    
+            if ($lab) {
+                return response()->json($lab);
+            } else {
+                return response()->json(['error' => 'Laboratory not found'], 404);
+            }
+        }
 
 
 

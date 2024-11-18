@@ -209,4 +209,31 @@ class ChemicalController extends Controller
         return response()->json(['cas_number' => $chemical->cas_number], 200);
     }
 
+    public function getAllChemicals()
+    {
+        $chemicals = Chemical::select('chemical_name', 'cas_number')
+                             ->where('status_of_chemical', 'active') // Optional: only get active chemicals
+                             ->get();
+
+        return response()->json($chemicals);
+    }
+
+    // Get CAS number by chemical name for autofill
+    public function getCASNumberByChemicalName($chemical_name)
+    {
+        $chemical = Chemical::where('chemical_name', $chemical_name)->first();
+
+        if ($chemical) {
+            return response()->json($chemical);
+        } else {
+            return response()->json(['error' => 'Chemical not found'], 404);
+        }
+    }
+
+    public function index()
+{
+    $chemicals = Chemical::all(); // Assuming `Chemical` is the model
+    return response()->json($chemicals);
+}
+
 }
