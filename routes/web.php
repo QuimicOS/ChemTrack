@@ -6,7 +6,6 @@ use App\Http\Controllers\LabelController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LaboratoryController;
 use App\Http\Controllers\pickupRequestController;
-use App\Http\Controllers\LaboratoryController;
 use App\Http\Controllers\ContentController;
 use App\Http\Controllers\chemicalController;
 
@@ -340,6 +339,66 @@ Route::get('/unwanted-material-memorandum', [LabelController::class, 'memorandum
 Route::put('/invalid/{id}', action: [LabelController::class, 'invalidateLabel']); 
 
 
+// -------------------------------------Chemical Routes--------------------------------------------------
+Route::post('/chemicalCreate', [ChemicalController::class, 'addChemical']); 
+Route::put('/chemicalInvalidate', [ChemicalController::class, 'deleteChemical']); 
+Route::put('/chemicalModify', [ChemicalController::class, 'editChemical']); 
+Route::get('/chemicalCreatedCount', [ChemicalController::class, 'chemicalsMadeThisMonth']); 
+Route::get('/chemicalCasNumber', [ChemicalController::class, 'getCasNumber']); 
+Route::get('/chemicalSearch', [ChemicalController::class, 'searchChemicalName']);
+// ------------------------------------------------------------------------------------------------------
+
+
+//////////////////////////////////For Laboratories//////////////////////////////////////////
+   
+Route::get('/labs', [LaboratoryController::class, 'getAllLabs']);  // GET all labs ONLY ADMIN
+Route::get('/labs/room', [LaboratoryController::class, 'searchByRoomNumber']);
+
+Route::get('/labs/{lab_id}', [LaboratoryController::class, 'getLabDetails']);  // GET a lab by ID ONLY ADMIN
+
+Route::post('/labs', [LaboratoryController::class, 'addLab']); // CREATE LAB ONLY ADMIN
+
+Route::put('/editLabs/{lab_id}', [LaboratoryController::class, 'editlab']); // UPDATE LAB ONLY ADMIN
+
+Route::put('/invalidateLabs/{lab_id}', [LaboratoryController::class, 'invalidateLab']); //ONLY ADMIN, reality is that it will not be deleted but the lab status changed to INVALID, LAB HAS 3 STATUS (ASSIGNED, UNASSIGNED, INVALID)
+
+Route::put('/lab/{id}/supervisor', [LaboratoryController::class, 'assignLabSupervisor']); // ONLY ADMIN can assign a supervisor to a lab
+
+//Route::get('/labs/room', [LaboratoryController::class, 'searchByRoomNumber']);  // GET a lab by Room Number
+
+////////////////////////////////////////For users///////////////////////////////////////////
+
+//statitstics
+
+//FALTA retrieve new users created on the last 30 days
+
+
+////Routes
+
+Route::post('/newUsers', [UserController::class, 'store']); //Create a new user has Admin only
+
+// Route::get('/userEmail', [UserController::class, 'searchByEmail']); // get a user by email
+
+Route::put('userStatus/{id}',[UserController::class, 'authenticateUser']); // update the user status to Accepted, only an admin can do it
+
+Route::put('userInvalid/{id}',[UserController::class, 'invalidatesUser']); //// update the user status to Denied, only an admin can do it
+
+Route::get('/users/search', [UserController::class, 'searchCertifiedUsers']); // Admin get a list of users where certification status is TRUE
+Route::get('/users/{id}', [UserController::class, 'getUserDetailsByID']);
+Route::put('/users/{id}', [UserController::class, 'roleManagementEditUser']);// update the user room number and role only
+Route::get('/users/search/{email}', [UserController::class, 'getUserDetailsByEmail'])->name('users.search');
+Route::get('/users/requested', [UserController::class, 'getRequestedUsers']);
+Route::delete('/users/{id}', [UserController::class, 'inactiveUser']);
+
+
+
+
+// //changes user role
+Route::put('usersRoleProfessor/{id}',[UserController::class, 'changeUserRoleProfessor']); //GOO
+Route::put('usersRoleAdmin/{id}',[UserController::class, 'changeUserRoleAdmin']); //GOO
+Route::put('usersRoleStaff/{id}',[UserController::class, 'changeUserRoleStaff']); //GOO
+
+Route::post('/professors/users', [UserController::class, 'createStaffUser']); //create a user with status = requested and role = staff
 
 
 
@@ -352,7 +411,7 @@ Route::put('/invalid/{id}', action: [LabelController::class, 'invalidateLabel'])
 use Illuminate\Http\Request;
 
 
-Route::get('auth/saml2/arrival', function () {
+/* Route::get('auth/saml2/arrival', function () {
     $user = Auth::user();
     // dd($user);
     if (!$user) {
@@ -370,7 +429,9 @@ Route::get('auth/saml2/arrival', function () {
             return redirect()->route('aboutUs');
     }
     // return view('welcome');
-})->middleware(['auth']);
+})->middleware(['auth']); */
 
 
 require __DIR__.'/auth.php';
+
+

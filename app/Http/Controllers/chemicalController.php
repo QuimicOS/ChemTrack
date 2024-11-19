@@ -165,9 +165,9 @@ class ChemicalController extends Controller
     
         $validatedData = $validator->validated();
     
-        $chemicals = Chemical::where('chemical_name', $validatedData['chemical_name'])
-            ->where('status', 1) 
-            ->get(['chemical_name', 'cas_number']);
+        $chemicals = Chemical::where('status_of_chemical', 1)
+        ->whereRaw('LOWER(chemical_name) LIKE ?', ['%' . strtolower($validatedData['chemical_name']) . '%'])
+        ->get(['id', 'chemical_name', 'cas_number']);
     
         if ($chemicals->isEmpty()) {
             return response()->json(['message' => 'No active chemicals found with the specified name.'], 404);

@@ -6,6 +6,7 @@ use App\Models\Laboratory;
 use App\Models\User;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
 class LaboratoryController extends Controller
@@ -150,18 +151,38 @@ class LaboratoryController extends Controller
         // Additional: Search laboratories by room number
         public function searchByRoomNumber(Request $request)
         {
-
-            // Retrieve the validated search term
-            $roomNumber = $request->input('room');
-
-            $roomNumber = Laboratory::where('room_number', $roomNumber)->first();
-    
-            if ($roomNumber) {
-                return response()->json($roomNumber);
-            } else {
-                return response()->json(['message' => 'Room not found'], 404);
+            //Log::info("searchByRoomNumber called with request data:", $request->all());
+        
+            // Step 1: Validate the request
+            $validator = Validator::make($request->all(), [
+                'room_number' => 'required|string|max:255',
+            ]);
+        
+            if ($validator->fails()) {
+              //  Log::info("Validation failed:", $validator->errors()->toArray());
+                return response()->json(['debug' => 'Validation failed', 'errors' => $validator->errors()], 422);
             }
         
+            // Step 2: Retrieve the validated room number
+            $roomNumber = $request->query('room_number');
+           // Log::info("Searching for room number:", ['room_number' => $roomNumber]);
+        
+            // Step 3: Query the database
+            $laboratories = Laboratory::where('room_number', $roomNumber)
+                ->where('lab_status', 'Active')
+                ->select('id', 'department', 'building_name', 'room_number', 'lab_name', 'professor_investigator', 'department_director')
+                ->get();
+        
+            if ($laboratories->isEmpty()) {
+                //Log::info("No laboratories found for room number:", ['room_number' => $roomNumber]);
+                return response()->json([
+                    'debug' => 'No laboratories found',
+                    'error' => 'Lab not found'
+                ], 404);
+            }
+        
+           // Log::info("Laboratories found:", $laboratories->toArray());
+            return response()->json($laboratories, 200);
         }
         
         
