@@ -25,7 +25,6 @@ return new class extends Migration
 
             $table->date('date_created'); // Date the label was created
             $table->string('container_size'); // Container size as a string
-            $table->string('label_size')->nullable();// Label size
             $table->integer('quantity'); // Quantity of the substance
             $table->string('units')->nullable();; // Units of measurement (e.g., L, mL)
             $table->tinyInteger('status_of_label')->default(Label::STATUS_PENDING); // Status with default value

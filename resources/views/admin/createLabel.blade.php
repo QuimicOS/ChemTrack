@@ -343,7 +343,7 @@
             principal_investigator: document.getElementById("principalInvestigator").value,
             container_size: document.getElementById("containerSize").value,
             quantity: document.getElementById("stored").value,
-            label_size: document.getElementById("labelSize").value,
+            //label_size: document.getElementById("labelSize").value,
             units: document.getElementById("units").value,
         };
 

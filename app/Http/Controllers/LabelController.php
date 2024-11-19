@@ -42,7 +42,7 @@ class LabelController extends Controller
         'label.principal_investigator' => 'required|string',
         'label.container_size' => 'required|string',
         'label.quantity' => 'required|numeric',
-        'label.label_size' => 'required|string',
+        //'label.label_size' => 'required|string',
         'label.units' => 'required|string',
         'content' => 'array|nullable',
         'content.*.chemical_name' => 'required_with:content|string',
@@ -148,7 +148,7 @@ class LabelController extends Controller
             $data = $request->validate([
                 'quantity' => 'required|numeric',
                 'units' => 'required|string',
-                'label_size' => 'required|string',
+                //'label_size' => 'required|string',
                 'chemicals' => 'required|array',
                 'chemicals.*.chemical_name' => 'required|string',
                 'chemicals.*.cas_number' => 'required|string',
@@ -160,7 +160,7 @@ class LabelController extends Controller
             $label->update([
                 'quantity' => $data['quantity'],
                 'units' => $data['units'],
-                'label_size' => $data['label_size']
+                //'label_size' => $data['label_size']
             ]);
     
             // Step 3: Handle the chemicals in the 'contents' table
