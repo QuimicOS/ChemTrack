@@ -1,12 +1,12 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Providers\EventServiceProvider;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LabelController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LaboratoryController;
 use App\Http\Controllers\pickupRequestController;
-use App\Http\Controllers\LaboratoryController;
 use App\Http\Controllers\ContentController;
 use App\Http\Controllers\chemicalController;
 
@@ -349,14 +349,15 @@ Route::put('/invalid/{id}', action: [LabelController::class, 'invalidateLabel'])
 
 
 
-use Illuminate\Http\Request;
 
 
-Route::get('auth/saml2/arrival', function () {
+Route::get('auth/saml2/arrival', function(){
     $user = Auth::user();
-    // dd($user);
+    Log::debug('[SAML2] User in arrival route', ['user' => $user]);
+
     if (!$user) {
-        return redirect()->route('/');
+        Log::debug('[SAML2] User not authenticated, redirecting to Home Page.');
+        return redirect()->route('home');
     }
 
     switch ($user->role) {
@@ -369,8 +370,8 @@ Route::get('auth/saml2/arrival', function () {
         default:
             return redirect()->route('aboutUs');
     }
-    // return view('welcome');
-})->middleware(['auth']);
+});
+
 
 
 require __DIR__.'/auth.php';
