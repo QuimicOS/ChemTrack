@@ -87,8 +87,7 @@
                 <div class="col-md-6 mb-3">
                     <label for="labelSize" class="form-label">Label Size</label>
                     <select class="form-select" id="labelSize" required>
-                        <option selected disabled>Select label size</option>
-                        <option value="Small">Small (1x1)</option>
+                        <option selected value="Small">Small (1x1)</option>
                         <option value="Medium">Medium (3x2)</option>
                         <option value="Large">Large (6x4)</option>
                     </select>
@@ -181,15 +180,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 document.getElementById('units').value = data.units;
 
                 // Handle label size dropdown
-                const labelSizeDropdown = document.getElementById('labelSize');
-                const availableOptions = Array.from(labelSizeDropdown.options).map(option => option.value);
+                // const labelSizeDropdown = document.getElementById('labelSize');
+                // const availableOptions = Array.from(labelSizeDropdown.options).map(option => option.value);
 
-                if (availableOptions.includes(data.label_size)) {
-                    labelSizeDropdown.value = data.label_size;
-                } else {
-                    labelSizeDropdown.value = "Select label size";
-                    console.warn('Unexpected label_size:', data.label_size);
-                }
+                // if (availableOptions.includes(data.label_size)) {
+                //     labelSizeDropdown.value = data.label_size;
+                // } else {
+                //     labelSizeDropdown.value = "Select label size";
+                //     console.warn('Unexpected label_size:', data.label_size);
+                // }
 
                 // Clear and populate the chemical table
                 const tableBody = document.querySelector('#chemicalTable tbody');
@@ -360,7 +359,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const updatedData = {
             quantity: document.getElementById('stored').value.trim(),
             units: document.getElementById('units').value,
-            label_size: document.getElementById('labelSize').value,
+            //label_size: document.getElementById('labelSize').value,
             chemicals: Array.from(document.querySelectorAll('#chemicalTable tbody tr')).map(row => ({
                 chemical_name: row.querySelector('.chemical-name')?.value.trim(),
                 cas_number: row.querySelector('.cas-number')?.value.trim(),

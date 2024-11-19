@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Providers\EventServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\LabelController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LaboratoryController;
@@ -328,6 +329,7 @@ Route::put('/pickupComplete', [PickupRequestController::class, 'completePickupRe
 // });
 
 Route::put('/editLabel/{id}', [LabelController::class, 'updateLabel'])->name('editLabel');
+
 
 
 
