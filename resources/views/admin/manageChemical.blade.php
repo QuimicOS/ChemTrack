@@ -1,7 +1,7 @@
 @extends('admin.templateAdmin')
 
 @section('title', 'Manage Chemicals')
-
+<meta name="csrf-token" content="{{ csrf_token() }}">
 @section('content')
 <style>
     /* Align content area with sidebar and navbar */
@@ -117,7 +117,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" onclick="saveEdit()">Save changes</button>
+                <button type="button" class="btn btn-success" id="saveEditBtn" onclick="saveEdit()">Save changes</button>
             </div>
         </div>
     </div>
@@ -203,6 +203,9 @@
 
 @section('scripts')
 <script>
+// Global variable to store the current chemical ID for edits and deletions
+let currentChemicalId = null;
+
 // Select fields and buttons
 const chemicalNameInput = document.getElementById('chemicalName');
 const casNumberInput = document.getElementById('casNumber');
@@ -210,236 +213,199 @@ const addChemicalBtn = document.getElementById('addChemicalBtn');
 const searchChemicalInput = document.getElementById('searchChemical');
 const searchChemicalBtn = document.getElementById('searchChemicalBtn');
 const editChemicalNameInput = document.getElementById('editChemicalName');
-const editCasNumberInput = document.getElementById('editCasNumber'); // Field in edit modal
-
-// Select the table container and set it to hidden initially
+const editCasNumberInput = document.getElementById('editCasNumber');
 const tableContainer = document.querySelector('.table-container');
 
-// Dummy array to store chemicals
+// Array to store chemicals temporarily
 let chemicals = [];
-let editingIndex = -1;
-let searchResults = [];
-let deleteIndex = -1;
 
-// Function to enforce only numbers and hyphen in CAS Number field
-function enforceCASFormat(inputField) {
-    inputField.addEventListener('keypress', function(event) {
-        const char = String.fromCharCode(event.which);
-        if (!/[0-9-]/.test(char)) {
-            event.preventDefault();
-        }
-    });
-    inputField.addEventListener('input', function() {
-        inputField.value = inputField.value.replace(/[^0-9-]/g, ''); // Remove any non-numeric/hyphen characters
-    });
-}
+// CSRF token for secure requests
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-// Apply format enforcement to main and edit CAS number fields
-enforceCASFormat(casNumberInput);
-enforceCASFormat(editCasNumberInput); // Ensure restriction on edit modal field
+// Disable the search button initially
+searchChemicalBtn.disabled = true;
 
-// Enable or disable the Add button based on field validity
-function toggleAddButton() {
-    const isChemicalNameValid = /^[a-zA-Z0-9\s%,-.]+$/.test(chemicalNameInput.value) && /[a-zA-Z]/.test(chemicalNameInput.value);
-    const isCasNumberValid = /^\d{2,6}-\d{2}-\d{1}$/.test(casNumberInput.value);
+// Toggle the search button based on input presence
+searchChemicalInput.addEventListener('input', () => {
+    // Enable button only if there’s input in the search field
+    searchChemicalBtn.disabled = searchChemicalInput.value.trim() === '';
+});
+
+// Toggle Add button based on field validity
+function toggleAddChemicalButton() {
+    const chemicalName = chemicalNameInput.value.trim();
+    const casNumber = casNumberInput.value.trim();
+    const isChemicalNameValid = /^[a-zA-Z0-9\s%.,-]+$/.test(chemicalName) && /[a-zA-Z]/.test(chemicalName);
+    const isCasNumberValid = /^\d{2,6}-\d{2}-\d{1}$/.test(casNumber);
     addChemicalBtn.disabled = !(isChemicalNameValid && isCasNumberValid);
 }
 
-// Enable or disable the Search button based on field content
-function toggleSearchButton() {
-    searchChemicalBtn.disabled = searchChemicalInput.value.trim() === '';
-}
-
-// Add event listeners for real-time validation
-chemicalNameInput.addEventListener('input', toggleAddButton);
-casNumberInput.addEventListener('input', toggleAddButton);
-searchChemicalInput.addEventListener('input', toggleSearchButton);
-
-// Initialize Search button and Add button state on page load
-toggleSearchButton();
-toggleAddButton(); 
-
-// Show invalid input modal
-function showInvalidInputModal() {
-    const invalidInputModal = new bootstrap.Modal(document.getElementById('invalidInputModal'));
-    invalidInputModal.show();
-}
-
-// Show Delete Confirmation Modal
-function showDeleteConfirmation(index) {
-    deleteIndex = index;
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
-    deleteModal.show();
-}
-
-// Confirm and delete the chemical
-document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-    if (deleteIndex !== -1) {
-        deleteChemical(deleteIndex);
-        deleteIndex = -1;
-    }
-});
-
-// Add Chemical and validate
-addChemicalBtn.addEventListener('click', function() {
-    if (addChemicalBtn.disabled) return;
-
-    const isChemicalNameValid = /^[a-zA-Z0-9\s%,-.]+$/.test(chemicalNameInput.value) && /[a-zA-Z]/.test(chemicalNameInput.value);
-    if (!isChemicalNameValid) {
-        showInvalidInputModal();
-        return;
-    }
-
-    const chemicalExists = chemicals.some(c => 
-        c.chemicalName.toLowerCase() === chemicalNameInput.value.toLowerCase() &&
-        c.casNumber === casNumberInput.value
-    );
-    
-    if (chemicalExists) {
-        alert('This chemical already exists with the same CAS number!');
-        return;
-    }
-
-    chemicals.push({
-        chemicalName: chemicalNameInput.value,
-        casNumber: casNumberInput.value
-    });
-
-    alert('Chemical added successfully!');
+// Clear form after adding a chemical
+function clearForm() {
     chemicalNameInput.value = '';
     casNumberInput.value = '';
     addChemicalBtn.disabled = true;
+}
 
-    downloadJSON(chemicals);
-    populateSuggestions();
-});
+// Event listeners for input validation
+chemicalNameInput.addEventListener('input', toggleAddChemicalButton);
+casNumberInput.addEventListener('input', toggleAddChemicalButton);
 
-// Render chemicals table based on search
-function renderTable(filteredChemicals = chemicals) {
+// Add chemical to the database
+function addChemical() {
+    const chemicalName = chemicalNameInput.value.trim();
+    const casNumber = casNumberInput.value.trim();
+
+    fetch('/chemicalCreate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify({ chemical_name: chemicalName, cas_number: casNumber, status_of_chemical: 1 })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to add chemical');
+        return response.json();
+    })
+    .then(() => {
+        alert('Chemical added successfully!');
+        clearForm(); // Clear the form without updating the table
+    })
+    .catch(error => {
+        console.error('Error adding chemical:', error);
+        alert('Failed to add chemical. Please try again.');
+    });
+}
+
+
+// Render chemicals in the table
+function renderTable(chemicals) {
     const tableBody = document.getElementById('chemicalTableBody');
     tableBody.innerHTML = '';
 
-    filteredChemicals.forEach((chemical, index) => {
+    chemicals.forEach(chemical => {
         const row = `<tr>
-                        <td>${chemical.chemicalName}</td>
-                        <td>${chemical.casNumber}</td>
+                        <td>${chemical.chemical_name}</td>
+                        <td>${chemical.cas_number}</td>
                         <td>
-                            <button class="btn btn-sm btn-primary" onclick="editChemical(${index})">Edit</button>
-                            <button class="btn btn-sm btn-danger" onclick="showDeleteConfirmation(${index})">Delete</button>
+                            <button class="btn btn-sm btn-primary" onclick="editChemical(${chemical.id})">Edit</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteChemical(${chemical.id})">Delete</button>
                         </td>
                     </tr>`;
         tableBody.innerHTML += row;
     });
+    tableContainer.style.display = 'block';
 }
 
-// Edit chemical
-function editChemical(index) {
-    editingIndex = index;
-    const chemical = searchResults.length > 0 ? searchResults[index] : chemicals[index];
+// Search chemicals by name
+function searchChemical() {
+    const chemicalName = searchChemicalInput.value.trim();
+    if (!chemicalName) return alert("Please enter a chemical name to search."); // Only prompt if input is empty
 
-    editChemicalNameInput.value = chemical.chemicalName;
-    editCasNumberInput.value = chemical.casNumber;
+    fetch(`/chemicalSearch?chemical_name=${chemicalName}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+            chemicals = data;
+            renderTable(chemicals);
+        } else {
+            alert('No chemicals found.');
+            renderTable([]); // Clear the table if no chemicals found
+        }
+    })
+    .catch(error => {
+        console.error('Error loading chemicals:', error);
+        alert('Failed to load chemicals.');
+    });
+}
+
+// Edit chemical data
+function editChemical(id) {
+    const chemical = chemicals.find(c => c.id === id);
+    if (!chemical) return alert("Chemical not found.");
+
+    currentChemicalId = chemical.id; // Set the current chemical ID
+
+    // Populate the form fields
+    editChemicalNameInput.value = chemical.chemical_name;
+    editCasNumberInput.value = chemical.cas_number;
 
     const editModal = new bootstrap.Modal(document.getElementById('editModal'));
     editModal.show();
 }
 
-// Save the edited chemical data
+// Save edited chemical data to database
 function saveEdit() {
-    const updatedChemicalName = editChemicalNameInput.value.trim();
-    const updatedCasNumber = editCasNumberInput.value.trim();
+    const updatedChemicalName = document.getElementById('editChemicalName').value.trim();
+    const updatedCasNumber = document.getElementById('editCasNumber').value.trim();
 
-    // Validate updated CAS Number format
-    if (!/^\d{2,6}-\d{2}-\d{1}$/.test(updatedCasNumber)) {
-        alert("CAS Number must follow the 'XXXXXX-XX-X' format.");
-        return;
-    }
-
-    // Validate updated chemical name and CAS number fields
-    if (!updatedChemicalName || !updatedCasNumber) {
-        showInvalidInputModal();
-        return;
-    }
-
-    const chemicalList = searchResults.length > 0 ? searchResults : chemicals;
-    chemicalList[editingIndex] = { chemicalName: updatedChemicalName, casNumber: updatedCasNumber };
-    renderTable(chemicalList);
-
-    const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
-    editModal.hide();
-}
-
-// Delete chemical
-function deleteChemical(index) {
-    if (searchResults.length > 0) {
-        const chemicalName = searchResults[index].chemicalName;
-        chemicals = chemicals.filter(chem => chem.chemicalName.toLowerCase() !== chemicalName.toLowerCase());
-        searchResults.splice(index, 1);
-        renderTable(searchResults);
-    } else {
-        chemicals.splice(index, 1);
-        renderTable(chemicals);
-    }
-    downloadJSON(chemicals);
-}
-
-// Automatically download the JSON file
-function downloadJSON(chemicals) {
-    const jsonStr = JSON.stringify(chemicals, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'chemicals.json';
-    link.click();
-    URL.revokeObjectURL(url);
-}
-
-// Show the table only when there are search results
-searchChemicalBtn.addEventListener('click', function() {
-    const searchValue = searchChemicalInput.value.trim().toLowerCase();
-
-    if (searchValue === '') {
-        return;
-    }
-
-    searchResults = chemicals.filter(c => c.chemicalName.toLowerCase().includes(searchValue));
-
-    if (searchResults.length === 0) {
-        const noResultsModal = new bootstrap.Modal(document.getElementById('noResultsModal'));
-        noResultsModal.show();
-    } else {
-        renderTable(searchResults);
-        tableContainer.style.display = 'block';
-    }
-});
-
-// Load chemicals from the JSON file when the page loads
-function loadChemicalsFromJSON() {
-    fetch('/json/chemicals.json')
-        .then(response => response.json())
-        .then(data => {
-            chemicals = data;
-            populateSuggestions();
+    fetch(`/chemicalModify`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({
+            chemical_id: currentChemicalId, // Use stored ID
+            chemical_name: updatedChemicalName,
+            cas_number: updatedCasNumber
         })
-        .catch(error => console.error('Error loading chemicals:', error));
-}
-
-// Function to populate datalist with autocomplete suggestions
-function populateSuggestions() {
-    const datalist = document.getElementById('chemicalSuggestions');
-    datalist.innerHTML = '';
-
-    chemicals.forEach(chemical => {
-        const option = document.createElement('option');
-        option.value = chemical.chemicalName;
-        datalist.appendChild(option);
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to update chemical');
+        return response.json();
+    })
+    .then(data => {
+        alert('Chemical updated successfully!');
+        searchChemical(); // Refresh the table with updated data
+    })
+    .catch(error => {
+        console.error('Error updating chemical:', error);
+        alert('Failed to update chemical. Please try again.');
     });
 }
 
-document.addEventListener('DOMContentLoaded', loadChemicalsFromJSON);
+// Delete chemical
+function deleteChemical(chemicalId) {
+    fetch(`/chemicalInvalidate`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({ chemical_id: chemicalId })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to delete chemical');
+        return response.json();
+    })
+    .then(() => {
+        // Remove the deleted chemical from the chemicals array
+        chemicals = chemicals.filter(chemical => chemical.id !== chemicalId);
+        renderTable(chemicals);
+        alert('Chemical has been deleted.');
+    })
+    .catch(error => {
+        console.error('Error deleting chemical:', error);
+        alert('Failed to delete chemical. Please try again.');
+    });
+}
+
+// Event listeners for button actions
+addChemicalBtn.addEventListener('click', addChemical);
+searchChemicalBtn.addEventListener('click', searchChemical);
+
 
 </script>
 @endsection
-
-

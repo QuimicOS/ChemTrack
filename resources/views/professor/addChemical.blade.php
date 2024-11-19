@@ -1,7 +1,7 @@
 @extends('professor.templateProfessor')
 
 @section('title', 'Add Chemicals')
-
+<meta name="csrf-token" content="{{ csrf_token() }}">
 @section('content')
 <style>
     /* Align content area with sidebar and navbar */
@@ -70,9 +70,6 @@
 
 @section('scripts')
 <script>
-// Dummy array to store chemicals
-let chemicals = [];
-
 // Function to toggle Add Chemical button based on field validity
 function toggleAddChemicalButton() {
     const chemicalName = document.getElementById('chemicalName').value;
@@ -80,16 +77,27 @@ function toggleAddChemicalButton() {
     const isChemicalNameValid = /^[a-zA-Z0-9\s%.,-]+$/.test(chemicalName) && /[a-zA-Z]/.test(chemicalName); // Requires at least one letter
     const isCasNumberValid = /^\d{2,6}-\d{2}-\d{1}$/.test(casNumber); // Matches format XXXXXX-XX-X
 
+    console.log("Chemical Name Valid:", isChemicalNameValid); // Debug log
+    console.log("CAS Number Valid:", isCasNumberValid);       // Debug log
+
     // Enable button only if both fields are valid
     document.getElementById('addChemicalBtn').disabled = !(isChemicalNameValid && isCasNumberValid);
 }
 
 // Add event listeners to trigger validation as user types
-document.getElementById('chemicalName').addEventListener('input', toggleAddChemicalButton);
-document.getElementById('casNumber').addEventListener('input', toggleAddChemicalButton);
+document.getElementById('chemicalName').addEventListener('input', () => {
+    console.log("Chemical Name Input Changed"); // Debug log
+    toggleAddChemicalButton();
+});
+document.getElementById('casNumber').addEventListener('input', () => {
+    console.log("CAS Number Input Changed"); // Debug log
+    toggleAddChemicalButton();
+});
 
 // Function to validate form and add chemical if valid
 function validateForm() {
+    console.log("Validate Form Called"); // Debug log
+
     // Clear previous error messages
     document.getElementById('chemicalNameError').textContent = '';
     document.getElementById('casNumberError').textContent = '';
@@ -97,52 +105,50 @@ function validateForm() {
     const chemicalName = document.getElementById('chemicalName').value.trim();
     const casNumber = document.getElementById('casNumber').value.trim();
 
-    // Check for duplicate chemical entry
-    const duplicateChemical = chemicals.some(chemical => 
-        chemical.chemical_name.toLowerCase() === chemicalName.toLowerCase() &&
-        chemical.cas_number === casNumber
-    );
-
-    if (duplicateChemical) {
-        document.getElementById('chemicalNameError').textContent = 'This chemical with the same CAS number already exists.';
-        return;
-    }
-
-    // Add chemical if validation is successful
     addChemical(chemicalName, casNumber);
 }
 
-// Function to add chemical and generate JSON
+// Function to add chemical and post data to the server
 function addChemical(chemicalName, casNumber) {
-    const chemicalData = {
-        chemical_name: chemicalName,
-        cas_number: casNumber
-    };
+    console.log("Add Chemical Function Called"); // Debug log
 
-    // Push the data to the chemicals array
-    chemicals.push(chemicalData);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    // Generate JSON file
-    const chemicalJSON = JSON.stringify(chemicals, null, 4); // Pretty print with 4-space indentation
-    downloadJSON(chemicalJSON, 'chemicals.json');
-
-    // Clear form fields after successful addition
-    clearForm();
+    fetch(`/chemicalCreate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken, // Include the CSRF token here
+        },
+        body: JSON.stringify({
+            chemical_name: chemicalName,
+            cas_number: casNumber,
+            status_of_chemical: 1 // Set status as active by default
+        })
+    })
+    .then(response => {
+        console.log("Response Status:", response.status); // Debug log
+        if (!response.ok) {
+            throw new Error('Failed to add chemical');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Chemical added successfully:', data); // Debug log
+        clearForm();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to add chemical. Please try again.');
+    });
 }
+
 
 // Function to clear form fields
 function clearForm() {
     document.getElementById('chemicalForm').reset();
     document.getElementById('addChemicalBtn').disabled = true; // Reset Add Chemical button to disabled state
-}
-
-// Function to download JSON file
-function downloadJSON(content, fileName) {
-    const a = document.createElement('a');
-    const file = new Blob([content], { type: 'application/json' });
-    a.href = URL.createObjectURL(file);
-    a.download = fileName;
-    a.click();
 }
 </script>
 @endsection
