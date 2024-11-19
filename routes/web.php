@@ -426,6 +426,30 @@ Route::put('/lab/{id}/supervisor', [LaboratoryController::class, 'assignLabSuper
 
 //Route::get('/labs/room', [LaboratoryController::class, 'searchByRoomNumber']);  // GET a lab by Room Number
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ////////////////////////////////////////For users///////////////////////////////////////////
 
 
@@ -433,7 +457,19 @@ Route::put('/lab/{id}/supervisor', [LaboratoryController::class, 'assignLabSuper
 
 ////Routes
 
-Route::post('/newUsers', [UserController::class, 'store']); //Create a new user has Admin only
+Route::post('/newUsers', [UserController::class, 'createUser']); //Create a new user has Admin only GOODIE
+
+Route::get('/users/search-by-email', [UserController::class, 'searchUserByEmail']); //GOODIE
+
+Route::get('/users/certified-students', [UserController::class, 'getCertifiedUsers']); //GOODIE
+
+
+
+
+
+
+
+
 
 // Route::get('/userEmail', [UserController::class, 'searchByEmail']); // get a user by email
 
@@ -441,10 +477,10 @@ Route::put('userStatus/{id}',[UserController::class, 'authenticateUser']); // up
 
 Route::put('userInvalid/{id}',[UserController::class, 'invalidatesUser']); //// update the user status to Denied, only an admin can do it
 
-Route::get('/users/search', [UserController::class, 'searchCertifiedUsers']); // Admin get a list of users where certification status is TRUE
+ // Admin get a list of users where certification status is TRUE
 Route::get('/users/{id}', [UserController::class, 'getUserDetailsByID']);
 Route::put('/users/{id}', [UserController::class, 'roleManagementEditUser']);// update the user room number and role only
-Route::get('/users/search/{email}', [UserController::class, 'getUserDetailsByEmail'])->name('users.search');
+
 Route::get('/users/requested', [UserController::class, 'getRequestedUsers']);
 Route::delete('/users/{id}', [UserController::class, 'inactiveUser']);
 
@@ -457,6 +493,24 @@ Route::put('usersRoleAdmin/{id}',[UserController::class, 'changeUserRoleAdmin'])
 Route::put('usersRoleStaff/{id}',[UserController::class, 'changeUserRoleStaff']); //GOO
 
 Route::post('/professors/users', [UserController::class, 'createStaffUser']); //create a user with status = requested and role = staff
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
