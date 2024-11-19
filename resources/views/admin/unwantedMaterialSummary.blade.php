@@ -67,12 +67,12 @@
                 <input type="text" class="form-control" id="chemicalName" placeholder="Search by Chemical Name">
             </div>
             <div class="col-md-4 d-flex align-items-end">
-                <button class="btn btn-secondary w-100" id="chemicalSearchBtn" disabled>Search by Chemical</button>
+                <button class="btn btn-primary w-100" id="chemicalSearchBtn" disabled>Search by Chemical</button>
             </div>
         </div>
 
         <!-- Filter by Volume or Weight -->
-        <div class="row mb-4">
+        <!-- <div class="row mb-4">
             <div class="col-md-4">
                 <label class="form-label">Filter By</label>
                 <div class="form-check">
@@ -84,7 +84,7 @@
                     <label class="form-check-label" for="filterWeight">Weight (Kg)</label>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Table Section -->
         <div class="table-container d-none" id="resultsTableContainer">
@@ -93,6 +93,8 @@
                     <tr>
                         <th>Chemical Name</th>
                         <th>Amount</th>
+                        <th>Added Date</th>
+
                     </tr>
                 </thead>
                 <tbody id="chemicalTableBody">
@@ -104,9 +106,13 @@
         <!-- Total Volume/Weight -->
         <div class="row mt-4 d-none" id="totalAmountContainer">
             <div class="col-md-6">
-                <h5>Total: <span id="totalAmount">0</span> <span id="unitLabel">L</span></h5>
+                <h5>Total Weight: <span id="totalAmount">0</span> <span id="unitLabel">kg</span></h5>
+                <!-- <h5>Total Volume: <span id="totalAmountV">0</span> <span id="unitLabel">L</span></h5> -->
+
             </div>
         </div>
+
+        
 
         <!-- Alert for invalid chemical search -->
         <div class="alert alert-danger mt-4 d-none" id="noChemicalAlert">
@@ -118,19 +124,7 @@
 
 @section('scripts')
 <script>
-// Dummy data for initial table view
-const labels = [
-    { chemical: "Iron", quantity: 10, units: "Kg", date: '2024-10-01' },
-    { chemical: "Iron", quantity: 5, units: "Kg", date: '2024-10-03' },
-    { chemical: "Sodium Chloride", quantity: 20, units: "Kg", date: '2024-10-05' },
-    { chemical: "Hydrochloric Acid", quantity: 1, units: "L", date: '2024-10-02' },
-    { chemical: "Water", quantity: 15, units: "L", date: '2024-10-06' },
-    { chemical: "Copper", quantity: 3, units: "Kg", date: '2024-10-07' }
-];
-
-let currentFilteredData = [];
-
-// Enable "Search by Date" button when both dates are selected and valid
+// Enable "Search by Date" button when both dates are valid
 const fromDateField = document.getElementById('fromDate');
 const toDateField = document.getElementById('toDate');
 const dateSearchBtn = document.getElementById('dateSearchBtn');
@@ -145,15 +139,17 @@ fromDateField.addEventListener('input', toggleDateSearchButton);
 toDateField.addEventListener('input', toggleDateSearchButton);
 
 // Date range search
-dateSearchBtn.addEventListener('click', function() {
+dateSearchBtn.addEventListener('click', function () {
     const fromDate = fromDateField.value;
     const toDate = toDateField.value;
 
-    currentFilteredData = labels.filter(label => 
-        new Date(label.date) >= new Date(fromDate) && new Date(label.date) <= new Date(toDate)
-    );
+    if (!fromDate || !toDate) {
+        alert('Please select both start and end dates.');
+        return;
+    }
 
-    filterAndPopulateTable(currentFilteredData);
+    // Fetch summary data for the specified date range
+    fetchData({ start_date: fromDate, end_date: toDate });
 });
 
 // Enable "Search by Chemical" button when chemical name input is non-empty
@@ -167,57 +163,65 @@ function toggleChemicalSearchButton() {
 chemicalNameField.addEventListener('input', toggleChemicalSearchButton);
 
 // Chemical name search with case-insensitive match
-chemicalSearchBtn.addEventListener('click', function() {
-    const chemicalName = chemicalNameField.value.trim().toLowerCase();
+chemicalSearchBtn.addEventListener('click', function () {
+    const chemicalName = chemicalNameField.value.trim();
 
-    currentFilteredData = labels.filter(label => 
-        label.chemical.toLowerCase() === chemicalName
-    );
-
-    if (currentFilteredData.length === 0) {
-        document.getElementById('noChemicalAlert').classList.remove('d-none');
-        document.getElementById('resultsTableContainer').classList.add('d-none');
-        document.getElementById('totalAmountContainer').classList.add('d-none');
-    } else {
-        document.getElementById('noChemicalAlert').classList.add('d-none');
-        filterAndPopulateTable(currentFilteredData);
-    }
+    fetchData({ chemical_name: chemicalName });
 });
 
+// Fetch data from the backend
+function fetchData(params) {
+    const queryString = new URLSearchParams(params).toString();
+    
+    fetch(`/unwanted-material-summary?${queryString}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch data');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.length === 0) {
+                document.getElementById('noChemicalAlert').classList.remove('d-none');
+                document.getElementById('resultsTableContainer').classList.add('d-none');
+                document.getElementById('totalAmountContainer').classList.add('d-none');
+            } else {
+                document.getElementById('noChemicalAlert').classList.add('d-none');
+                filterAndPopulateTable(data);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+            alert('Error fetching data. Please try again.');
+        });
+}
 
-// Toggle table display and filter data based on selected unit (volume or weight)
+// Filter data and populate table
 function filterAndPopulateTable(filteredData) {
-    const selectedUnit = document.querySelector('input[name="filterType"]:checked').value === 'volume' ? 'L' : 'Kg';
     const tableBody = document.getElementById('chemicalTableBody');
-    tableBody.innerHTML = '';
+    tableBody.innerHTML = ''; // Clear previous data
 
     let totalAmount = 0;
-    const chemicalSums = {};
 
-    filteredData.forEach(label => {
-        if (label.units === selectedUnit) {
-            if (!chemicalSums[label.chemical]) {
-                chemicalSums[label.chemical] = 0;
-            }
-            chemicalSums[label.chemical] += label.quantity;
-            totalAmount += label.quantity;
-        }
+    filteredData.forEach(item => {
+        totalAmount += item.total_contributed_quantity;
+
+        const row = `
+            <tr>
+                <td>${item.chemical_name}</td>
+                <td>${item.total_contributed_quantity.toFixed(2)} ${item.units}</td>
+                <td>${item.readable_date}</td>
+
+            </tr>
+        `;
+        tableBody.innerHTML += row;
     });
 
-    for (const chemical in chemicalSums) {
-        const row = `<tr>
-                        <td>${chemical}</td>
-                        <td>${chemicalSums[chemical]} ${selectedUnit}</td>
-                     </tr>`;
-        tableBody.innerHTML += row;
-    }
-
-    // Display table and total amount only after search
+    // Display total amount and table
     document.getElementById('resultsTableContainer').classList.remove('d-none');
     document.getElementById('totalAmountContainer').classList.remove('d-none');
-    
-    document.getElementById('totalAmount').textContent = totalAmount;
-    document.getElementById('unitLabel').textContent = selectedUnit;
+    document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+    document.getElementById('unitLabel').textContent = filteredData[0]?.units || '';
 }
 </script>
 @endsection

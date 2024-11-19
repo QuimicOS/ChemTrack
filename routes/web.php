@@ -39,11 +39,20 @@ Route::get('loginTemp', function () {
     return view('loginTemp');
 })->name('loginTemp');
 
+
+
+
+
+
+
+
+
+
 ////////////////////////////////ADMIN ROUTES//////////////////////////////////////////////
 
 Route::get('admin/homeAdmin', function () {
     return view('admin/homeAdmin');
-})->name('admin/homeAdmin');
+})->name('admin/homeAdmin')->middleware(['auth']);
 
 Route::get('admin/notifications', function () {
     return view('admin/notifications');
@@ -114,6 +123,22 @@ Route::get('admin/manageQuiz', function () {
 })->name('admin/manageQuiz');
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ////////////////////////////////PROFESSOR ROUTES//////////////////////////////////////////////
 
 Route::get('professor/homeProfessor', function () {
@@ -168,6 +193,22 @@ Route::get('professor/addChemical', function () {
     return view('professor/addChemical');
 })->name('professor/addChemical');
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ////////////////////////////////STAFF ROUTES//////////////////////////////////////////////
 
 Route::get('staff/homeStaff', function () {
@@ -217,6 +258,24 @@ Route::get('staff/invalidPickup', function () {
 Route::get('staff/addChemical', function () {
     return view('staff/addChemical');
 })->name('staff/addChemical');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 Route::get('/dashboard', function () {
@@ -369,9 +428,7 @@ Route::put('/lab/{id}/supervisor', [LaboratoryController::class, 'assignLabSuper
 
 ////////////////////////////////////////For users///////////////////////////////////////////
 
-//statitstics
 
-//FALTA retrieve new users created on the last 30 days
 
 
 ////Routes
@@ -406,35 +463,52 @@ Route::post('/professors/users', [UserController::class, 'createStaffUser']); //
 
 
 
+Route::get('/notice', function () {
+    return view('notice');
+})->name('notice');
+
+Route::get('/training', function () {
+    return view('training');
+})->name('training');
+
+Route::get('/quiz', function () {
+    return view('quiz');
+})->name('quiz');
+
+Route::get('/manageQuiz', function () {
+    return view('manageQuiz');
+})->name('manageQuiz');
 
 
 
-use Illuminate\Http\Request;
 
-
-/* Route::get('auth/saml2/arrival', function () {
+ Route::get('auth/saml2/arrival', function () {
     $user = Auth::user();
-    Log::debug('[SAML2] User in arrival route', ['user' => $user]);
 
     if (!$user) {
-        Log::debug('[SAML2] User not authenticated, redirecting to Home Page.');
-        return redirect()->route('home');
+        return redirect()->route('aboutUs');
     }
 
     switch ($user->role) {
         case 'Administrator':
-            return redirect()->route('admin.homeAdmin');
+            return redirect()->route('admin/homeAdmin');
         case 'Professor':
-            return redirect()->route('professor.homeProfessor');
+            return redirect()->route('professor/homeProfessor');
         case 'Staff':
-            return redirect()->route('staff.homeStaff');
+            return redirect()->route('staff/homeStaff');
         default:
-            return redirect()->route('aboutUs');
+            return redirect()->route('home');
     }
-    // return view('welcome');
-})->middleware(['auth']); */
+}); 
+
+
+
+
+
+
+
 
 
 require __DIR__.'/auth.php';
-
+require __DIR__.'/saml2.php';
 

@@ -143,7 +143,7 @@
                 </div>
 
                 <!-- Username and Sign Out -->
-                <span class="navbar-text me-3"><b>juan.pablo@upr.edu</b></span>
+                <span class="navbar-text me-3"><b>{{Auth::user()->email}}</b></span>
                 <a href="{{ route('home') }}" class="btn btn-danger">Sign Out</a>
             </div>
         </div>
@@ -156,7 +156,7 @@
         </div>
         <div class="line-divider"></div>
         <div class="menu-button-primary">
-            <div class="menu-item">juan.pablo@upr.edu</div>
+            <div class="menu-item">{{Auth::user()->email}}</div>
         </div>
         <div class="line-divider"></div>
         <div class="menu-section">

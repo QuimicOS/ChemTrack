@@ -45,11 +45,12 @@
             <thead class="table-dark">
                 <tr>
                     <th>Label ID</th>
-                    <th>Container #</th>
+                    <th>Container Size</th>
                     <th>Chemical Name</th>
+                    <th>Percentage</th>
                     <th>Material State</th>
                     <th>Container Material</th>
-                    <th>Container Capacity</th>
+                    <th>Container #</th>
                     <th>pH</th>
                 </tr>
             </thead>
@@ -73,49 +74,56 @@ const searchButton = document.getElementById('searchLabelBtn');
 const tableContainer = document.querySelector('.table-container'); // Table container to control its display
 
 // Function to enforce only numbers in the search input field
-searchInput.addEventListener('input', function(event) {
-    // Remove any non-numeric characters from the input value
-    searchInput.value = searchInput.value.replace(/[^0-9]/g, '');
+searchInput.addEventListener('input', function (event) {
+    searchInput.value = searchInput.value.replace(/[^0-9]/g, ''); // Remove any non-numeric characters
     toggleSearchButton(); // Re-check button state
 });
 
 // Function to toggle the search button based on input validation
 function toggleSearchButton() {
     const searchValue = searchInput.value.trim();
-    // Enable button only if searchValue is non-empty and contains only digits
-    searchButton.disabled = !(searchValue && /^[0-9]+$/.test(searchValue));
+    searchButton.disabled = !(searchValue && /^[0-9]+$/.test(searchValue)); // Enable button only if input is non-empty and numeric
 }
-
-// Attach input event listener to search input field
-searchInput.addEventListener('input', toggleSearchButton);
 
 // Initial toggle check to disable the button on load
 toggleSearchButton();
 
 // Search button click event to fetch and search labels
-searchButton.addEventListener('click', function() {
+searchButton.addEventListener('click', function () {
     const searchValue = searchInput.value.trim();
-
-    // Clear search input
-    searchInput.value = '';
+    searchInput.value = ''; // Clear search input
     toggleSearchButton(); // Disable the button again after clearing
 
-    // Fetch and search label data from the JSON file
-    fetch('/json/labelM.json')
-        .then(response => response.json())
+    // Fetch the label data from the correct API endpoint
+    fetch(`/unwanted-material-memorandum?label_id=${searchValue}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Label ID not found');
+            }
+            return response.json();
+        })
         .then(data => {
-            // Find the label by ID
-            const label = data.find(l => l.label_id === searchValue);
-            if (label) {
-                // Add found label to the searchedLabels array
-                searchedLabels.push(label);
+            if (data.length === 0) {
+                alert('Label ID not found');
+            } else {
+                // Clear previous results
+                searchedLabels = [];
+
+                // Populate searched labels with the response data
+                data.forEach(item => {
+                    searchedLabels.push({
+                        label_id: item.label_id,
+                        container_size: item.container_size,
+                        chemical_name: item.chemical_name,
+                        percentage: item.percentage
+                    });
+                });
+
                 renderTable();
                 tableContainer.style.display = 'block'; // Show the table after successful search
-            } else {
-                alert('Label ID not found');
             }
         })
-        .catch(error => console.error('Error loading labels:', error));
+        .catch(error => console.error('Error loading label data:', error));
 });
 
 // Function to render table with searched labels
@@ -123,19 +131,22 @@ function renderTable() {
     const tableBody = document.getElementById('labelTableBody');
     tableBody.innerHTML = ''; // Clear previous rows
 
-    // Populate rows for each searched label
+    // Populate rows for each searched label with only the required columns
     searchedLabels.forEach(label => {
         const row = `<tr>
                         <td>${label.label_id}</td>
-                        <td></td> <!-- Empty cell for Container # -->
+                        <td>${label.container_size}</td>
                         <td>${label.chemical_name}</td>
-                        <td></td> <!-- Empty cell for Material State -->
-                        <td></td> <!-- Empty cell for Container Material -->
-                        <td>${label.container_capacity}</td>
-                        <td></td> <!-- Empty cell for pH -->
+                        <td>${label.percentage}%</td>
+                        <td>${''}</td>
+                        <td>${''}</td>
+                        <td>${''}</td>
+                        <td>${''}</td>
                     </tr>`;
         tableBody.innerHTML += row;
     });
 }
 </script>
+
+
 @endsection

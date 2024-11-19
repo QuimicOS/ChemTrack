@@ -9,7 +9,9 @@
         "24slides/laravel-saml2": "^2.4",
         "laravel/framework": "^11.9",
         "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^2.9"
+        "laravel/tinker": "^2.9",
+        "laravel/ui": "^4.5",
+        "socialiteproviders/saml2": "^4.7"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

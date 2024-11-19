@@ -66,7 +66,7 @@
             <legend>Basic Information</legend>
             <div class="mb-3">
                 <label for="createdBy" class="form-label">Created By (Username)</label>
-                <input type="text" class="form-control" id="createdBy" value="orlangel.olivo@edu.edu" readonly>
+                <input type="text" class="form-control" id="createdBy" value={{Auth::user()->email}} readonly>
             </div>
             <div class="mb-3">
                 <label for="dateCreated" class="form-label">Date</label>
@@ -81,8 +81,6 @@
                 <label for="department" class="form-label">Department</label>
                 <select class="form-select" id="department" required>
                     <option value="" selected>Select Department</option>
-                    <option value="Mecanica">Mecanica</option>
-                    <option value="Quimica">Quimica</option>
                 </select>
             </div>
             <div class="mb-3">

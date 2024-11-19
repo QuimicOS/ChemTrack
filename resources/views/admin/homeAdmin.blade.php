@@ -184,7 +184,7 @@
                 <p>LABELS CREATED LAST 7 DAYS</p>
             </div>
             <div class="dashboard-card">
-              <h5></h5>
+              <h5>8</h5>
               <p>PENDING PICKUP REQUESTS</p>
             </div>
             <div class="dashboard-card">
@@ -193,7 +193,7 @@
             </div>
             <div class="dashboard-card weight-last30days">
               <h5></h5>
-              <p>WEIGHT GENERATED (LBS) LAST 30 DAYS</p>
+              <p>WEIGHT GENERATED LAST 30 DAYS</p>
             </div>
             <div class="dashboard-card volume-last30days">
               <h5></h5>
@@ -330,6 +330,7 @@
             .catch(error => console.error('Error fetching weight data:', error));
     }
 
+        // <!-- AJAX Calls for Dashboard Data volumegenerated -->
 
         function fetchVolumeTotal() {
         fetch('/labels/volume')
@@ -344,6 +345,7 @@
 
 
 
+        // <!-- AJAX Calls for Dashboard Data Users generated -->
 
         function fetchNewMembersLast30Days() {
         fetch('/users/new-members')

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Laboratory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
 
 class UserController extends Controller
 {
@@ -388,6 +390,35 @@ class UserController extends Controller
 
     return response()->json(['new_member_count' => $newMemberCount], 200);
 }
+
+
+
+
+
+
+
+// public function validateUserRole(Request $request)
+// {
+//     $user = Auth::user(); // Get the authenticated user
+
+//     // Define the allowed roles
+//     $allowedRoles = ['Administrator', 'Professor', 'Staff'];
+
+//     // Get the requested role from the request
+//     $requestedRole = $request->input('role');
+
+//     // Check if the requested role is valid and matches the user's role
+//     if (!in_array($requestedRole, $allowedRoles)) {
+//         return response()->json(['error' => 'Invalid role requested.'], 400);
+//     }
+
+//     if ($user->role !== $requestedRole) {
+//         return response()->json(['error' => 'Unauthorized role selection.'], 403);
+//     }
+
+//     // Role is valid and matches the user's role
+//     return response()->json(['success' => true, 'message' => "Role validated as {$requestedRole}."], 200);
+// }
 
   
  
