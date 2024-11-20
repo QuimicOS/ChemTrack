@@ -59,14 +59,11 @@ class User extends Authenticatable implements MustVerifyEmail
         
         'name' => 'required|string|max:255',
         'last_name' => 'required|string|max:255',
-        'email' => 'required|string|max:255',
-        'role' => 'required|string|max:255',
-        'department' => 'required|string|max:255',
-        'room_number' => 'required|string|max:255',
-        'user_status' => 'required|string|max:255',
-        'certification_status' => 'required|boolean',
-        'certification_date' => 'required|date',
-        'lab_id' => 'nullable|integer'
+        'email' => 'required|string|email|max:255',
+        'role' => 'nullable|string|max:255',
+        'department' => 'nullable|string|max:255',
+        'user_status' => 'nullable|string|max:255',
+        'room_number' => 'nullable|string|max:255|exists:laboratory,room_number'
         
      ];
 

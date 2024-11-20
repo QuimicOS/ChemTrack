@@ -37,14 +37,39 @@ class UserController extends Controller
 
 
 
-    // POST - Create a new user (Create operation)/////////////
-    public function store(Request $request)
-    {
-    
-        $user = User::create($request->all());
 
-        return response()->json($user, 201); // 201 Created
+
+    // POST - Create a new user (Create operation)/////////////
+    public function createUser(Request $request)
+    {
+        // Validate input data
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:user,email',
+            'role' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:255',
+            'room_number' => 'nullable|string|max:255|exists:laboratory,room_number',
+        ]);
+    
+        // Create the user with default certification status
+        $user = new User();
+        $user->name = $validatedData['name'];
+        $user->last_name = $validatedData['last_name'];
+        $user->email = $validatedData['email'];
+        $user->role = $validatedData['role'] ?? null;
+        $user->department = $validatedData['department'] ?? null;
+        $user->user_status = 'Accepted';
+        $user->certification_status = 0; // Default certification status
+        $user->room_number = $validatedData['room_number'] ?? null;
+        $user->save();
+    
+        return response()->json(['message' => 'User created successfully!', 'user' => $user], 201);
     }
+    
+
+
+
 
 
 
@@ -63,19 +88,6 @@ class UserController extends Controller
         return response()->json($user);
     }
 
-
-
-    // DELETE - Remove a user by ID (Delete operation)
-    // public function destroy($id)
-    // {
-    //     $user = User::find($id);
-    //     if (!$user) {
-    //         return response()->json(['error' => 'User not found'], 404);
-    //     }
-
-    //     $user->delete();
-    //     return response()->json(['success' => 'User deleted successfully']);
-    // }
 
 
 
@@ -249,38 +261,36 @@ class UserController extends Controller
 
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////// PEdido por Orlangel para views
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
 
 
 
  
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
-
-//     // GET para buscar por email
-
-    public function searchByEmail(Request $request)
-    {
-        $email = $request->input('email');
-
-        $user = User::where('email', $email)->first();
-
-        if ($user) {
-            return response()->json($user);
-        } else {
-            return response()->json(['message' => 'User not found'], 404);
-        }
+//// GET para buscar por email GOOD/////////////////////////////
+public function searchUserByEmail($email)
+{
+    // Validate the email format
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return response()->json(['error' => 'Invalid email format'], 400);
     }
+
+    // Find the user by email
+    $user = User::where('email', $email)->first();
+
+    // If user is not found, return an error response
+    if (!$user) {
+        return response()->json(['error' => 'User not found'], 404);
+    }
+
+    // Return the user details
+    return response()->json($user, 200);
+}
 
 
 
@@ -289,32 +299,38 @@ class UserController extends Controller
 //     //GEt wherre user certification status = true
 
 
-    public function searchCertifiedUsers(Request $request)
-    {
-        $query = User::where('certification_status', true);
+public function getCertifiedUsers()
+{
+    // Fetch all users with certification_status = true
+    $certifiedStudents = User::where('certification_status', true)->get();
 
-        if ($request->filled('name')) {
-            $query->where('name', 'like', '%' . $request->input('name') . '%');
-        }
-        if ($request->filled('lastname')) {
-            $query->where('lastname', 'like', '%' . $request->input('lastname') . '%');
-        }
-        if ($request->filled('certification_date')) {
-            $query->whereDate('certification_date', $request->input('certification_date'));
-        }
-        if ($request->filled('department')) {
-            $query->where('department', 'like', '%' . $request->input('department') . '%');
-        }
-
-        $users = $query->get();
-
-        return response()->json($users);
+    // Check if there are any certified students
+    if ($certifiedStudents->isEmpty()) {
+        return response()->json(['message' => 'No certified students found'], 404);
     }
 
+    // Return the certified students
+    return response()->json(['certified_students' => $certifiedStudents], 200);
+}
 
 
 
+public function getRequestedUsers()
+{
+    // Fetch all users with user_status = "requested"
+    $requestedUsers = User::where('user_status', 'Requested')->get();
 
+    // Check if there are any requested users
+    if ($requestedUsers->isEmpty()) {
+        return response()->json(['message' => 'No requested users found'], 404);
+    }
+
+    // Return the requested users
+    return response()->json(['requested_users' => $requestedUsers], 200);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 ////////CONTROLLER that will create a new user from scratch with the user_status always set to "requested" when the role is professor
@@ -324,9 +340,9 @@ class UserController extends Controller
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:user',
             'department' => 'required|string|max:255',
-            'room_number' => 'required|exists:laboratories,room_number'
+            'room_number' => 'required|exists:laboratory,room_number'
         ]);
 
         // Set default attributes
@@ -336,9 +352,9 @@ class UserController extends Controller
         $user->email = $validatedData['email'];
         $user->department = $validatedData['department'];
         $user->room_number = $validatedData['room_number'];
-        $user->role = 'staff'; // Always "staff" for this function
+        $user->role = 'Staff'; // Always "staff" for this function
         $user->certification_status = false; // Default false
-        $user->user_status = 'requested'; // Default "requested"
+        $user->user_status = 'Requested'; // Default "requested"
 
         // Save user to the database
         $user->save();
@@ -374,13 +390,20 @@ class UserController extends Controller
         // Validate and update user data
         $validatedData = $request->validate([
             'room_number' => 'required|string|max:255',
-            'role' => 'required|string|in:professor', 
+            'role' => 'required|string|max:255', 
 
         ]);
 
         $user->update($validatedData);
         return response()->json($user);
     }
+
+
+
+
+
+
+
 
 
     public function countNewMembersLast30Days()

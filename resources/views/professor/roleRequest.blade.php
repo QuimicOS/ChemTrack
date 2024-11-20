@@ -2,6 +2,8 @@
 
 @section('title', 'Role Request - ChemTrack')
 
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
 @section('content')
 <style>
     .content-area {
@@ -82,7 +84,7 @@
             <!-- Role Field -->
             <div class="col-md-6">
                 <label for="role" class="form-label">Role</label>
-                <input type="text" class="form-control" id="role" value="Teaching Assistant/Technician/Student" readonly>
+                <input type="text" class="form-control" id="role" value="Teaching Assistant/Lab Technician/Student" readonly>
             </div>
         </div>
         
@@ -99,6 +101,7 @@
 
 @section('scripts')
 <script>
+// Regular expressions for validation
 // Regular expressions for validation
 const namePattern = /^[a-zA-Z\s]+$/; // Only letters and spaces for names and department
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -121,7 +124,7 @@ function toggleSubmitButton() {
         namePattern.test(departmentField.value.trim()) &&
         Array.from(roomNumberFields).every(field => roomNumberPattern.test(field.value.trim()));
 
-    submitButton.disabled = !isValid;  // Enable button only if all fields are valid
+    submitButton.disabled = !isValid; // Enable button only if all fields are valid
 }
 
 // Add additional room number field
@@ -152,44 +155,55 @@ function addRoomNumberField() {
     toggleSubmitButton(); // Re-validate form
 }
 
-// Validate fields and download as JSON
-function validateAndDownloadJSON() {
+// Submit form data to backend using POST request
+function submitRoleRequest() {
     const nameField = document.getElementById('name');
     const lastNameField = document.getElementById('lastName');
     const emailField = document.getElementById('email');
     const departmentField = document.getElementById('department');
-    const roomNumberFields = document.querySelectorAll('.room-number');
+    const roomNumberField = document.querySelector('.room-number');
 
-    // Collect all room numbers
-    const roomNumbers = Array.from(roomNumberFields).map(field => field.value.trim());
-
+    // Prepare the request payload
     const roleRequestData = {
         name: nameField.value.trim(),
-        lastName: lastNameField.value.trim(),
+        last_name: lastNameField.value.trim(),
         email: emailField.value.trim(),
         department: departmentField.value.trim(),
-        roomNumbers: roomNumbers,  // Store all room numbers as an array
-        role: "Teaching Assistant/Technician/Student",  // Static role
+        room_number: roomNumberField.value.trim() // Single room number for now
     };
 
-    // Convert the JSON object to string
-    const jsonString = JSON.stringify(roleRequestData, null, 4);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    // Create a blob from the JSON string and trigger download
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    // Make a POST request to the server
+    fetch('/professors/users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify(roleRequestData),
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.message || 'Error creating user');
+                });
+            }
+            return response.json(); // Parse the JSON response
+        })
+        .then(data => {
+            alert('User created successfully!');
+            console.log('Response:', data);
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'roleRequestData.json';
-    a.click();
-
-    // Clean up URL.createObjectURL
-    URL.revokeObjectURL(url);
-
-    // Clear the form fields
-    document.getElementById('roleRequestForm').reset();
-    toggleSubmitButton();  // Disable the button again after submission
+            // Clear the form fields
+            document.getElementById('roleRequestForm').reset();
+            toggleSubmitButton(); // Disable the button again after submission
+        })
+        .catch(error => {
+            console.error('Error creating user:', error);
+            alert('Failed to create user. Check the console for details.');
+        });
 }
 
 // Attach event listeners to input fields to toggle the submit button state
@@ -197,10 +211,10 @@ document.getElementById('name').addEventListener('input', toggleSubmitButton);
 document.getElementById('lastName').addEventListener('input', toggleSubmitButton);
 document.getElementById('email').addEventListener('input', toggleSubmitButton);
 document.getElementById('department').addEventListener('input', toggleSubmitButton);
+document.querySelector('.room-number').addEventListener('input', toggleSubmitButton);
 
-// Attach click event to submit button to handle form validation and JSON download
-document.getElementById('submitBtn').addEventListener('click', validateAndDownloadJSON);
-
+// Attach click event to submit button to handle form submission
+document.getElementById('submitBtn').addEventListener('click', submitRoleRequest);
 
 </script>
 @endsection

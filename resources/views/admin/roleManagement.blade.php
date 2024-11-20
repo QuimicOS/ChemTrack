@@ -1,7 +1,7 @@
 @extends('admin.templateAdmin')
 
 @section('title', 'Role Management')
-
+<meta name="csrf-token" content="{{ csrf_token() }}">
 @section('content')
 <style>
     .content-area {
@@ -19,6 +19,17 @@
         display: flex;
         justify-content: space-between;
     }
+    fieldset {
+        border: 1px solid #ccc;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background-color: #f8f9fa;
+    }
+    legend {
+        font-size: 1.2rem;
+        font-weight: bold;
+        padding: 0 0.5rem;
+    }
 </style>
 
 <div class="content-area container">
@@ -27,7 +38,7 @@
         <h1 class="display-5">Role Management</h1>
         <hr class="my-4">
     </div>
-
+    <fieldset>
     <!-- Form Section (Add User) -->
     <form id="roleForm">
         <div class="row mb-3">
@@ -57,14 +68,18 @@
         </div>
 
         <div class="row mb-3">
+            <!-- Room Number Field with Add Button -->
             <div class="col-md-4">
                 <label for="laboratory" class="form-label">Room Number</label>
-                <input type="text" class="form-control" id="laboratory" placeholder="Enter Lab (e.g., S-122)">
+                <div id="roomNumberContainer">
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control room-number" placeholder="Enter Lab (e.g., S-122)">
+                        <button type="button" class="btn btn-outline-success" onclick="addRoomNumberField()">+</button>
+                    </div>
+                </div>
                 <small class="text-danger" id="laboratoryError"></small>
             </div>
-        </div>
 
-        <div class="row mb-3">
             <div class="col-md-4">
                 <label for="role" class="form-label">Role</label>
                 <select class="form-control" id="role">
@@ -81,8 +96,10 @@
             <button type="button" class="btn btn-success" onclick="validateForm()">Add</button>
         </div>
     </form>
+    </fieldset>
 
     <!-- Submitted Requests Table -->
+    <fieldset>
     <div class="table-container mt-5">
         <h3>Submitted Requests</h3>
         <table class="table table-bordered table-hover">
@@ -100,19 +117,23 @@
             </tbody>
         </table>
     </div>
+    </fieldset>
 
     <!-- Search Section for Editing Users -->
+    <fieldset>
     <div class="row mb-3 mt-5">
         <div class="col-md-8">
             <label for="searchUsername" class="form-label">Search Username</label>
             <input type="text" class="form-control" id="searchUsername" placeholder="Enter username (e.g., name.lastname)">
         </div>
         <div class="col-md-4 d-flex align-items-end">
-            <button class="btn btn-secondary w-100" onclick="searchUsername()">Search</button>
+            <button class="btn btn-primary w-100" onclick="searchUsername()">Search</button>
         </div>
     </div>
+    </fieldset>
 
     <!-- Edit Users Table -->
+    <fieldset>
     <div class="table-container mt-3">
         <h3>Edit Users</h3>
         <table class="table table-bordered table-hover">
@@ -129,8 +150,57 @@
             </tbody>
         </table>
     </div>
+    </fieldset>
+
+    <div class="modal" id="editUserModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editUserId"> <!-- Hidden userId field -->
+                    <div class="mb-3">
+                        <label for="editLaboratory" class="form-label">Room Number</label>
+                        <input type="text" id="editLaboratory" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editRole" class="form-label">Role</label>
+                        <input type="text" id="editRole" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteUserModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete this user?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="confirmDeleteButton" class="btn btn-danger">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
 
     <!-- Show Certified Users Button -->
+    <fieldset>
     <div class="text-center mt-5">
         <button type="button" class="btn btn-info" onclick="toggleCertifiedUsers()">Show Certified Users</button>
     </div>
@@ -155,30 +225,92 @@
             <button type="button" class="btn btn-primary" onclick="generatePDF()">Generate PDF</button>
         </div>
     </div>
+    </fieldset>
 </div>
 @endsection
 
 @section('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 <script>
-let users = [
-    { username: 'john.doe@upr.edu', laboratories: 'S-122', role: 'Admin', date: '2024-10-18' },
-    { username: 'alice.smith@upr.edu', laboratories: 'CH-001', role: 'TA', date: '2024-10-17' }
-];
 
-let submittedRequests = [
-    { username: 'paul.green@upr.edu', laboratories: 'S-101', role: 'Professor', date: '2024-10-19' },
-    { username: 'susan.blue@upr.edu', laboratories: 'PH-220', role: 'TA', date: '2024-10-18' }
-];
+// Function to add new room fields
+function addRoomNumberField() {
+    const roomNumberContainer = document.getElementById('roomNumberContainer');
+    const newInputGroup = document.createElement('div');
+    newInputGroup.classList.add('input-group', 'mb-2');
 
-// Dummy certified users data
-let certifiedUsers = [
-    { firstName: 'Emma', lastName: 'Johnson', completionDate: '2024-09-30', department: 'Chemistry' },
-    { firstName: 'Liam', lastName: 'Brown', completionDate: '2024-10-05', department: 'Biology' },
-    { firstName: 'Olivia', lastName: 'Wilson', completionDate: '2024-10-10', department: 'Physics' }
-];
+    const newInput = document.createElement('input');
+    newInput.type = 'text';
+    newInput.className = 'form-control room-number';
+    newInput.placeholder = 'Enter room number (e.g., S-122)';
 
-let editIndex = -1;
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'btn btn-outline-danger';
+    removeButton.textContent = '-';
+    removeButton.onclick = () => newInputGroup.remove();
+
+    newInputGroup.appendChild(newInput);
+    newInputGroup.appendChild(removeButton);
+    roomNumberContainer.appendChild(newInputGroup);
+}
+// Regular expressions for validation
+const namePattern = /^[a-zA-Z\s]+$/; // Only letters and spaces for names and department
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const roomNumberPattern = /^[a-zA-Z0-9]{1,5}-[a-zA-Z0-9]{1,5}$/; // Room number format
+
+// Toggle submit button based on all validations
+function toggleSubmitButton() {
+    const nameField = document.getElementById('name');
+    const lastNameField = document.getElementById('lastName');
+    const emailField = document.getElementById('email');
+    const departmentField = document.getElementById('department');
+    const roomNumberFields = document.querySelectorAll('.room-number');
+    const roleField = document.getElementById('role');
+    const submitButton = document.getElementById('submitBtn');
+
+    // Check if all fields are valid
+    const isValid = 
+        namePattern.test(nameField.value.trim()) &&
+        namePattern.test(lastNameField.value.trim()) &&
+        emailPattern.test(emailField.value.trim()) &&
+        namePattern.test(departmentField.value.trim()) &&
+        Array.from(roomNumberFields).every(field => roomNumberPattern.test(field.value.trim())) &&
+        roleField.value; // Ensures role is selected
+
+    submitButton.disabled = !isValid;  // Enable button only if all fields are valid
+}
+
+// Add additional room number field
+function addRoomNumberField() {
+    const roomNumberContainer = document.getElementById('roomNumberContainer');
+    const newFieldGroup = document.createElement('div');
+    newFieldGroup.classList.add('input-group', 'mb-2');
+
+    const newInput = document.createElement('input');
+    newInput.type = 'text';
+    newInput.className = 'form-control room-number';
+    newInput.placeholder = 'Enter room number (e.g., B-257)';
+    newInput.required = true;
+
+    // Add event listener for validation
+    newInput.addEventListener('input', toggleSubmitButton);
+
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'btn btn-outline-danger';
+    removeButton.textContent = '-';
+    removeButton.onclick = () => {
+        newFieldGroup.remove();
+        toggleSubmitButton(); // Re-validate form after removal
+    };
+
+    newFieldGroup.appendChild(newInput);
+    newFieldGroup.appendChild(removeButton);
+
+    roomNumberContainer.appendChild(newFieldGroup);
+    toggleSubmitButton(); // Re-validate form
+}
 
 // Function to validate and add new user
 function validateForm() {
@@ -195,144 +327,380 @@ function validateForm() {
     // Validate Name and Last Name: Characters only
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
-    if (!/^[a-zA-Z]+$/.test(firstName)) {
+    if (!/^[a-zA-Z\s]+$/.test(firstName)) {
         document.getElementById('firstNameError').textContent = 'First name must contain only letters.';
         isValid = false;
     }
-    if (!/^[a-zA-Z]+$/.test(lastName)) {
+    if (!/^[a-zA-Z\s]+$/.test(lastName)) {
         document.getElementById('lastNameError').textContent = 'Last name must contain only letters.';
         isValid = false;
     }
 
-    // Validate Email: Specific format (example@upr.edu)
+    // Validate Email
     const email = document.getElementById('email').value.trim();
-    const emailPattern = /^[a-zA-Z0-9._%+-]+@upr\.edu$/;
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailPattern.test(email)) {
-        document.getElementById('emailError').textContent = 'Please enter a valid UPR email (example@upr.edu).';
+        document.getElementById('emailError').textContent = 'Invalid email format.';
         isValid = false;
     }
 
-    // Validate Department: Characters only
+    // Validate Department
     const department = document.getElementById('department').value.trim();
     if (!/^[a-zA-Z\s]+$/.test(department)) {
         document.getElementById('departmentError').textContent = 'Department must contain only letters.';
         isValid = false;
     }
 
-    // Validate Laboratory: Format should be 1-5 letters, dash, and up to three alphanumeric characters
-    const laboratory = document.getElementById('laboratory').value.trim();
-    const labPattern = /^[A-Za-z]{1,5}-[A-Za-z0-9]{1,3}$/;
-    if (!labPattern.test(laboratory)) {
-        document.getElementById('laboratoryError').textContent = 'Lab format should be letters-digits (e.g., S-122).';
-        isValid = false;
-    }
-
-    // Validate Role: Ensure selection
+    // Validate Role
     const role = document.getElementById('role').value;
     if (!role) {
         document.getElementById('roleError').textContent = 'Please select a role.';
         isValid = false;
     }
 
-    // If all fields are valid, proceed with adding the user
+    // Get Room Number (Optional)
+    const roomNumber = document.querySelector('.room-number').value.trim();
+
+    // Submit form if valid
     if (isValid) {
-        const newUser = { username: email, laboratories: laboratory, role: role, date: new Date().toISOString().split('T')[0] };
-        users.push(newUser);  // Assuming `users` array is used to store user entries
-        document.getElementById('roleForm').reset();
-        alert('User successfully added!');  // Replace this with your alert modal if needed
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        fetch('/newUsers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            body: JSON.stringify({
+                name: firstName,
+                last_name: lastName,
+                email: email,
+                department: department,
+                room_number: roomNumber || null,
+                role: role,
+            }),
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        console.error('Validation errors:', errorData);
+                        throw new Error('Failed to add user.');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('User added successfully!');
+                document.getElementById('roleForm').reset();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to add user. Please try again.');
+            });
     }
 }
-// Function to render submitted requests
+
+// Function to render submitted requested users
 function renderSubmittedRequestsTable() {
     const tableBody = document.getElementById('submittedRequestsTableBody');
-    tableBody.innerHTML = '';
-    submittedRequests.forEach((user, index) => {
-        const row = `<tr>
-            <td>${user.username}</td>
-            <td>${user.laboratories}</td>
-            <td>${user.role}</td>
-            <td>${user.date}</td>
-            <td>
-                <button class="btn btn-success btn-sm" onclick="acceptRequest(${index})">Accept</button>
-                <button class="btn btn-danger btn-sm" onclick="denyRequest(${index})">Deny</button>
-            </td>
-        </tr>`;
-        tableBody.innerHTML += row;
-    });
+    tableBody.innerHTML = ''; // Clear existing table rows
+
+    // Fetch users with 'requested' status
+    fetch('/users/requested', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.message || 'Error fetching requested users');
+                });
+            }
+            return response.json(); // Parse JSON if response is OK
+        })
+        .then(data => {
+            // Check if data is empty
+            if (!data.requested_users || data.requested_users.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center">No requested users found</td></tr>`;
+                return;
+            }
+
+            // Populate the table with user data
+            data.requested_users.forEach(user => {
+                const row = `
+                    <tr>
+                        <td>${user.email}</td>
+                        <td>${user.room_number || 'N/A'}</td>
+                        <td>${user.role || 'N/A'}</td>
+                        <td>${new Date(user.created_at).toLocaleString()}</td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="acceptRequest(${user.id})">Accept</button>
+                            <button class="btn btn-danger btn-sm" onclick="denyRequest(${user.id})">Deny</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error.message);
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center">Error fetching requested users</td></tr>`;
+        });
 }
+
+
+
+
 
 // Function to accept a user request
-function acceptRequest(index) {
-    const acceptedUser = submittedRequests[index];
-    users.push(acceptedUser);
-    submittedRequests.splice(index, 1);
-    renderSubmittedRequestsTable();
-    showAlert("Request accepted. User can now be searched.");
+function acceptRequest(userId) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    fetch(`/userStatus/${userId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify({
+            completion_status: true,
+            completion_date: new Date().toISOString().split('T')[0], // Today's date
+        }),
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    console.error('Validation errors:', errorData);
+                    throw new Error('Failed to accept user request');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('User request accepted successfully!');
+            renderSubmittedRequestsTable(); // Refresh the table
+        })
+        .catch(error => {
+            console.error(error);
+            alert(error.message);
+        });
 }
 
-// Function to deny a request
-function denyRequest(index) {
-    submittedRequests.splice(index, 1);
-    renderSubmittedRequestsTable();
-    showAlert("Request denied.");
+
+
+function denyRequest(userId) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    fetch(`/userInvalid/${userId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+        },
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to deny user request');
+            }
+            return response.json();
+        })
+        .then(() => {
+            alert('User request denied');
+            renderSubmittedRequestsTable(); // Refresh the table
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Failed to deny user request');
+        });
 }
+
 
 // Function to render edit users table based on search results
 function renderEditUsersTable(userList) {
     const tableBody = document.getElementById('searchResultsTableBody');
-    tableBody.innerHTML = '';
-    userList.forEach((user, index) => {
+    tableBody.innerHTML = ''; // Clear previous results
+
+    userList.forEach(user => {
         const row = `<tr>
-            <td>${user.username}</td>
-            <td>${user.laboratories}</td>
+            <td>${user.email}</td>
+            <td>${user.room_number || 'N/A'}</td>
             <td>${user.role}</td>
             <td>
-                <button class="btn btn-warning btn-sm" onclick="openEditModal('${user.username}')">Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="openDeleteModal('${user.username}')">Delete</button>
+                <button class="btn btn-primary btn-sm" onclick="openEditModal('${user.id}')">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="openDeleteModal('${user.id}')">Delete</button>
             </td>
         </tr>`;
         tableBody.innerHTML += row;
     });
+
+    // Show a message if no users match the search
+    if (userList.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="4" class="text-center">No users found</td></tr>`;
+    }
 }
 
-// Function to search for a user
+
+
+// Function to search for a user by a email
 function searchUsername() {
-    const searchValue = document.getElementById('searchUsername').value.trim().toLowerCase();
-    const searchResults = users.filter(user => user.username.toLowerCase().includes(searchValue));
-    renderEditUsersTable(searchResults);
+    const searchValue = document.getElementById('searchUsername').value.trim();
+
+    if (!searchValue) {
+        alert("Please enter a username to search.");
+        return;
+    }
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    fetch(`/users/search/${encodeURIComponent(searchValue)}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+        },
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Active user not found');
+            }
+            return response.json();
+        })
+        .then(user => {
+            renderEditUsersTable([user]);
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Active user not found or an error occurred.');
+            renderEditUsersTable([]); // Clear the table if no user is found
+        });
 }
+
+
 
 // Open edit modal with selected user info
-function openEditModal(username) {
-    editIndex = users.findIndex(user => user.username === username);
-    const user = users[editIndex];
-    document.getElementById('editLaboratory').value = user.laboratories;
-    document.getElementById('editRole').value = user.role;
-    const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
-    editModal.show();
+function openEditModal(userId) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    fetch(`/users/${userId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+        },
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('User not found');
+            }
+            return response.json();
+        })
+        .then(user => {
+            // Populate the modal
+            document.getElementById('editLaboratory').value = user.room_number;
+            document.getElementById('editRole').value = user.role;
+
+            // Store the userId in a hidden field
+            document.getElementById('editUserId').value = user.id;
+
+            const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+            editModal.show();
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Failed to fetch user details.');
+        });
 }
+
+
+
+
 
 // Save edited changes
 function saveEdit() {
-    users[editIndex].laboratories = document.getElementById('editLaboratory').value;
-    users[editIndex].role = document.getElementById('editRole').value;
-    showAlert("User successfully edited.");
-    searchUsername(); // Refresh search results
+    const userId = document.getElementById('editUserId').value;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    const updatedData = {
+        room_number: document.getElementById('editLaboratory').value,
+        role: document.getElementById('editRole').value,
+    };
+
+    fetch(`/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify(updatedData),
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    console.error('Validation errors:', errorData);
+                    alert(errorData.error || 'Failed to update user.');
+                    throw new Error('Validation failed.');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('User updated successfully!');
+            renderSubmittedRequestsTable();
+        })
+        .catch(error => {
+            console.error(error);
+        });
 }
 
+
+
+
+
 // Open delete confirmation modal
-function openDeleteModal(username) {
-    editIndex = users.findIndex(user => user.username === username);
+function openDeleteModal(userId) {
     const deleteModal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+    document.getElementById('confirmDeleteButton').onclick = () => confirmDelete(userId);
     deleteModal.show();
 }
 
 // Confirm and delete a user
-function confirmDelete() {
-    users.splice(editIndex, 1);
-    showAlert("User successfully deleted.");
-    searchUsername(); // Refresh search results
+function confirmDelete(userId) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    fetch(`/userInvalid/${userId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+        },
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to delete user');
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('User status set to Inactive');
+            renderSubmittedRequestsTable(); // Refresh table
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Failed to delete user.');
+        });
 }
+
+
+
 
 // Show an alert modal
 function showAlert(message) {
@@ -341,46 +709,87 @@ function showAlert(message) {
     alertModal.show();
 }
 
+// Toggle the display of the certified users container
 function toggleCertifiedUsers() {
     const certifiedContainer = document.getElementById('certifiedUsersContainer');
-    if (certifiedContainer.style.display === 'none') {
+    if (certifiedContainer.style.display === 'none' || !certifiedContainer.style.display) {
         certifiedContainer.style.display = 'block';
-        renderCertifiedUsersTable();
+        fetchCertifiedUsers(); // Fetch and render certified users
     } else {
         certifiedContainer.style.display = 'none';
     }
 }
 
-function renderCertifiedUsersTable() {
+// Fetch certified users from the backend and render the table
+function fetchCertifiedUsers() {
     const tableBody = document.getElementById('certifiedUsersTableBody');
-    tableBody.innerHTML = '';
-    certifiedUsers.forEach(user => {
-        const row = `<tr>
-            <td>${user.firstName}</td>
-            <td>${user.lastName}</td>
-            <td>${user.completionDate}</td>
-            <td>${user.department}</td>
-        </tr>`;
-        tableBody.innerHTML += row;
-    });
+    tableBody.innerHTML = ''; // Clear existing rows
+
+    // Fetch certified users
+    fetch('/users/certified', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.message || 'Error fetching certified users');
+                });
+            }
+            return response.json(); // Parse the JSON response
+        })
+        .then(data => {
+            const certifiedStudents = data.certified_students;
+
+            // If no certified users are found, show a message
+            if (!certifiedStudents || certifiedStudents.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="text-center">No certified users found</td></tr>`;
+                return;
+            }
+
+            // Populate the table with certified users
+            certifiedStudents.forEach(user => {
+                const row = `
+                    <tr>
+                        <td>${user.name || 'N/A'}</td>
+                        <td>${user.last_name || 'N/A'}</td>
+                        <td>${user.certification_date ? new Date(user.certification_date).toLocaleDateString() : 'N/A'}</td>
+                        <td>${user.department || 'N/A'}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching certified users:', error);
+            tableBody.innerHTML = `<tr><td colspan="4" class="text-center">Error fetching certified users</td></tr>`;
+        });
 }
 
-// PDF Generation function
+// PDF Generation for Certified Users
 function generatePDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     doc.text("Certified Users", 10, 10);
-    
+
     let y = 20;
-    certifiedUsers.forEach(user => {
-        doc.text(`${user.firstName} ${user.lastName} - ${user.completionDate} - ${user.department}`, 10, y);
+    const tableRows = document.querySelectorAll('#certifiedUsersTableBody tr');
+    tableRows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        const rowText = Array.from(cells).map(cell => cell.textContent).join(' - ');
+        doc.text(rowText, 10, y);
         y += 10;
     });
 
     doc.save("Certified_Users.pdf");
 }
 
-// Initial render
+
+
+// Render initial data
 document.addEventListener('DOMContentLoaded', renderSubmittedRequestsTable);
 </script>
 @endsection
