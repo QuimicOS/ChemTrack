@@ -23,7 +23,7 @@ return new class extends Migration
 
             $table->string('created_by', 255)->nullable();
 
-            $table->foreign('created_by')->references('email')->on('user')->onDelete('set null');
+            // $table->foreign('created_by')->references('email')->on('user')->onDelete('set null');
 
             $table->timestamps();
         });
