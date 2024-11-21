@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
-class pickupRequestController extends Controller
+class PickupRequestController extends Controller
 {
 
 // ------------------------------------------------------------------------------------------------------
