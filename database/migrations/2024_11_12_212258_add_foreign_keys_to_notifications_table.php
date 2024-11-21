@@ -21,10 +21,10 @@ return new class extends Migration
 
             // Add foreign key constraints
             $table->foreign('user_id')->references('id')->on('user')->onDelete('set null');
-            $table->foreign('label_id')->references('label_id')->on('label')->onDelete('set null');
+            // $table->foreign('label_id')->references('label_id')->on('label')->onDelete('set null');
             $table->foreign('laboratory_id')->references('id')->on('laboratory')->onDelete('set null');
             $table->foreign('chemical_id')->references('id')->on('chemical')->onDelete('set null');
-            $table->foreign('pickup_id')->references('id')->on('pickup')->onDelete('set null');
+            // $table->foreign('pickup_id')->references('id')->on('pickup')->onDelete('set null');
         });
     }
 
