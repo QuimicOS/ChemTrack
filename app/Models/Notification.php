@@ -15,8 +15,14 @@ class Notification extends Model
         'send_to',
         'message',
         'status_of_notification',
-        'notification_type'
+        'notification_type',
+        'user_id',
+        'label_id',
+        'laboratory_id',
+        'chemical_id',
+        'pickup_id',
     ];
+    
     
     // DIRECT RELATIONSHIPS
     public function pickupRequests()
@@ -41,6 +47,6 @@ class Notification extends Model
 
     public function label()
     {
-        return $this->belongsTo(Label::class, 'label_id');
+        return $this->hasMany(Label::class, 'label_id');
     }
 }

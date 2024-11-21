@@ -70,7 +70,7 @@
             </div>
             <div class="mb-3">
                 <label for="dateCreated" class="form-label">Date</label>
-                <input type="date" class="form-control" id="dateCreated" name="date_created" readonly>
+                <input type="date" class="form-control" id="dateCreated" name="date_created">
             </div>
         </fieldset>
 

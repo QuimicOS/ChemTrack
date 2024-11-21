@@ -1,19 +1,14 @@
 @extends('admin.templateAdmin')
 
+<meta name="csrf-token" content="{{ csrf_token() }}">
 @section('title', 'Notifications - ChemTrack')
 
 @section('content')
 <style>
-    .content-area {
-        margin-left: 270px;
-        padding: 1.25rem;
-        margin-top: 70px;
-    }
-
     .notification-item {
         border: 1px solid #ccc;
         padding: 15px;
-        margin-bottom: 20px; /* Increased margin to add more space between notifications */
+        margin-bottom: 20px;
         border-radius: 5px;
         background-color: #f9f9f9;
     }
@@ -22,8 +17,20 @@
         background-color: #e9ecef;
     }
 
-    .notification-item .notification-header {
+    .notification-header {
         font-weight: bold;
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+
+    .notification-body {
+        margin-bottom: 10px;
+        font-size: 1rem;
+    }
+
+    .notification-timestamp {
+        font-size: 0.8rem;
+        color: #888;
     }
 
     .notification-actions {
@@ -36,100 +43,123 @@
     <hr class="my-4">
 </div>
 
+<!-- Overdue Notifications Section -->
+<h3 class="mt-5">Overdue Notifications</h3>
+<div id="overdueNotificationsList">
+    <!-- Overdue notifications will be dynamically loaded here -->
+</div>
+
 <!-- Active Notifications Section -->
 <h3>Active Notifications</h3>
 <div id="activeNotificationsList">
-    <!-- Sorted by date from newest to oldest -->
-
-    <!-- 1. Label 5 Months -->
-    <div class="notification-item unread" id="notification_1">
-        <div class="notification-header">Label 5 Months - Lab 203</div>
-        <div class="notification-body">Maria Gomez has notified that the label for Sodium Chloride in Lab 203 has reached 5 months without a pickup request.</div>
-        <div class="notification-details">Label ID: 12345, Room: 203, Chemical: Sodium Chloride</div>
-        <div class="notification-timestamp">Oct 25, 2024, 10:15 AM</div>
-        <div class="notification-actions">
-            <button class="btn btn-success mark-as-read" onclick="markAsRead(1)">Mark as Read</button>
-        </div>
-    </div>
-
-    <!-- 2. Pickup Request Submitted -->
-    <div class="notification-item unread" id="notification_3">
-        <div class="notification-header">Pickup Request - Lab 305</div>
-        <div class="notification-body">John Doe has submitted a pickup request for hazardous chemicals in Lab 305, including Hydrochloric Acid.</div>
-        <div class="notification-details">Pickup ID: 67890, Room: 305, Chemical: Hydrochloric Acid, Pickup Timeframe: Mon-Fri, 8am to 4pm</div>
-        <div class="notification-timestamp">Oct 24, 2024, 4:45 PM</div>
-        <div class="notification-actions">
-            <button class="btn btn-success mark-as-read" onclick="markAsRead(3)">Mark as Read</button>
-        </div>
-    </div>
-
-    <!-- 3. Pickup Invalidation -->
-    <div class="notification-item unread" id="notification_4">
-        <div class="notification-header">Pickup Invalidation - Lab 203</div>
-        <div class="notification-body">John Doe has invalidated the previous pickup request for Methanol in Lab 203.</div>
-        <div class="notification-details">Pickup ID: 54321, Room: 203, Chemical: Methanol</div>
-        <div class="notification-timestamp">Oct 23, 2024, 3:15 PM</div>
-        <div class="notification-actions">
-            <button class="btn btn-success mark-as-read" onclick="markAsRead(4)">Mark as Read</button>
-        </div>
-    </div>
-
-    <!-- 4. New Chemical Added -->
-    <div class="notification-item unread" id="notification_5">
-        <div class="notification-header">New Chemical Added - Lab 203</div>
-        <div class="notification-body">Maria Gomez has added a new chemical, Sodium Chloride, to the database for Lab 203.</div>
-        <div class="notification-details">Room: 203, Chemical: Sodium Chloride</div>
-        <div class="notification-timestamp">Oct 22, 2024, 11:20 AM</div>
-        <div class="notification-actions">
-            <button class="btn btn-success mark-as-read" onclick="markAsRead(5)">Mark as Read</button>
-        </div>
-    </div>
-
-    <!-- 5. Label 5 1/2 Months -->
-    <div class="notification-item unread" id="notification_2">
-        <div class="notification-header">Label 5 1/2 Months - Lab 203</div>
-        <div class="notification-body">Admin: Immediate action needed. Maria Gomez reports the label for Acetone in Lab 203 has passed 5 1/2 months without pickup.</div>
-        <div class="notification-details">Label ID: 54321, Room: 203, Chemical: Acetone</div>
-        <div class="notification-timestamp">Oct 20, 2024, 9:30 AM</div>
-        <div class="notification-actions">
-            <button class="btn btn-success mark-as-read" onclick="markAsRead(2)">Mark as Read</button>
-        </div>
-    </div>
-
-    <!-- 6. Lab Exceeds Limit -->
-    <div class="notification-item unread" id="notification_6">
-        <div class="notification-header">Lab Exceeds Limit - Lab 203</div>
-        <div class="notification-body">Maria Gomez reports Lab 203 exceeds 55 gallons of liquid waste or 1 quart of P-listed materials.</div>
-        <div class="notification-details">Room: 203, Building: Luchetti, Chemical: P-listed</div>
-        <div class="notification-timestamp">Oct 19, 2024, 2:00 PM</div>
-        <div class="notification-actions">
-            <button class="btn btn-success mark-as-read" onclick="markAsRead(6)">Mark as Read</button>
-        </div>
-    </div>
+    <!-- Active notifications will be dynamically loaded here -->
 </div>
 
 <!-- Read Notifications Section -->
 <h3 class="mt-5">Read Notifications</h3>
 <div id="readNotificationsList">
-    <!-- Read notifications will be appended here after marking as read -->
+    <!-- Read notifications will be dynamically loaded here -->
 </div>
 
 @endsection
 
 @section('scripts')
 <script>
-    // Mark a notification as read
-    function markAsRead(notificationId) {
-        const notificationItem = document.getElementById('notification_' + notificationId);
-        notificationItem.classList.remove('unread');
-        const markAsReadButton = notificationItem.querySelector('.mark-as-read');
-        
-        if (markAsReadButton) {
-            markAsReadButton.remove(); // Remove the "Mark as Read" button
-        }
+document.addEventListener("DOMContentLoaded", function () {
+    fetchNotifications('/notificationAdminActives', 'activeNotificationsList', true);
+    fetchNotifications('/notificationAdminRead', 'readNotificationsList', false);
+    fetchNotifications('/notificationAdminOverdues', 'overdueNotificationsList', false);
+});
 
-        // Move notification to "Read Notifications" section
-        document.getElementById('readNotificationsList').appendChild(notificationItem);
-    }
+// Map notification types to their respective titles
+const notificationTitles = {
+    0: "New Pickup Request",
+    1: "Invalidated Pickup Request",
+    2: "Label Due For Pickup (5-Month Warning)",
+    3: "Label Without Pickup Request (5.5-Month Warning)",
+    4: "Label Expired (6-Month Warning)",
+    5: "New Chemical",
+    6: "User Role Requested",
+    7: "Maximum Capacity Reached (55 Gallons)",
+    8: "P Material Capacity Reached (1 Quart)"
+};
+
+function fetchNotifications(url, containerId, allowMarkAsRead) {
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            console.log(`Fetched data for ${containerId}:`, data);
+
+            // Extract notifications array
+            const notifications = Object.values(data)[0];
+            const container = document.getElementById(containerId);
+            container.innerHTML = ''; // Clear container
+
+            if (!Array.isArray(notifications) || notifications.length === 0) {
+                container.innerHTML = '<p>No notification found.</p>';
+                return;
+            }
+
+            notifications.forEach(notification => {
+                const div = document.createElement('div');
+                div.className = `notification-item ${notification.status_of_notification === 0 ? 'unread' : ''}`;
+                div.id = `notification_${notification.id}`; // Assign ID for the notification block
+                div.innerHTML = `
+                    <p class="notification-header">${notificationTitles[notification.notification_type] || "Unknown Type"}</p>
+                    <p class="notification-body">${notification.message}</p>
+                    <p class="notification-timestamp">Created At: ${new Date(notification.created_at).toLocaleString()}</p>
+                    ${
+                        allowMarkAsRead
+                            ? `<div class="notification-actions">
+                                   <button onclick="markAsRead(${notification.id})" class="btn btn-success">Mark as Read</button>
+                               </div>`
+                            : ''
+                    }
+                `;
+                container.appendChild(div);
+            });
+        })
+        .catch(error => {
+            console.error(`Error fetching ${containerId}:`, error);
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<p>Error loading notifications. Please try again later.</p>`;
+        });
+}
+
+function markAsRead(notificationId) {
+    console.log(`Marking notification ${notificationId} as read...`);
+
+    fetch('/notificationRead', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ notification_id: notificationId })
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    console.error('Backend error:', err);
+                    throw new Error(err.message || 'Failed to mark as read.');
+                });
+            }
+            return response.json();
+        })
+        .then(() => {
+            console.log(`Notification ${notificationId} marked as read.`);
+            // Move notification to "Read Notifications"
+            const item = document.getElementById(`notification_${notificationId}`);
+            if (item) {
+                item.classList.remove('unread');
+                item.querySelector('.notification-actions').remove(); // Remove button
+                document.getElementById('readNotificationsList').appendChild(item);
+            }
+        })
+        .catch(error => {
+            console.error(`Error marking notification ${notificationId} as read:`, error);
+            alert(`Failed to mark notification as read. Try again.`);
+        });
+}
 </script>
 @endsection

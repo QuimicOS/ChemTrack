@@ -19,6 +19,39 @@ class PickupRequest extends Model
         'label_id'
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Listen to the `created` event
+        static::created(function ($pickupRequest) {
+            // Trigger a notification (use a service or event instead of directly calling a controller)
+            Notification::create([
+                'send_to' => 'Administrator',
+                'status_of_notification' => 0,
+                'notification_type' => 0,
+                'message' => 'A new Pickup Request has beed made for Label: ' . $pickupRequest->label_id,
+                'label_id' => $pickupRequest->label->label_id,
+                'pickup_id' => $pickupRequest->id,
+            ]);
+        });
+
+        static::updated(function ($pickupInvalid) {
+            // Trigger a notification (use a service or event instead of directly calling a controller)
+            if($pickupInvalid->status_of_pickup===0){
+
+            Notification::create([
+                'send_to' => 'Administrator',
+                'status_of_notification' => 0,
+                'notification_type' => 1,
+                'message' => 'The Pickup Request: ' . $pickupInvalid->id . ' has been invalidated.',
+                'label_id' => $pickupInvalid->label->label_id,
+                'pickup_id' => $pickupInvalid->id,
+            ]);
+        }
+        });
+    }
+
     // DIRECT RELATIONSHIPS
     public function user()
     {

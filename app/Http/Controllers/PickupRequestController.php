@@ -8,6 +8,7 @@ use App\Models\Label;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class PickupRequestController extends Controller
 {
@@ -93,17 +94,39 @@ class PickupRequestController extends Controller
             'timeframe' => 'required|string'
         ]);
     
+        // Verify input data
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
-    
         $validatedData = $validator->validated();
     
+        // Verify Authenticated User
+        $user = Auth::user();
+            if (!$user || !$user->room_number) {
+            return response()->json(['message' => 'User is not authorized or is assigned a room number.'], 404);
+        }
+
+        // Verify Label existance
         $label = Label::find($validatedData['label_id']);
         if (!$label) {
             return response()->json(['success' => false, 'error' => 'Label not found'], 404);
         }
-    
+
+        // Verify Label Status
+        if ($label->status_of_label == 0) {
+            return response()->json(['success' => false, 'error' => 'The label is invalid and cannot be used for a Pickup Request.'], 400);
+        }
+
+        // Verify Room Number, unless the user is an Administrator
+        if ($user->role !== 'Administrator' && $user->room_number !== $label->room_number) {
+            return response()->json(['success' => false, 'error' => 'User is not authorized to create a Pickup Request for this label.'], 403);
+        }
+
+        // Verify existing Pickup Requests
+        $existingPickupRequest = PickupRequest::where('label_id', $validatedData['label_id'])->first();
+        if ($existingPickupRequest) {
+            return response()->json(['success' => false, 'error' => 'A Pickup Request already exists for this label.'], 409);
+        }
         $pickupRequest = PickupRequest::create(array_merge(
             $validatedData,
             [
@@ -112,7 +135,6 @@ class PickupRequestController extends Controller
                 'completion_method' => null,
             ]
         ));
-    
         return response()->json(['success' => true, 'data' => $pickupRequest], 201);
     }
     

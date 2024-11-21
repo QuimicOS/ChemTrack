@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Label extends Model
@@ -40,6 +41,27 @@ class Label extends Model
         'message'
     ];
 
+    public static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($label) {
+            $totalQuantity = Label::where('room_number', $label->room_number)
+            ->where('status_of_label', 1)
+            ->sum('quantity');
+
+            if ($totalQuantity > 55) {
+                Notification::create([
+                    'notification_type' => 7, 
+                    'message' => "The total quantity of chemicals in room {$label->room_number} has exceeded 55 gallons.",
+                    'send_to' => 'Admin',
+                    'status_of_notification' => 0, 
+                    'label_id' => $label->label_id,
+                ]);
+            }
+        });
+    }
+
     // Relationships
 
     // Relationship with the user who created the label
@@ -55,10 +77,22 @@ class Label extends Model
     }
 
     // Relationship with Laboratory (assuming you have a lab_id or similar foreign key in your labels table)
-    public function laboratory()
-{   
-    return $this->belongsTo(Laboratory::class, 'id');
-}
+        public function laboratory()
+    {   
+        return $this->belongsTo(Laboratory::class, 'id');
+    }
+
+    public function pickupRequests()
+    {
+        return $this->belongsTo(PickupRequest::class, 'label_id', 'label_id');
+    }
+    
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class, 'label_id', 'label_id');
+    }
+
 
 
     // Custom method to fetch Laboratory details based on multiple fields

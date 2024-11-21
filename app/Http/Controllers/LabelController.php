@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Label;
 use App\Models\Laboratory;
 use App\Models\Content;
+use App\Models\Notification;
+use App\Models\PickupRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -288,12 +290,24 @@ class LabelController extends Controller
     }
 
 
-
-
-
-
-
-
+    //Mark as completed
+    public function checkPickupRequest(Request $request)
+    {
+        $labelId = $request->input('label_id');
+    
+        // Check if a pickup request exists for the label
+        $pickupExists = PickupRequest::where('label_id', $labelId)->exists();
+    
+        if (!$pickupExists) {
+            return response()->json(['message' => 'Pickup request not found'], 404);
+        }
+    
+        // Mark notification as done if pickup request exists
+        Notification::where('label_id', $labelId)
+            ->update(['status_of_notification' => 1]);
+    
+        return response()->json(['message' => 'Notification marked as done'], 200);
+    }
 
 
 

@@ -35,6 +35,24 @@ class User extends Authenticatable implements MustVerifyEmail
         
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+    
+        static::created(function ($user) {
+            if ($user->user_status === 'Requested') {
+                Notification::create([
+                    'send_to' => 'Admin', 
+                    'status_of_notification' => 0, 
+                    'notification_type' => 6, 
+                    'message' => "A Professor has requested {$user->role} access for {$user->email}",
+                    'user_id' => $user->id,
+                ]);
+            }
+        });
+    }
+
+
     /**
      * The attributes that should be hidden for serialization.
      *

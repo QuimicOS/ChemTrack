@@ -12,6 +12,7 @@ use App\Http\Controllers\ContentController;
 use App\Http\Controllers\chemicalController;
 use App\Http\Controllers\ManageQuizController;
 use App\Http\Controllers\QuizController;
+use App\Http\Controllers\NotificationController;
 
 
 
@@ -479,6 +480,21 @@ Route::get('/chemicalCreatedCount', [ChemicalController::class, 'chemicalsMadeTh
 Route::get('/chemicalCasNumber', [ChemicalController::class, 'getCasNumber']); 
 Route::get('/chemicalSearch', [ChemicalController::class, 'searchChemicalName']);
 // ------------------------------------------------------------------------------------------------------
+
+// -------------------------------------Notification Routes--------------------------------------------------
+Route::put('/notificationRead', action: [NotificationController::class, 'markAsRead']);
+Route::get('/notificationAdminActives', action: [NotificationController::class, 'adminGetUnreadNotifications']);
+Route::get('/notificationAdminRead', action: [NotificationController::class, 'adminGetReadNotifications']);
+Route::get('/notificationAdminOverdues', action: [NotificationController::class, 'adminGetOverdueNotifications']);
+Route::get('/notificationGetToDo', action: [NotificationController::class, 'getToDo']);
+Route::get('/create5Months', action: [LabelController::class, 'getValidLabels']);
+
+Route::get('/todoList', action: [NotificationController::class, 'todoList']);
+Route::post('/checkPickupRequest', [LabelController::class, 'checkPickupRequest']);
+
+
+// ------------------------------------------------------------------------------------------------------
+
 
 
 //////////////////////////////////For Laboratories//////////////////////////////////////////
