@@ -12,8 +12,9 @@ return new class extends Migration
     public function up()
     {
         Schema::table('chemical', function (Blueprint $table) {
-            // Modify the user_id column to be nullable
-            $table->unsignedBigInteger('user_id')->nullable()->change();
+            $table->unsignedBigInteger('user_id')->nullable();
+
+            $table->foreign('user_id')->references('id')->on('user')->onDelete('set null');
         });
     }
 
