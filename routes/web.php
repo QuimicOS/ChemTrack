@@ -101,7 +101,7 @@ Route::get('accessDenied', function () {
 
 
 ////////////////////////////////ADMIN ROUTES//////////////////////////////////////////////
-Route::middleware(['auth', 'admin'])->group(function(){
+// Route::middleware(['auth', 'admin'])->group(function(){
 
     Route::get('admin/homeAdmin', function () {
         return view('admin/homeAdmin');
@@ -254,7 +254,7 @@ Route::middleware(['auth', 'admin'])->group(function(){
 
 
 
-});
+// });
 
 
 
@@ -271,7 +271,7 @@ Route::middleware(['auth', 'admin'])->group(function(){
 
 
 ////////////////////////////////PROFESSOR ROUTES//////////////////////////////////////////////
-Route::middleware(['auth', 'professor'])->group(function(){
+// Route::middleware(['auth', 'professor'])->group(function(){
 
     Route::get('professor/homeProfessor', function () {
         return view('professor/homeProfessor');
@@ -326,7 +326,7 @@ Route::middleware(['auth', 'professor'])->group(function(){
     })->name('professor/addChemical');
 
 
-});
+// });
 
 
 
@@ -343,7 +343,7 @@ Route::middleware(['auth', 'professor'])->group(function(){
 
 ////////////////////////////////STAFF ROUTES//////////////////////////////////////////////
 
-Route::middleware(['auth', 'staff'])->group(function(){
+// Route::middleware(['auth', 'staff'])->group(function(){
 
     Route::get('staff/homeStaff', function () {
         return view('staff/homeStaff');
@@ -395,7 +395,7 @@ Route::middleware(['auth', 'staff'])->group(function(){
 
 
 
-});
+// });
 
 
 
