@@ -10,7 +10,8 @@ use App\Http\Controllers\LaboratoryController;
 use App\Http\Controllers\pickupRequestController;
 use App\Http\Controllers\ContentController;
 use App\Http\Controllers\chemicalController;
-
+use App\Http\Controllers\ManageQuizController;
+use App\Http\Controllers\QuizController;
 
 
 
@@ -41,7 +42,9 @@ Route::get('loginTemp', function () {
 })->name('loginTemp');
 
 
-
+Route::get('accessDenied', function () {
+    return view('accessDenied');
+})->name('accessDenied');
 
 
 
@@ -50,81 +53,82 @@ Route::get('loginTemp', function () {
 
 
 ////////////////////////////////ADMIN ROUTES//////////////////////////////////////////////
+Route::middleware(['auth', 'admin'])->group(function(){
 
-Route::get('admin/homeAdmin', function () {
-    return view('admin/homeAdmin');
-})->name('admin/homeAdmin')->middleware(['auth']);
+    Route::get('admin/homeAdmin', function () {
+        return view('admin/homeAdmin');
+    })->name('admin/homeAdmin');
 
-Route::get('admin/notifications', function () {
-    return view('admin/notifications');
-})->name('admin/notifications');
+    Route::get('admin/notifications', function () {
+        return view('admin/notifications');
+    })->name('admin/notifications');
 
-Route::get('admin/aboutUs', function () {
-    return view('admin/aboutUs');
-})->name('admin/aboutUs');
+    Route::get('admin/aboutUs', function () {
+        return view('admin/aboutUs');
+    })->name('admin/aboutUs');
 
-Route::get('admin/contactUs', function () {
-    return view('admin/contactUs');
-})->name('admin/contactUs');
+    Route::get('admin/contactUs', function () {
+        return view('admin/contactUs');
+    })->name('admin/contactUs');
 
-Route::get('admin/help', function () {
-    return view('admin/help');
-})->name('admin/help');
+    Route::get('admin/help', function () {
+        return view('admin/help');
+    })->name('admin/help');
 
-Route::get('admin/searchLabel', function () {
-    return view('admin/searchLabel');
-})->name('admin/searchLabel');
+    Route::get('admin/searchLabel', function () {
+        return view('admin/searchLabel');
+    })->name('admin/searchLabel');
 
-Route::get('admin/createLabel', function () {
-    return view('admin/createLabel');
-})->name('admin/createLabel');
+    Route::get('admin/createLabel', function () {
+        return view('admin/createLabel');
+    })->name('admin/createLabel');
 
-Route::get('admin/editLabel', function () {
-    return view('admin/editLabel');
-})->name('admin/editLabel');
+    Route::get('admin/editLabel', function () {
+        return view('admin/editLabel');
+    })->name('admin/editLabel');
 
-Route::get('admin/invalidLabel', function () {
-    return view('admin/invalidLabel');
-})->name('admin/invalidLabel');
+    Route::get('admin/invalidLabel', function () {
+        return view('admin/invalidLabel');
+    })->name('admin/invalidLabel');
 
-Route::get('admin/pickupRequest', function () {
-    return view('admin/pickupRequest');
-})->name('admin/pickupRequest');
+    Route::get('admin/pickupRequest', function () {
+        return view('admin/pickupRequest');
+    })->name('admin/pickupRequest');
 
-Route::get('admin/invalidPickup', function () {
-    return view('admin/invalidPickup');
-})->name('admin/invalidPickup');
+    Route::get('admin/invalidPickup', function () {
+        return view('admin/invalidPickup');
+    })->name('admin/invalidPickup');
 
-Route::get('admin/pickupHistorial', function () {
-    return view('admin/pickupHistorial');
-})->name('admin/pickupHistorial');
+    Route::get('admin/pickupHistorial', function () {
+        return view('admin/pickupHistorial');
+    })->name('admin/pickupHistorial');
 
-Route::get('admin/manageChemical', function () {
-    return view('admin/manageChemical');
-})->name('admin/manageChemical');
+    Route::get('admin/manageChemical', function () {
+        return view('admin/manageChemical');
+    })->name('admin/manageChemical');
 
-Route::get('admin/roleManagement', function () {
-    return view('admin/roleManagement');
-})->name('admin/roleManagement');
+    Route::get('admin/roleManagement', function () {
+        return view('admin/roleManagement');
+    })->name('admin/roleManagement');
 
-Route::get('admin/unwantedMaterialSummary', function () {
-    return view('admin/unwantedMaterialSummary');
-})->name('admin/unwantedMaterialSummary');
+    Route::get('admin/unwantedMaterialSummary', function () {
+        return view('admin/unwantedMaterialSummary');
+    })->name('admin/unwantedMaterialSummary');
 
-Route::get('admin/unwantedMaterialMemorandum', function () {
-    return view('admin/unwantedMaterialMemorandum');
-})->name('admin/unwantedMaterialMemorandum');
+    Route::get('admin/unwantedMaterialMemorandum', function () {
+        return view('admin/unwantedMaterialMemorandum');
+    })->name('admin/unwantedMaterialMemorandum');
 
-Route::get('admin/manageLaboratories', function () {
-    return view('admin/manageLaboratories');
-})->name('admin/manageLaboratories');
+    Route::get('admin/manageLaboratories', function () {
+        return view('admin/manageLaboratories');
+    })->name('admin/manageLaboratories');
 
-Route::get('admin/manageQuiz', function () {
-    return view('admin/manageQuiz');
-})->name('admin/manageQuiz');
+    // Route::get('admin/manageQuiz', function () {
+    //     return view('admin/manageQuiz');
+    // })->name('admin/manageQuiz');
 
 
-
+});
 
 
 
@@ -141,61 +145,62 @@ Route::get('admin/manageQuiz', function () {
 
 
 ////////////////////////////////PROFESSOR ROUTES//////////////////////////////////////////////
+Route::middleware(['auth', 'professor'])->group(function(){
 
-Route::get('professor/homeProfessor', function () {
-    return view('professor/homeProfessor');
-})->name('professor/homeProfessor');
+    Route::get('professor/homeProfessor', function () {
+        return view('professor/homeProfessor');
+    })->name('professor/homeProfessor');
 
-Route::get('professor/notifications', function () {
-    return view('professor/notifications');
-})->name('professor/notifications');
+    Route::get('professor/notifications', function () {
+        return view('professor/notifications');
+    })->name('professor/notifications');
 
-Route::get('professor/aboutUs', function () {
-    return view('professor/aboutUs');
-})->name('professor/aboutUs');
+    Route::get('professor/aboutUs', function () {
+        return view('professor/aboutUs');
+    })->name('professor/aboutUs');
 
-Route::get('professor/contactUs', function () {
-    return view('professor/contactUs');
-})->name('professor/contactUs');
+    Route::get('professor/contactUs', function () {
+        return view('professor/contactUs');
+    })->name('professor/contactUs');
 
-Route::get('professor/help', function () {
-    return view('professor/help');
-})->name('professor/help');
+    Route::get('professor/help', function () {
+        return view('professor/help');
+    })->name('professor/help');
 
-Route::get('professor/searchLabel', function () {
-    return view('professor/searchLabel');
-})->name('professor/searchLabel');
+    Route::get('professor/searchLabel', function () {
+        return view('professor/searchLabel');
+    })->name('professor/searchLabel');
 
-Route::get('professor/createLabel', function () {
-    return view('professor/createLabel');
-})->name('professor/createLabel');
+    Route::get('professor/createLabel', function () {
+        return view('professor/createLabel');
+    })->name('professor/createLabel');
 
-Route::get('professor/editLabel', function () {
-    return view('professor/editLabel');
-})->name('professor/editLabel');
+    Route::get('professor/editLabel', function () {
+        return view('professor/editLabel');
+    })->name('professor/editLabel');
 
-Route::get('professor/invalidLabel', function () {
-    return view('professor/invalidLabel');
-})->name('professor/invalidLabel');
+    Route::get('professor/invalidLabel', function () {
+        return view('professor/invalidLabel');
+    })->name('professor/invalidLabel');
 
-Route::get('professor/pickupRequest', function () {
-    return view('professor/pickupRequest');
-})->name('professor/pickupRequest');
+    Route::get('professor/pickupRequest', function () {
+        return view('professor/pickupRequest');
+    })->name('professor/pickupRequest');
 
-Route::get('professor/invalidPickup', function () {
-    return view('professor/invalidPickup');
-})->name('professor/invalidPickup');
+    Route::get('professor/invalidPickup', function () {
+        return view('professor/invalidPickup');
+    })->name('professor/invalidPickup');
 
-Route::get('professor/roleRequest', function () {
-    return view('professor/roleRequest');
-})->name('professor/roleRequest');
+    Route::get('professor/roleRequest', function () {
+        return view('professor/roleRequest');
+    })->name('professor/roleRequest');
 
-Route::get('professor/addChemical', function () {
-    return view('professor/addChemical');
-})->name('professor/addChemical');
+    Route::get('professor/addChemical', function () {
+        return view('professor/addChemical');
+    })->name('professor/addChemical');
 
 
-
+});
 
 
 
@@ -212,57 +217,59 @@ Route::get('professor/addChemical', function () {
 
 ////////////////////////////////STAFF ROUTES//////////////////////////////////////////////
 
-Route::get('staff/homeStaff', function () {
-    return view('staff/homeStaff');
-})->name('staff/homeStaff');
+Route::middleware(['auth', 'staff'])->group(function(){
 
-Route::get('staff/notifications', function () {
-    return view('staff/notifications');
-})->name('staff/notifications');
+    Route::get('staff/homeStaff', function () {
+        return view('staff/homeStaff');
+    })->name('staff/homeStaff');
 
-Route::get('staff/aboutUs', function () {
-    return view('staff/aboutUs');
-})->name('staff/aboutUs');
+    Route::get('staff/notifications', function () {
+        return view('staff/notifications');
+    })->name('staff/notifications');
 
-Route::get('staff/contactUs', function () {
-    return view('staff/contactUs');
-})->name('staff/contactUs');
+    Route::get('staff/aboutUs', function () {
+        return view('staff/aboutUs');
+    })->name('staff/aboutUs');
 
-Route::get('staff/help', function () {
-    return view('staff/help');
-})->name('staff/help');
+    Route::get('staff/contactUs', function () {
+        return view('staff/contactUs');
+    })->name('staff/contactUs');
 
-Route::get('staff/searchLabel', function () {
-    return view('staff/searchLabel');
-})->name('staff/searchLabel');
+    Route::get('staff/help', function () {
+        return view('staff/help');
+    })->name('staff/help');
 
-Route::get('staff/createLabel', function () {
-    return view('staff/createLabel');
-})->name('staff/createLabel');
+    Route::get('staff/searchLabel', function () {
+        return view('staff/searchLabel');
+    })->name('staff/searchLabel');
 
-Route::get('staff/editLabel', function () {
-    return view('staff/editLabel');
-})->name('staff/editLabel');
+    Route::get('staff/createLabel', function () {
+        return view('staff/createLabel');
+    })->name('staff/createLabel');
 
-Route::get('staff/invalidLabel', function () {
-    return view('staff/invalidLabel');
-})->name('staff/invalidLabel');
+    Route::get('staff/editLabel', function () {
+        return view('staff/editLabel');
+    })->name('staff/editLabel');
 
-Route::get('staff/pickupRequest', function () {
-    return view('staff/pickupRequest');
-})->name('staff/pickupRequest');
+    Route::get('staff/invalidLabel', function () {
+        return view('staff/invalidLabel');
+    })->name('staff/invalidLabel');
 
-Route::get('staff/invalidPickup', function () {
-    return view('staff/invalidPickup');
-})->name('staff/invalidPickup');
+    Route::get('staff/pickupRequest', function () {
+        return view('staff/pickupRequest');
+    })->name('staff/pickupRequest');
 
-Route::get('staff/addChemical', function () {
-    return view('staff/addChemical');
-})->name('staff/addChemical');
+    Route::get('staff/invalidPickup', function () {
+        return view('staff/invalidPickup');
+    })->name('staff/invalidPickup');
+
+    Route::get('staff/addChemical', function () {
+        return view('staff/addChemical');
+    })->name('staff/addChemical');
 
 
 
-
+});
 
 
 
@@ -392,13 +399,24 @@ Route::get('/unwanted-material-summary', [LabelController::class, 'unwantedMater
 
 
 //Memorandum
-Route::get('/unwanted-material-memorandum', [LabelController::class, 'memorandum']);
+Route::get('/memorandum', [LabelController::class, 'memorandum']);
+
+
+
+
+
 
 
 
 //For INVALIDATE LABEL
 
 Route::put('/invalid/{id}', action: [LabelController::class, 'invalidateLabel']); 
+
+
+
+
+
+
 
 
 // -------------------------------------Chemical Routes--------------------------------------------------
@@ -458,6 +476,10 @@ Route::put('/lab/{id}/supervisor', [LaboratoryController::class, 'assignLabSuper
 
 
 ////Routes For Admin role management///////////////
+
+
+Route::delete('/users/{id}', [UserController::class, 'deleteUserById']);
+
 
 Route::post('/newUsers', [UserController::class, 'createUser']); //Create a new user has Admin only GOODIE
 
@@ -523,7 +545,9 @@ Route::post('/professors/users', [UserController::class, 'createStaffUser']); //
 
 
 
-
+//////////////////////////////////////////////////////////////////////////////////
+////////////////////////////// Quiz //////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -539,10 +563,52 @@ Route::get('/quiz', function () {
     return view('quiz');
 })->name('quiz');
 
-Route::get('/manageQuiz', function () {
-    return view('manageQuiz');
-})->name('manageQuiz');
+// Route::get('/manageQuiz', function () {
+//     return view('manageQuiz');
+// })->name('manageQuiz');
 
+
+////   Quiz Management Routes
+Route::get('admin/manageQuiz', [ManageQuizController::class, 'show'])->name('admin.manageQuiz.show');
+Route::post('admin/manageQuiz/save', [ManageQuizController::class, 'save'])->name('admin.manageQuiz.save');
+
+
+
+// // Quiz Routes for Users
+Route::get('/quiz', [QuizController::class, 'show'])->name('quiz.show');
+Route::post('/quiz/submit', [QuizController::class, 'submit'])->name('quiz.submit');
+
+Route::post('/update-certification-status', [UserController::class, 'updateCertificationStatus'])->name('update.certificate');
+
+
+
+
+// //////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+Route::get('labels/near-six-months',[LabelController::class, 'getLabelsNearSixMonths']);// get the accumulation start date and get the labes that are close of the 6 months (so 5 months or 5 1/2 months)
+
+
+
+
+
+
+
+
+
+
+///////////////////////////////////////// Login Validations ///////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -553,15 +619,36 @@ Route::get('/manageQuiz', function () {
         return redirect()->route('aboutUs');
     }
 
-    switch ($user->role) {
-        case 'Administrator':
-            return redirect()->route('admin/homeAdmin');
-        case 'Professor':
-            return redirect()->route('professor/homeProfessor');
-        case 'Staff':
-            return redirect()->route('staff/homeStaff');
-        default:
-            return redirect()->route('home');
+
+
+    // IF a user tries to enter the system BEFORE a Professor or Admin gaves authorization.
+    if($user->user_status === NUll ||$user->certification_status === NULL ||$user->role === NULL ){ //Ruta de acceso denegado
+        return redirect()->route('accessDenied');
+    }
+
+    // Check  User Status
+    if($user->user_status === 'Denied'){
+        return redirect()->route('home'); // Ruta de Acceso denegado
+    }
+
+
+    // Check Certification Status and User Status
+    if ($user->certification_status === false) {
+        return redirect()->route('notice'); // Redirect to notice
+    }
+
+    // Redirect based on role if Certification Status is TRUE and User Status is Accepted
+    if ($user->certification_status === true && $user->user_status === 'Accepted') {
+        switch ($user->role) {
+            case 'Administrator':
+                return redirect()->route('admin/homeAdmin');
+            case 'Professor':
+                return redirect()->route('professor/homeProfessor');
+            case 'Staff':
+                return redirect()->route('staff/homeStaff');
+            default:
+                return redirect()->route('home'); // Fallback to main homepage
+        }
     }
 }); 
 

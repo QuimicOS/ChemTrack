@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Laboratory;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 
 class UserController extends Controller
@@ -94,8 +94,21 @@ class UserController extends Controller
 
 
 
-
-
+    public function deleteUserById($id)
+    {
+        // Find the user by ID
+        $user = User::find($id);
+    
+        // Check if the user exists
+        if (!$user) {
+            return response()->json(['error' => 'User not found.'], 404);
+        }
+    
+        // Delete the user
+        $user->delete();
+    
+        return response()->json(['message' => "User with ID {$id} deleted successfully."], 200);
+    }
 
 
 

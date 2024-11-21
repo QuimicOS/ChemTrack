@@ -171,7 +171,7 @@
                 <img src="{{ asset('photos/manageLabs.png') }}" alt="Manage Laboratories Image" class="option-image">
                 <h3>Manage Laboratories</h3>
             </a>
-            <a href="{{ route('admin/manageQuiz') }}" class="middle-option">
+            <a href="{{ route('admin.manageQuiz.show') }}" class="middle-option">
                 <img src="{{ asset('photos/manageQuiz.png') }}" alt="Manage Quiz Image" class="option-image">
                 <h3>Manage Quiz</h3>
             </a>

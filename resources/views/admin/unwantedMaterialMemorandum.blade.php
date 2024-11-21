@@ -44,14 +44,15 @@
         <table class="table table-bordered table-hover">
             <thead class="table-dark">
                 <tr>
-                    <th>Label ID</th>
-                    <th>Container Size</th>
-                    <th>Chemical Name</th>
-                    <th>Percentage</th>
-                    <th>Material State</th>
-                    <th>Container Material</th>
-                    <th>Container #</th>
-                    <th>pH</th>
+                <th>Label ID</th>
+                <th>Container Size</th>
+                <th>Chemical Names</th>
+                <th>Percentages</th>
+                <th>Total Percentage</th> <!-- New column for total percentage -->
+                <th>Material State</th>
+                <th>Container Material</th>
+                <th>Container #</th>
+                <th>pH</th>
                 </tr>
             </thead>
             <tbody id="labelTableBody">
@@ -95,7 +96,7 @@ searchButton.addEventListener('click', function () {
     toggleSearchButton(); // Disable the button again after clearing
 
     // Fetch the label data from the correct API endpoint
-    fetch(`/unwanted-material-memorandum?label_id=${searchValue}`)
+    fetch(`/memorandum?label_id=${searchValue}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Label ID not found');
@@ -104,7 +105,7 @@ searchButton.addEventListener('click', function () {
         })
         .then(data => {
             if (data.length === 0) {
-                alert('Label ID not found');
+                alert('UH oh');
             } else {
                 // Clear previous results
                 searchedLabels = [];
@@ -131,13 +132,35 @@ function renderTable() {
     const tableBody = document.getElementById('labelTableBody');
     tableBody.innerHTML = ''; // Clear previous rows
 
-    // Populate rows for each searched label with only the required columns
-    searchedLabels.forEach(label => {
+    // Group labels by label_id
+    const groupedLabels = searchedLabels.reduce((acc, label) => {
+        if (!acc[label.label_id]) {
+            acc[label.label_id] = {
+                label_id: label.label_id,
+                container_size: label.container_size,
+                chemicals: [], // Array to hold chemical names and percentages
+                totalPercentage: 0 // Track total percentage
+            };
+        }
+        acc[label.label_id].chemicals.push({
+            name: label.chemical_name,
+            percentage: label.percentage
+        });
+        acc[label.label_id].totalPercentage += label.percentage; // Sum percentages for each label
+        return acc;
+    }, {});
+
+    // Populate table with grouped data
+    Object.values(groupedLabels).forEach(label => {
+        const chemicalNames = label.chemicals.map(chemical => chemical.name).join('<br>'); // Combine chemical names
+        const percentages = label.chemicals.map(chemical => `${chemical.percentage}%`).join('<br>'); // Combine percentages
+
         const row = `<tr>
                         <td>${label.label_id}</td>
                         <td>${label.container_size}</td>
-                        <td>${label.chemical_name}</td>
-                        <td>${label.percentage}%</td>
+                        <td>${chemicalNames}</td>
+                        <td>${percentages}</td>
+                        <td>${label.totalPercentage}%</td>
                         <td>${''}</td>
                         <td>${''}</td>
                         <td>${''}</td>
@@ -146,6 +169,8 @@ function renderTable() {
         tableBody.innerHTML += row;
     });
 }
+
+
 </script>
 
 

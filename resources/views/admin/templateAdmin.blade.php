@@ -143,7 +143,7 @@
                 </div>
 
                 <!-- Username and Sign Out -->
-                <span class="navbar-text me-3"><b>{{Auth::user()->email}}</b></span>
+                <span class="navbar-text me-3"><b>{{Auth::user()->name}}</b></span>
                 <a href="{{ route('home') }}" class="btn btn-danger">Sign Out</a>
             </div>
         </div>
@@ -156,7 +156,7 @@
         </div>
         <div class="line-divider"></div>
         <div class="menu-button-primary">
-            <div class="menu-item">{{Auth::user()->email}}</div>
+            <div class="menu-item">{{Auth::user()->name}}</div>
         </div>
         <div class="line-divider"></div>
         <div class="menu-section">
@@ -172,7 +172,7 @@
           <a href="{{ route('admin/unwantedMaterialSummary') }}" class="menu-button">Unwanted Material Summary</a>
           <a href="{{ route('admin/unwantedMaterialMemorandum') }}" class="menu-button">Unwanted Material Memorandum</a>
           <a href="{{ route('admin/manageLaboratories') }}" class="menu-button">Manage Laboratories</a>
-          <a href="{{ route('admin/manageQuiz') }}" class="menu-button">Manage Quiz</a>
+          <a href="{{ route('admin.manageQuiz.show') }}" class="menu-button">Manage Quiz</a>
         </div>
         <div class="line-divider"></div>
 
@@ -189,7 +189,7 @@
 
     <!-- Footer -->
     <footer class="footerprimary">
-        <p>© 2024 ChemTrack UPRM. All rights reserved.</p>
+        <p>Â© 2024 ChemTrack UPRM. All rights reserved.</p>
         <nav class="d-flex justify-content-center">
             <a href="{{ route('admin/contactUs') }}" class="text-muted mx-3">Contact Us</a>
             <a href="{{ route('admin/aboutUs') }}" class="text-muted mx-3">About Us</a>

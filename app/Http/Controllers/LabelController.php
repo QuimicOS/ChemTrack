@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Label;
 use App\Models\Laboratory;
 use App\Models\Content;
-use App\Models\Chemical;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -92,48 +91,6 @@ class LabelController extends Controller
 
 
 
-
-
-
-
-  ///////////////////  // GET a single label by ID (Read operation)///////////////////////////////////////////////////////////////
-    // public function show($id)
-    // {
-    //     $label = Label::find($id);
-    //     if (!$label) {
-    //         return response()->json(['error' => 'Label not found'], 404);
-    //     }
-    //     return response()->json($label);
-    // }
-
-
-
-
-    //this will return only the labels created by the user logged in
-// public function show(Request $request, $id)
-// {
-//     // Check if the user is authenticated
-//     $user = Auth::user();
-//     if (!$user) {
-//         return response()->json(['error' => 'Unauthorized'], 401);
-//     }
-
-//     // Get the authenticated admin's email
-//     $adminEmail = $user->email;
-
-//     // Find the label by ID where 'created_by' is the authenticated admin's email
-//     $label = Label::with(['laboratory', 'chemicals'])
-//                   ->where('label_id', $id)
-//                   ->where('created_by', $adminEmail) // assuming 'created_by' column stores the admin's email
-//                   ->first();
-
-//     // Check if the label exists and is created by this admin
-//     if (!$label) {
-//         return response()->json(['error' => 'Label not found or access denied'], 404);
-//     }
-
-//     return response()->json($label, 200);
-// }
 
 
 
@@ -283,7 +240,6 @@ class LabelController extends Controller
 
 
 
-/////////////////////////////////////// CREATE LABEL//////////////////////////////////////////////////////
 
 
 
@@ -347,31 +303,62 @@ class LabelController extends Controller
 
 
 
-///////////////////// INVALID A LABEL??????????????????????????????
+    //----------------------------INVALID A LABEL------------------------------------------------------//
     // change status to invalid, need to add the message to explain why the invalidation
     public function invalidateLabel(Request $request, $id)
     {
         // Validate the provided message
         $request->validate([
-            'message' => 'required|string|max:255'
+            'message' => 'required|string|max:255',
         ]);
     
-        $updatedRows = DB::table('label')
-        ->where('label_id', $id)
-        ->update([
-            'status_of_label' => 0, // Assuming 0 is the STATUS_INVALID
-            'message' => $request->message
-        ]);
-
-    if ($updatedRows) {
-        return response()->json([
-            'success' => 'Label updated successfully to Invalid',
-            'message' => $request->message
-        ], 200);
-    } else {
-        return response()->json(['error' => 'Failed to update label or label not found'], 500);
+        try {
+            // Fetch the authenticated user's room_number
+            $user = Auth::user();
+            if (!$user || !$user->room_number) {
+                return response()->json(['error' => 'User does not have a valid room number'], 403);
+            }
+    
+            // Fetch the label by ID
+            $label = DB::table('label')->where('label_id', $id)->first();
+    
+            if (!$label) {
+                return response()->json(['error' => 'Label not found'], 404);
+            }
+    
+            // Check if the label is already invalidated
+            if ($label->status_of_label === 0) { // Assuming 0 means "Invalid"
+                return response()->json(['error' => 'Label is already invalidated'], 400);
+            }
+    
+            // Validate that the user's room_number matches the label's room_number
+            if ($label->room_number !== $user->room_number) {
+                return response()->json(['error' => 'Unauthorized: User does not have permission to invalidate this label'], 403);
+            }
+    
+            // Update the label to "Invalid"
+            $updatedRows = DB::table('label')
+                ->where('label_id', $id)
+                ->update([
+                    'status_of_label' => 0, // Set to invalid
+                    'message' => $request->message,
+                ]);
+    
+            if ($updatedRows) {
+                return response()->json([
+                    'success' => 'Label updated successfully to Invalid',
+                    'message' => $request->message,
+                ], 200);
+            } else {
+                return response()->json(['error' => 'Error invalidating label'], 500);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error invalidating label'], 500);
+        }
     }
-    }
+    
+    
+    
     
 
 
@@ -725,16 +712,18 @@ public function memorandum(Request $request)
         'label_id' => 'required|integer', // Mandatory search by label ID
     ]);
 
-    // Fetch the label along with related contents
+    // Fetch the label along with related contents where status is Completed
     $results = Label::query()
         ->select('label.label_id', 'label.container_size', 'contents.chemical_name', 'contents.percentage')
         ->join('contents', 'label.label_id', '=', 'contents.label_id')
         ->where('label.label_id', $validatedData['label_id']) // Filter by label ID
+        ->where('label.status_of_label', 2) // Only include completed labels
         ->get();
 
     // Return the search results in JSON format
     return response()->json($results, 200);
 }
+
 
 
 

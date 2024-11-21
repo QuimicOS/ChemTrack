@@ -675,8 +675,8 @@ function openDeleteModal(userId) {
 function confirmDelete(userId) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    fetch(`/userInvalid/${userId}`, {
-        method: 'PUT',
+    fetch(`/users/${userId}`, { // Adjusted endpoint to match the delete by ID route
+        method: 'DELETE', // Use DELETE method for deletion
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
@@ -690,7 +690,7 @@ function confirmDelete(userId) {
             return response.json();
         })
         .then(data => {
-            alert('User status set to Inactive');
+            alert(`User deleted successfully.`);
             renderSubmittedRequestsTable(); // Refresh table
         })
         .catch(error => {
@@ -698,6 +698,7 @@ function confirmDelete(userId) {
             alert('Failed to delete user.');
         });
 }
+
 
 
 
