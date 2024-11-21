@@ -134,7 +134,7 @@ class LaboratoryController extends Controller
                 return response()->json(['error' => ' not found'], 404);
             }
     
-            $lab->update(['lab_status' => 'Invalid']);
+            $lab->update(['lab_status' => 'Inactive']);
             return response()->json(['success' => 'Laboratory invalidated successfully']);
         }
     

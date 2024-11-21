@@ -6,7 +6,7 @@ use App\Models\Chemical;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class ChemicalController extends Controller
+class chemicalController extends Controller
 {
 
 // ------------------------------------------------------------------------------------------------------

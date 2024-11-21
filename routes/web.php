@@ -20,6 +20,59 @@ Route::get('/', function () {
 });
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////--------------------------------- Login Validations ------------------------------------------------/////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+Route::get('auth/saml2/arrival', function () {
+    $user = Auth::user();
+
+    if (!$user) {
+        return redirect()->route('aboutUs');
+    }
+
+
+
+    // IF a user tries to enter the system BEFORE a Professor or Admin gaves authorization.
+    if($user->user_status === NUll ||$user->certification_status === NULL ||$user->role === NULL ){ //Ruta de acceso denegado
+        return redirect()->route('accessDenied');
+    }
+
+    // Check  User Status
+    if($user->user_status === 'Denied'){
+        return redirect()->route('home'); // Ruta de Acceso denegado
+    }
+
+
+    // Check Certification Status and User Status
+    if ($user->certification_status === false) {
+        return redirect()->route('notice'); // Redirect to notice
+    }
+
+    // Redirect based on role if Certification Status is TRUE and User Status is Accepted
+    if ($user->certification_status === true && $user->user_status === 'Accepted') {
+        switch ($user->role) {
+            case 'Administrator':
+                return redirect()->route('admin/homeAdmin');
+            case 'Professor':
+                return redirect()->route('professor/homeProfessor');
+            case 'Staff':
+                return redirect()->route('staff/homeStaff');
+            default:
+                return redirect()->route('home'); // Fallback to main homepage
+        }
+    }
+}); 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
 
 
 
@@ -37,15 +90,10 @@ Route::get('contactUs', function () {
     return view('contactUs');
 })->name('contactUs');
 
-Route::get('loginTemp', function () {
-    return view('loginTemp');
-})->name('loginTemp');
-
-
 Route::get('accessDenied', function () {
     return view('accessDenied');
 })->name('accessDenied');
-
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -126,6 +174,84 @@ Route::middleware(['auth', 'admin'])->group(function(){
     // Route::get('admin/manageQuiz', function () {
     //     return view('admin/manageQuiz');
     // })->name('admin/manageQuiz');
+
+
+
+
+    //Statistics for Admin dashboard
+    Route::get('/labels/last7days', [LabelController::class, 'countLabelsLast7Days']);
+    Route::get('/labels/weight', [LabelController::class, 'calculateTotalWeight']); 
+    Route::get('/labels/volume', [LabelController::class, 'calculateTotalVolume']); 
+    Route::get('/users/new-members', [UserController::class, 'countNewMembersLast30Days']);
+
+
+
+
+    //Search Label by ID
+    Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
+
+    //For Create Label has ADMIN
+
+
+    //For EDIT LABEL
+    Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
+
+
+
+
+
+
+    ////For Role Managemnt
+    Route::delete('/users/{id}', [UserController::class, 'deleteUserById']);
+
+    Route::post('/newUsers', [UserController::class, 'createUser']); //Create a new user has Admin only GOODIE
+
+    Route::get('/users/search/{email}', [UserController::class, 'searchUserByEmail']); //GOODIE
+
+    Route::get('/users/certified', [UserController::class, 'getCertifiedUsers']); // // Admin get a list of users where certification status is TRUE
+
+    Route::get('/users/requested', [UserController::class, 'getRequestedUsers']); // user_status requested
+
+    Route::put('userInvalid/{id}',[UserController::class, 'invalidatesUser']); // status to denied
+
+    Route::put('userStatus/{id}',[UserController::class, 'authenticateUser']); // update the user status to Accepted, only an admin can do it
+
+    Route::get('/users/{id}', [UserController::class, 'getUserDetailsByID']);
+
+    Route::put('/users/{id}', [UserController::class, 'roleManagementEditUser']);// update the user room number and role only
+
+
+
+    //Summary
+    Route::get('/unwanted-material-summary', [LabelController::class, 'unwantedMaterialSummary']);
+
+    //Memorandum
+    Route::get('/memorandum', [LabelController::class, 'memorandum']);
+
+    //For INVALIDATE LABEL
+    Route::put('/invalid/{id}', action: [LabelController::class, 'invalidateLabel']); 
+    
+    //For Laboratories
+    Route::get('/labs', [LaboratoryController::class, 'getAllLabs']);  // GET all labs ONLY ADMIN
+    
+    Route::get('/labs/room', [LaboratoryController::class, 'searchByRoomNumber']);
+
+    Route::get('/labs/{lab_id}', [LaboratoryController::class, 'getLabDetails']);  // GET a lab by ID ONLY ADMIN
+
+    Route::post('/labs', [LaboratoryController::class, 'addLab']); // CREATE LAB ONLY ADMIN
+
+    Route::put('/editLabs/{lab_id}', [LaboratoryController::class, 'editlab']); // UPDATE LAB ONLY ADMIN
+
+    Route::put('/invalidateLabs/{lab_id}', [LaboratoryController::class, 'invalidateLab']); //ONLY ADMIN, reality is that it will not be deleted but the lab status changed to INVALID, LAB HAS 3 STATUS (ASSIGNED, UNASSIGNED, INVALID)
+
+    Route::put('/lab/{id}/supervisor', [LaboratoryController::class, 'assignLabSupervisor']); // ONLY ADMIN can assign a supervisor to a lab
+
+
+    ////   Quiz Management Routes
+    Route::get('admin/manageQuiz', [ManageQuizController::class, 'show'])->name('admin.manageQuiz.show');
+    Route::post('admin/manageQuiz/save', [ManageQuizController::class, 'save'])->name('admin.manageQuiz.save');
+
+
 
 
 });
@@ -331,86 +457,12 @@ Route::get('/pickupSearch', [PickupRequestController::class, 'searchPickupReques
 
 Route::put('/pickupComplete', [PickupRequestController::class, 'completePickupRequest']);
 
-// Route::middleware(['web', 'auth'])->group(function () {
-//     Route::put('/editLabel/{id}', [LabelController::class, 'updateLabel'])->name('editLabel');
-// });
-
 Route::put('/editLabel/{id}', [LabelController::class, 'updateLabel'])->name('editLabel');
 
 
 
-
-//Statistics for Admin dashboard
-
-
-Route::get('/labels/last7days', [LabelController::class, 'countLabelsLast7Days']);
-Route::get('/labels/weight', [LabelController::class, 'calculateTotalWeight']); 
-Route::get('/labels/volume', [LabelController::class, 'calculateTotalVolume']); 
-////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////
-
-Route::get('/users/new-members', [UserController::class, 'countNewMembersLast30Days']);
-// Route::get('/users', [UserController::class, 'getUserDetails']);
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-
-
-
-
-
-
-
-
-//For EDIT LABEL
-Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
-
-//Route::post('/editLabel/{id}', [LabelController::class, 'updateLabel'])->withoutMiddleware('auth');
-
-
-
-
-
-
-//search label
-Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
-
-
-
-
-
-
-
-
-
-
-
-//Summary
-Route::get('/unwanted-material-summary', [LabelController::class, 'unwantedMaterialSummary']);
-
-
-
-
-
-//Memorandum
-Route::get('/memorandum', [LabelController::class, 'memorandum']);
-
-
-
-
-
-
-
-
-//For INVALIDATE LABEL
-
-Route::put('/invalid/{id}', action: [LabelController::class, 'invalidateLabel']); 
 
 
 
@@ -444,7 +496,6 @@ Route::put('/invalidateLabs/{lab_id}', [LaboratoryController::class, 'invalidate
 
 Route::put('/lab/{id}/supervisor', [LaboratoryController::class, 'assignLabSupervisor']); // ONLY ADMIN can assign a supervisor to a lab
 
-//Route::get('/labs/room', [LaboratoryController::class, 'searchByRoomNumber']);  // GET a lab by Room Number
 
 
 
@@ -467,10 +518,6 @@ Route::put('/lab/{id}/supervisor', [LaboratoryController::class, 'assignLabSuper
 
 
 
-
-
-
-////////////////////////////////////////For users///////////////////////////////////////////
 
 
 
@@ -504,10 +551,6 @@ Route::get('/users/{id}', [UserController::class, 'getUserDetailsByID']);
 
 
 Route::put('/users/{id}', [UserController::class, 'roleManagementEditUser']);// update the user room number and role only
-
-
-// Route::delete('/users/{id}', [UserController::class, 'inactiveUser']);
-
 
 
 
@@ -549,8 +592,6 @@ Route::post('/professors/users', [UserController::class, 'createStaffUser']); //
 ////////////////////////////// Quiz //////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 
-
-
 Route::get('/notice', function () {
     return view('notice');
 })->name('notice');
@@ -563,24 +604,12 @@ Route::get('/quiz', function () {
     return view('quiz');
 })->name('quiz');
 
-// Route::get('/manageQuiz', function () {
-//     return view('manageQuiz');
-// })->name('manageQuiz');
 
-
-////   Quiz Management Routes
-Route::get('admin/manageQuiz', [ManageQuizController::class, 'show'])->name('admin.manageQuiz.show');
-Route::post('admin/manageQuiz/save', [ManageQuizController::class, 'save'])->name('admin.manageQuiz.save');
-
-
-
-// // Quiz Routes for Users
+//// Quiz Routes for Users
 Route::get('/quiz', [QuizController::class, 'show'])->name('quiz.show');
 Route::post('/quiz/submit', [QuizController::class, 'submit'])->name('quiz.submit');
 
 Route::post('/update-certification-status', [UserController::class, 'updateCertificationStatus'])->name('update.certificate');
-
-
 
 
 // //////////////////////////////////////////////////////////////////////////////////
@@ -591,66 +620,6 @@ Route::post('/update-certification-status', [UserController::class, 'updateCerti
 
 
 
-
-
-
-
-
-Route::get('labels/near-six-months',[LabelController::class, 'getLabelsNearSixMonths']);// get the accumulation start date and get the labes that are close of the 6 months (so 5 months or 5 1/2 months)
-
-
-
-
-
-
-
-
-
-
-///////////////////////////////////////// Login Validations ///////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
- Route::get('auth/saml2/arrival', function () {
-    $user = Auth::user();
-
-    if (!$user) {
-        return redirect()->route('aboutUs');
-    }
-
-
-
-    // IF a user tries to enter the system BEFORE a Professor or Admin gaves authorization.
-    if($user->user_status === NUll ||$user->certification_status === NULL ||$user->role === NULL ){ //Ruta de acceso denegado
-        return redirect()->route('accessDenied');
-    }
-
-    // Check  User Status
-    if($user->user_status === 'Denied'){
-        return redirect()->route('home'); // Ruta de Acceso denegado
-    }
-
-
-    // Check Certification Status and User Status
-    if ($user->certification_status === false) {
-        return redirect()->route('notice'); // Redirect to notice
-    }
-
-    // Redirect based on role if Certification Status is TRUE and User Status is Accepted
-    if ($user->certification_status === true && $user->user_status === 'Accepted') {
-        switch ($user->role) {
-            case 'Administrator':
-                return redirect()->route('admin/homeAdmin');
-            case 'Professor':
-                return redirect()->route('professor/homeProfessor');
-            case 'Staff':
-                return redirect()->route('staff/homeStaff');
-            default:
-                return redirect()->route('home'); // Fallback to main homepage
-        }
-    }
-}); 
 
 
 
