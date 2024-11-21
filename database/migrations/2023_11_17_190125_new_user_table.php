@@ -26,7 +26,7 @@ return new class extends Migration
 
 
 
-        $table->foreign('room_number')->references('room_number')->on('laboratory')->onDelete('set null'); 
+        // $table->foreign('room_number')->references('room_number')->on('laboratory')->onDelete('set null'); 
 
     });
     }
