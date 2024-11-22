@@ -19,6 +19,14 @@ class PickupRequest extends Model
         'label_id'
     ];
 
+    /**
+     * PICKUP REQUEST STATUS:
+     * 0 = Invalid
+     * 1 = Completed
+     * 2 = Pending
+     * 3 = Overdue
+     */
+
     protected static function boot()
     {
         parent::boot();

@@ -88,7 +88,7 @@ class NotificationController extends Controller
 
     public function adminGetOverdueNotifications()
     {
-        $notifications = Notification::where('send_to', 'Admin')
+        $notifications = Notification::where('send_to', 'Administrator')
             ->where('status_of_notification', operator: 0)
             ->where('notification_type', operator: 4)
             ->orderBy('created_at', 'asc') 
@@ -103,7 +103,7 @@ class NotificationController extends Controller
 
     public function adminGetUnreadNotifications()
     {
-        $notifications = Notification::where('send_to', 'Admin')
+        $notifications = Notification::where('send_to', 'Administrator')
             ->where('status_of_notification', 0)
             ->whereNot('notification_type', operator: 4)
             ->orderBy('created_at', 'asc') 
@@ -118,7 +118,7 @@ class NotificationController extends Controller
 
     public function adminGetReadNotifications()
     {
-        $notifications = Notification::where('send_to', 'Admin')
+        $notifications = Notification::where('send_to', 'Administrator')
             ->where('status_of_notification', 1)
             ->orderBy('created_at', 'asc') 
             ->get();

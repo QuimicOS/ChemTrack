@@ -143,24 +143,53 @@
         }
 
         function validateForm() {
-            const labelValue = document.getElementById('labelID').value;
-            const isValidLabelID = labelValue !== ''; // Valid if not empty
-            
-            let isTimeSelectionValid = true;
-            let hasValidDay = false;
-            
-            days.forEach(day => {
-                const start = document.getElementById(day + 'Start').value;
-                const end = document.getElementById(day + 'End').value;
-                if ((start === '-' && end !== '-') || (start !== '-' && end === '-')) {
+        const labelValue = document.getElementById('labelID').value;
+        const isValidLabelID = labelValue !== ''; // Valid if not empty
+
+        let isTimeSelectionValid = true;
+        let hasValidDay = false;
+
+        const timeRegex = /^(\d{1,2}):(\d{2})\s?(AM|PM)$/; // Regex to validate time format (e.g., 8:00 AM)
+        
+        days.forEach(day => {
+            const start = document.getElementById(day + 'Start').value;
+            const end = document.getElementById(day + 'End').value;
+
+            // Check if one dropdown is filled but the other is not
+            if ((start === '-' && end !== '-') || (start !== '-' && end === '-')) {
+                isTimeSelectionValid = false;
+            }
+
+            // Check if both start and end times are selected
+            if (start !== '-' && end !== '-') {
+                hasValidDay = true;
+
+                // Validate time format
+                if (!timeRegex.test(start) || !timeRegex.test(end)) {
                     isTimeSelectionValid = false;
-                } else if (start !== '-' && end !== '-') {
-                    hasValidDay = true;
+                } else {
+                    // Parse times to check the order
+                    const [startHours, startMinutes, startPeriod] = start.match(timeRegex).slice(1);
+                    const [endHours, endMinutes, endPeriod] = end.match(timeRegex).slice(1);
+
+                    // Convert 12-hour format to 24-hour format for comparison
+                    const startTimeInMinutes = 
+                        (parseInt(startHours) % 12 + (startPeriod === 'PM' ? 12 : 0)) * 60 + parseInt(startMinutes);
+                    const endTimeInMinutes = 
+                        (parseInt(endHours) % 12 + (endPeriod === 'PM' ? 12 : 0)) * 60 + parseInt(endMinutes);
+
+                    // If the start time is greater than or equal to the end time, the timeframe is invalid
+                    if (startTimeInMinutes >= endTimeInMinutes) {
+                        isTimeSelectionValid = false;
+                    }
                 }
-            });
-            
-            document.getElementById('requestBtn').disabled = !(isValidLabelID && isTimeSelectionValid && hasValidDay);
-        }
+            }
+        });
+
+    // Disable or enable the request button based on validation
+    document.getElementById('requestBtn').disabled = !(isValidLabelID && isTimeSelectionValid && hasValidDay);
+}
+
 
         document.getElementById('labelID').addEventListener('input', validateLabelID);
         days.forEach(day => {

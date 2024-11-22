@@ -17,6 +17,13 @@ class Chemical extends Model
         'status_of_chemical'
     ];
 
+    /**
+     * CHEMICAL STATUS
+     * 0 = Inactive
+     * 1 = Active
+     * 2 = P Material 
+     */
+
     protected static function boot()
     {
         parent::boot();

@@ -25,9 +25,13 @@ class Kernel extends ConsoleKernel
      * @return void
      */
     protected function schedule(Schedule $schedule)
-{
-    $schedule->command('notifications:admin-labels')->daily();
-}
+    {
+    $schedule->command('notifications:admin-labels')->daily(); 
+    //php artisan notifications:admin-labels
+    
+    $schedule->command('notifications:cleanup')->daily();
+    //php artisan notifications:cleanup
+    }
 
     /**
      * Register the commands for the application.

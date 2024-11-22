@@ -167,11 +167,17 @@ class PickupRequestController extends Controller
         return response()->json(['errors' => $validator->errors()], 422);
     }
 
-    $pickupRequest = PickupRequest::find($request->id);  // Changed pickup_id to id
-    $pickupRequest->status_of_pickup = 1; // Set status to 'Completed'
+    $pickupRequest = PickupRequest::find($request->id); 
+
+    $label = Label::find($pickupRequest->label_id);
+
+    $pickupRequest->status_of_pickup = 1; 
     $pickupRequest->completion_method = $request->completion_method;
     $pickupRequest->completion_date = now();
     $pickupRequest->save();
+
+    $label->status_of_label = 2; 
+    $label->save();
 
     return response()->json(['success' => true, 'message' => 'Pickup request completed successfully.']);
 }
@@ -224,19 +230,12 @@ class PickupRequestController extends Controller
     }
     
 
-    
     // COUNT PICKUP REQUESTS WITH PENDING STATUS
-    public function listPickupRequests() 
-    {    
-        $pickupRequests = PickupRequest::where('status_of_pickup', 2)->get();
-    
-        $pickupCount = $pickupRequests->count();
-    
-        if ($pickupRequests->isNotEmpty()) {
-            return response()->json(['pickup_count' => $pickupCount, 'pickup_requests' => $pickupRequests], 200);
-        } 
-    
-        return response()->json(['message' => 'No pickup requests found with the specified status.'], 404);
+    public function countPendingPickupRequests()
+    {
+        $pickupCount = PickupRequest::where('status_of_pickup', 2)->count();
+
+        return response()->json($pickupCount, 200);
     }
 
     // RETURNS DATABASE INFORMATION THROUGH FOREIGN KEYSpublic function getAllPickupRequests()

@@ -22,7 +22,25 @@ class Notification extends Model
         'chemical_id',
         'pickup_id',
     ];
+
+    /**
+     * NOTIFICATION STATUS:
+     * 0 = Unread
+     * 1 = Read
+     */
     
+    /**
+     * NOTIFICATION TYPES:
+     * 0 = New Pickup Request
+     * 1 = Pickup Request Invalidated
+     * 2 = Label Due For Pickup (5 Month Warning)
+     * 3 = Label Without Pickup Request (5 1/2 Month Warning)
+     * 4 = Label Overdue (6 Month Warning)
+     * 5 = New Chemical
+     * 6 = User Role Requested
+     * 7 = Maximum Capacity Reached (55 Gallons)
+     * 8 = Maximum P Material Capacity Reached (1 Quart)
+     */
     
     // DIRECT RELATIONSHIPS
     public function pickupRequests()
