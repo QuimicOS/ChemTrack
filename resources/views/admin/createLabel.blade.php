@@ -78,23 +78,19 @@
         <fieldset>
             <legend>Location Details</legend>
             <div class="mb-3">
-                <label for="department" class="form-label">Department</label>
-                <select class="form-select" id="department" required>
-                    <option value="" selected>Select Department</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="building" class="form-label">Building</label>
-                <select class="form-select" id="building" required>
-                    <option value="" selected>Select Building</option>
-                </select>
-            </div>
-            <div class="mb-3">
                 <label for="roomNumber" class="form-label">Room Number</label>
                 <select class="form-select" id="roomNumber" required>
                     <option value="" selected>Select Room Number</option>
                 </select>
             </div>
+            <div class="mb-3">
+                <label for="department" class="form-label">Department</label>
+                <input type="text" class="form-control" id="department" placeholder="Select Room Number to autofill" readonly>
+            </div>
+            <div class="mb-3">
+                <label for="building" class="form-label">Building</label>
+                <input type="text" class="form-control" id="building" placeholder="Select Room Number to autofill" readonly>
+            </div>            
             <div class="mb-3">
                 <label for="labName" class="form-label">Laboratory Name</label>
                 <input type="text" class="form-control" id="labName" placeholder="Select Room Number to autofill" readonly>
@@ -208,8 +204,10 @@
             const labDetails = labData.find(lab => lab.room_number === selectedRoom);
 
             if (labDetails) {
-                document.getElementById("labName").value = labDetails.lab_name;
-                document.getElementById("principalInvestigator").value = labDetails.professor_investigator;
+            document.getElementById("labName").value = labDetails.lab_name || "N/A";
+            document.getElementById("principalInvestigator").value = labDetails.professor_investigator || "N/A";
+            document.getElementById("department").value = labDetails.department || "N/A";
+            document.getElementById("building").value = labDetails.building_name || "N/A";
             }
         });
 
@@ -234,20 +232,13 @@
 
     // Populate laboratory dropdowns
     function populateLabDropdowns(data) {
-        const departmentSelect = document.getElementById('department');
-        const buildingSelect = document.getElementById('building');
         const roomNumberSelect = document.getElementById('roomNumber');
+        roomNumberSelect.innerHTML = '<option value="" selected>Select Room Number</option>';
 
         data.forEach(lab => {
-            if (!Array.from(departmentSelect.options).some(option => option.value === lab.department)) {
-                departmentSelect.add(new Option(lab.department, lab.department));
-            }
-            if (!Array.from(buildingSelect.options).some(option => option.value === lab.building_name)) {
-                buildingSelect.add(new Option(lab.building_name, lab.building_name));
-            }
-            roomNumberSelect.add(new Option(`Room ${lab.room_number}`, lab.room_number));
+            roomNumberSelect.add(new Option(`${lab.room_number}`, lab.room_number));
         });
-    }
+        }
 
     // Populate the datalist for chemical autocomplete
     function populateChemicalAutocomplete(data) {
@@ -306,29 +297,39 @@
 
     // Validate the form before submission
     function validateForm() {
-        let isValid = true;
+    let isValid = true;
 
-        // Check required fields
-        document.querySelectorAll('input[required], select[required]').forEach(field => {
-            if (!field.value.trim()) {
-                isValid = false;
-                alert('Please fill in all required fields.');
-            }
-        });
+    // Check required fields
+    document.querySelectorAll('input[required], select[required]').forEach(field => {
+        if (!field.value.trim()) {
+            isValid = false;
+            alert('Please fill in all required fields.');
+        }
+    });
 
-        // Validate percentage inputs
-        document.querySelectorAll('.percentage').forEach(input => {
-            if (!/^\d+(\.\d+)?$/.test(input.value)) {
-                input.classList.add("invalid-percentage");
-                alert("Please enter a valid numeric value for percentage.");
-                isValid = false;
-            } else {
-                input.classList.remove("invalid-percentage");
-            }
-        });
+    // Validate percentage inputs
+    const percentages = Array.from(document.querySelectorAll('.percentage'));
+    let totalPercentage = 0;
 
-        return isValid;
+    percentages.forEach(input => {
+        const value = parseFloat(input.value);
+        if (isNaN(value) || value <= 0 || value > 100) {
+            input.classList.add("invalid-percentage");
+            alert("Each percentage must be a positive number and cannot exceed 100.");
+            isValid = false;
+        } else {
+            input.classList.remove("invalid-percentage");
+            totalPercentage += value;
+        }
+    });
+
+    if (totalPercentage !== 100) {
+        alert(`The total percentage of all chemicals must be exactly 100. Current total: ${totalPercentage}`);
+        isValid = false;
     }
+
+    return isValid;
+}
 
     // Submit the form data to the server
     function validateAndSubmit() {
@@ -343,23 +344,22 @@
             principal_investigator: document.getElementById("principalInvestigator").value,
             container_size: document.getElementById("containerSize").value,
             quantity: document.getElementById("stored").value,
-            //label_size: document.getElementById("labelSize").value,
             units: document.getElementById("units").value,
         };
 
         const contentData = Array.from(document.querySelectorAll("#chemicalTable tbody tr")).map(row => ({
             chemical_name: row.cells[0].querySelector('input').value,
             cas_number: row.cells[1].querySelector('input').value,
-            percentage: row.cells[2].querySelector('input').value,
+            percentage: parseFloat(row.cells[2].querySelector('input').value),
         }));
 
         fetch('/labels', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             },
-            body: JSON.stringify({ label: labelData, content: contentData })
+            body: JSON.stringify({ label: labelData, content: contentData }),
         })
         .then(response => {
             if (!response.ok) {
@@ -370,33 +370,228 @@
             return response.json();
         })
         .then(data => {
-            console.log('Parsed Response:', data);
             if (data.success) {
                 alert('Label created successfully');
-                generatePDF(data.data); // Generate the PDF with label data
+                labelData.label_id = data.data.label_id;
+                labelData.chemicals = contentData;
+                generatePDF(labelData);
             } else {
                 alert(`Error creating label: ${data.message}`);
             }
         })
         .catch(error => {
-            console.error('Fetch Error:', error);
             alert(`Failed to create label: ${error.message}`);
         });
     }
 }
 
-
+    //Look if the percentage value its greater than 0
     function validateStoredInput() {
     const storedInput = document.getElementById("stored");
     const value = parseFloat(storedInput.value);
 
-    if (isNaN(value) || value < 0) {
+    if (isNaN(value) || value <= 0) {
         storedInput.style.borderColor = "red";
         alert("Please enter a valid positive number for the stored quantity.");
     } else {
         storedInput.style.borderColor = "";
     }
+    }
+
+function generatePDF(labelData) {
+    const { jsPDF } = window.jspdf;
+
+    const pageWidth = 215.9;  // 8.5 inches in mm
+    const pageHeight = 279.4; // 11 inches in mm
+    let labelHeight, labelWidth, offsetX, offsetY, fontSize, lineSpacing, tableColumnSpacing, additionalSpacing;
+
+    // Fetch the labelSize from the form
+    const labelSize = document.getElementById("labelSize").value;
+
+    // Initialize the PDF with A4 (8.5 x 11 inch) dimensions
+    let doc = new jsPDF({ unit: "mm", format: [pageWidth, pageHeight] });
+
+    // Adjust label dimensions based on label size
+    if (labelSize === "Small") {
+        labelHeight = 25.4;
+        labelWidth = 25.4;
+        offsetX = (pageWidth - labelWidth) / 2;
+        offsetY = (pageHeight - labelHeight) / 2;
+        fontSize = 4;
+        lineSpacing = 2.5;
+        tableColumnSpacing = { chemical: 2, cas: 12, percent: 20 };
+        additionalSpacing = 1;
+    } else if (labelSize === "Medium") {
+        labelHeight = 76.2;
+        labelWidth = 50.8;
+        offsetX = (pageWidth - labelWidth) / 2;
+        offsetY = (pageHeight - labelHeight) / 2;
+        fontSize = 6;
+        lineSpacing = 4.5;
+        tableColumnSpacing = { chemical: 2, cas: 20, percent: 34 };
+        additionalSpacing = 2;
+    } else if (labelSize === "Large") {
+        labelHeight = 152.4;
+        labelWidth = 101.6;
+        offsetX = (pageWidth - labelWidth) / 2;
+        offsetY = (pageHeight - labelHeight) / 2;
+        fontSize = 9;
+        lineSpacing = 7.5;
+        tableColumnSpacing = { chemical: 15, cas: 60, percent: 80 };
+        additionalSpacing = 6;
+    } else {
+        // Add a fallback case for invalid sizes
+        console.error('Invalid label size:', labelSize);
+        alert('Invalid label size selected. Please select a valid label size.');
+        return; // Prevent further execution
+    }
+
+    // Draw border around the label
+    doc.rect(offsetX, offsetY, labelWidth, labelHeight);
+
+    // Label Header
+    doc.setFont("Helvetica", "bold");
+    if (labelSize === "Small"){
+        doc.setFontSize(fontSize + 2);
+    }
+    if (labelSize === "Medium"){
+        doc.setFontSize(fontSize + 5);
+    }
+    if (labelSize === "Large"){
+        doc.setFontSize(fontSize + 10);
+    }
+    doc.text("UNWANTED MATERIAL", offsetX + labelWidth / 2, offsetY + fontSize + 2, { align: "center" });
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(fontSize);
+
+    // Main information with dynamic line spacing
+
+    let contentY = offsetY + fontSize + 5;
+
+    if (labelSize == "Small") {
+        doc.text(`Label ID:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(String(labelData.label_id) || 'N/A', offsetX + 15, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Date:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(labelData.date_created, offsetX + 12, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Room #:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(labelData.room_number, offsetX + 15, contentY);
+        doc.setFont("Helvetica", "normal");
+    }
+    else if (labelSize == "Medium") {
+        doc.text(`Label ID:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(String(labelData.label_id) || 'N/A', offsetX + 15, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Date:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(labelData.date_created, offsetX + 12, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Room #:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(labelData.room_number, offsetX + 15, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Professor Investigator:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(labelData.principal_investigator, offsetX + 27, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Department:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(labelData.department, offsetX + 18, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Building:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(labelData.building, offsetX + 15, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Quantity:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(`${labelData.quantity} ${labelData.units}`, offsetX + 15, contentY);
+        doc.setFont("Helvetica", "normal");
+    }
+    else {
+
+        doc.text(`Label ID:`, offsetX + 4, contentY + 1);
+        doc.setFont("Helvetica", "bold");
+        doc.text(String(labelData.label_id) || 'N/A', offsetX + 20, contentY + 1);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Date:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(labelData.date_created, offsetX + 15, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Room #:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(labelData.room_number, offsetX + 20, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Professor Investigator:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(labelData.principal_investigator, offsetX + 40, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Department:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(labelData.department, offsetX + 25, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Building:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(labelData.building, offsetX + 20, contentY);
+        doc.setFont("Helvetica", "normal");
+
+        contentY += lineSpacing;
+        doc.text(`Quantity:`, offsetX + 4, contentY);
+        doc.setFont("Helvetica", "bold");
+        doc.text(`${labelData.quantity} ${labelData.units}`, offsetX + 20, contentY);
+        doc.setFont("Helvetica", "normal");
+    }
+
+    contentY += lineSpacing + additionalSpacing;
+    doc.setFont("Helvetica", "bold");
+    doc.text("Chemical", offsetX + tableColumnSpacing.chemical, contentY);
+    doc.text("CAS #", offsetX + tableColumnSpacing.cas, contentY);
+    doc.text("%", offsetX + tableColumnSpacing.percent, contentY);
+    doc.setFont("Helvetica", "normal");
+
+    contentY += 1;
+    doc.line(offsetX + 2, contentY, offsetX + labelWidth - 2, contentY);
+
+    (labelData.chemicals || []).slice(0, labelSize === "Small" ? 2 : labelSize === "Medium" ? 5 : 8).forEach((chemical) => {
+        contentY += lineSpacing;
+        doc.text(chemical.chemical_name, offsetX + tableColumnSpacing.chemical, contentY);
+        doc.text(chemical.cas_number, offsetX + tableColumnSpacing.cas, contentY);
+        doc.text(String(chemical.percentage), offsetX + tableColumnSpacing.percent, contentY);
+    });
+
+    doc.save(`label_${String(labelData.label_id) || "N/A"}.pdf`);
 }
+
 
 </script>
 @endsection

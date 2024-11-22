@@ -70,7 +70,7 @@ class LabelController extends Controller
         }
 
         DB::commit();
-        return response()->json(['success' => true, 'data' => $label], 200);
+        return response()->json(['success' => true, 'data' => $label], 201);
     } catch (\Exception $e) {
         DB::rollBack();
         return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
