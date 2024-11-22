@@ -180,28 +180,28 @@
         <!-- Dashboard Cards Section (on the right) -->
         <div class="dashboard-cards">
             <div class="dashboard-card labels-last7days">
-                <h5></h5>
+                <h5>0</h5>
                 <p>LABELS CREATED LAST 7 DAYS</p>
             </div>
-            <div class="dashboard-card">
-              <h5>8</h5>
-              <p>PENDING PICKUP REQUESTS</p>
+            <div class="dashboard-card pending-pickup-requests">
+                <h5>0</h5>
+                <p>PENDING PICKUP REQUESTS</p>
             </div>
-            <div class="dashboard-card">
-              <h5>8</h5>
-              <p>CHEMICALS ADDED LAST 30 DAYS</p>
+            <div class="dashboard-card new-chemicals-last30days">
+                <h5>0</h5>
+                <p>CHEMICALS ADDED LAST 30 DAYS</p>
             </div>
-            <div class="dashboard-card weight-last30days">
-              <h5></h5>
-              <p>WEIGHT GENERATED LAST 30 DAYS</p>
+            <div class="dashboard-card total-weight">
+                <h5>0</h5>
+                <p>WEIGHT GENERATED (Kilograms) LAST 30 DAYS</p>
             </div>
-            <div class="dashboard-card volume-last30days">
-              <h5></h5>
-              <p>VOLUME GENERATED (GAL) LAST 30 DAYS</p>
+            <div class="dashboard-card total-volume">
+                <h5>0</h5>
+                <p>VOLUME GENERATED (Liters) LAST 30 DAYS</p>
             </div>
             <div class="dashboard-card new-members-last30days">
-              <h5></h5>
-              <p>NEW MEMBERS LAST 30 DAYS</p>
+                <h5>0</h5>
+                <p>NEW MEMBERS LAST 30 DAYS</p>
             </div>
         </div>
 
@@ -300,9 +300,11 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             fetchLabelsLast7Days();
-            fetchWeightTotal();
-            fetchVolumeTotal();
+            fetchTotalWeight();
+            fetchTotalVolume();
             fetchNewMembersLast30Days();
+            fetchNewChemicalsLast30Days();
+            fetchPendingPickupRequests();
         });
 
         function fetchLabelsLast7Days() {
@@ -316,32 +318,37 @@
 
         // <!-- AJAX Calls for Dashboard Data wightgenerated -->
 
-        function fetchWeightTotal() {
+        function fetchTotalWeight() {
         fetch('/labels/weight')
             .then(response => response.json())
             .then(data => {
-                const weightElement = document.querySelector('.weight-last30days h5');
-                if (weightElement) {
-                    weightElement.textContent = data.total_weight;
+                const totalWeightElement = document.querySelector('.total-weight h5');
+                if (totalWeightElement) {
+                    totalWeightElement.textContent = `${data.total_weight_kg.toFixed(2)} Kg`;
                 } else {
-                    console.error('Weight element not found');
+                    console.error('Total weight element not found');
                 }
             })
-            .catch(error => console.error('Error fetching weight data:', error));
-    }
+            .catch(error => console.error('Error fetching total weight:', error));
+        }
 
         // <!-- AJAX Calls for Dashboard Data volumegenerated -->
 
-        function fetchVolumeTotal() {
+        function fetchTotalVolume() {
         fetch('/labels/volume')
             .then(response => response.json())
             .then(data => {
-                // Update the statistic on the page with the total weight
-                document.querySelector('.volume-last30days h5').textContent = data.total_volume;
-
+                const totalVolumeElement = document.querySelector('.total-volume h5');
+                if (totalVolumeElement) {
+                    totalVolumeElement.textContent = `${data.total_volume_liters.toFixed(2)} Liters`;
+                } else {
+                    console.error('Total volume element not found');
+                }
             })
-            .catch(error => console.error('Error fetching weight data:', error));
+            .catch(error => console.error('Error fetching total volume:', error));
         }
+
+
 
 
 
@@ -350,17 +357,47 @@
         function fetchNewMembersLast30Days() {
         fetch('/users/new-members')
         .then(response => response.json())
-        .then(data => {
-            const newMembersElement = document.querySelector('.new-members-last30days h5');
-            if (newMembersElement) {
-                newMembersElement.textContent = data.new_member_count;
-            } else {
-                console.error('New members element not found');
-            }
-        })
-        .catch(error => console.error('Error fetching new members count:', error));
-}
+            .then(data => {
+                const newMembersElement = document.querySelector('.new-members-last30days h5');
+                if (newMembersElement) {
+                    newMembersElement.textContent = data.new_member_count;
+                } else {
+                    console.error('New members element not found');
+                }
+            })
+            .catch(error => console.error('Error fetching new members count:', error));
+        }
 
+        // <!-- AJAX Calls for Dashboard Chemicals generated -->
+
+        function fetchNewChemicalsLast30Days() {
+        fetch('/chemicalCreatedCount')
+            .then(response => response.json())
+            .then(data => {
+                const chemicalCountElement = document.querySelector('.new-chemicals-last30days h5');
+                if (chemicalCountElement) {
+                    chemicalCountElement.textContent = data.chemicals_created_in_the_last_30_days;
+                } else {
+                    console.error('Chemical count element not found');
+                }
+            })
+            .catch(error => console.error('Error fetching chemical count:', error));
+        }
+
+
+        function fetchPendingPickupRequests() {
+        fetch('/pickup-requests/pending')
+            .then(response => response.json())
+            .then(data => {
+                const pickupCountElement = document.querySelector('.pending-pickup-requests h5');
+                if (pickupCountElement) {
+                    pickupCountElement.textContent = `${data}`;
+                } else {
+                    console.error('Pickup requests count element not found');
+                }
+            })
+            .catch(error => console.error('Error fetching pending pickup requests count:', error));
+        }
 
     </script>
 @endsection

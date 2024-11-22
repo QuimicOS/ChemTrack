@@ -12,7 +12,6 @@ use App\Http\Controllers\ContentController;
 use App\Http\Controllers\chemicalController;
 use App\Http\Controllers\ManageQuizController;
 use App\Http\Controllers\QuizController;
-use App\Http\Controllers\NotificationController;
 
 
 
@@ -184,6 +183,9 @@ Route::get('accessDenied', function () {
     Route::get('/labels/weight', [LabelController::class, 'calculateTotalWeight']); 
     Route::get('/labels/volume', [LabelController::class, 'calculateTotalVolume']); 
     Route::get('/users/new-members', [UserController::class, 'countNewMembersLast30Days']);
+    Route::get('/pickup-requests/pending', [PickupRequestController::class, 'countPendingPickupRequests']);
+    Route::get('/chemicalCreatedCount', [ChemicalController::class, 'chemicalsMadeThisMonth']); 
+
 
 
 
@@ -272,7 +274,7 @@ Route::get('accessDenied', function () {
 
 
 ////////////////////////////////PROFESSOR ROUTES//////////////////////////////////////////////
-// Route::middleware(['auth', 'professor'])->group(function(){
+Route::middleware(['auth', 'professor'])->group(function(){
 
     Route::get('professor/homeProfessor', function () {
         return view('professor/homeProfessor');
@@ -327,7 +329,7 @@ Route::get('accessDenied', function () {
     })->name('professor/addChemical');
 
 
-// });
+});
 
 
 
@@ -344,7 +346,7 @@ Route::get('accessDenied', function () {
 
 ////////////////////////////////STAFF ROUTES//////////////////////////////////////////////
 
-// Route::middleware(['auth', 'staff'])->group(function(){
+Route::middleware(['auth', 'staff'])->group(function(){
 
     Route::get('staff/homeStaff', function () {
         return view('staff/homeStaff');
@@ -396,7 +398,7 @@ Route::get('accessDenied', function () {
 
 
 
-// });
+});
 
 
 
@@ -476,25 +478,9 @@ Route::put('/editLabel/{id}', [LabelController::class, 'updateLabel'])->name('ed
 Route::post('/chemicalCreate', [ChemicalController::class, 'addChemical']); 
 Route::put('/chemicalInvalidate', [ChemicalController::class, 'deleteChemical']); 
 Route::put('/chemicalModify', [ChemicalController::class, 'editChemical']); 
-Route::get('/chemicalCreatedCount', [ChemicalController::class, 'chemicalsMadeThisMonth']); 
 Route::get('/chemicalCasNumber', [ChemicalController::class, 'getCasNumber']); 
 Route::get('/chemicalSearch', [ChemicalController::class, 'searchChemicalName']);
 // ------------------------------------------------------------------------------------------------------
-
-// -------------------------------------Notification Routes--------------------------------------------------
-Route::put('/notificationRead', action: [NotificationController::class, 'markAsRead']);
-Route::get('/notificationAdminActives', action: [NotificationController::class, 'adminGetUnreadNotifications']);
-Route::get('/notificationAdminRead', action: [NotificationController::class, 'adminGetReadNotifications']);
-Route::get('/notificationAdminOverdues', action: [NotificationController::class, 'adminGetOverdueNotifications']);
-Route::get('/notificationGetToDo', action: [NotificationController::class, 'getToDo']);
-Route::get('/create5Months', action: [LabelController::class, 'getValidLabels']);
-
-Route::get('/todoList', action: [NotificationController::class, 'todoList']);
-Route::post('/checkPickupRequest', [LabelController::class, 'checkPickupRequest']);
-
-
-// ------------------------------------------------------------------------------------------------------
-
 
 
 //////////////////////////////////For Laboratories//////////////////////////////////////////

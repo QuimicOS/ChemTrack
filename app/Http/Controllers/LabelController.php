@@ -346,7 +346,7 @@ class LabelController extends Controller
             }
     
             // Validate that the user's room_number matches the label's room_number
-            if ($label->room_number !== $user->room_number) {
+            if ($user->role !== 'Administrator' && $label->room_number !== $user->room_number) {
                 return response()->json(['error' => 'Unauthorized: User does not have permission to invalidate this label'], 403);
             }
     
@@ -525,59 +525,71 @@ class LabelController extends Controller
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+// public function calculateTotalWeight()
+// {
+//     // Define solid units for categorization
+//     $solidUnits = ['Grams', 'Kilograms', 'Pounds'];
+
+//     // Get the date 30 days ago
+//     $thirtyDaysAgo = Carbon::now()->subDays(30);
+
+//     // Get all labels created in the last 30 days
+//     $labels = Label::where(DB::raw('date(label.date_created)'), '>=', $thirtyDaysAgo)->get();
+
+//     // Initialize variable for total solid weight
+//     $totalSolidWeight = 0;
+
+//     // Loop through labels to sum quantities based on units
+//     foreach ($labels as $label) {
+//         if (in_array(strtolower($label->units), $solidUnits)) {
+//             $totalSolidWeight += $label->quantity;
+//         }
+//     }
+
+//     // Return the total solid weight as a response
+//     return response()->json([
+//         'total_solid_weight' => $totalSolidWeight,
+//     ]);
+// }
+
 public function calculateTotalWeight()
 {
-    // Define solid units for categorization
-    $solidUnits = ['g', 'kg', 'lb'];
+    $totalWeightKg = Label::where('date_created', '>=', now()->subDays(30))
+        ->whereIn('units', ['Grams', 'Kilograms', 'Pounds'])
+        ->selectRaw("
+            SUM(
+                CASE
+                    WHEN units = 'Grams' THEN quantity / 1000
+                    WHEN units = 'Pounds' THEN quantity * 0.453592
+                    WHEN units = 'Kilograms' THEN quantity
+                    ELSE 0
+                END
+            ) AS total_weight_kg
+        ")
+        ->value('total_weight_kg');
 
-    // Get the date 30 days ago
-    $thirtyDaysAgo = Carbon::now()->subDays(30);
-
-    // Get all labels created in the last 30 days
-    $labels = Label::where(DB::raw('date(label.date_created / 1000, "unixepoch")'), '>=', $thirtyDaysAgo)->get();
-
-    // Initialize variable for total solid weight
-    $totalSolidWeight = 0;
-
-    // Loop through labels to sum quantities based on units
-    foreach ($labels as $label) {
-        if (in_array(strtolower($label->units), $solidUnits)) {
-            $totalSolidWeight += $label->quantity;
-        }
-    }
-
-    // Return the total solid weight as a response
-    return response()->json([
-        'total_solid_weight' => $totalSolidWeight,
-    ]);
+    return response()->json(['total_weight_kg' => $totalWeightKg], 200);
 }
+
 
 
 public function calculateTotalVolume()
 {
-    // Define liquid units for categorization
-    $liquidUnits = ['mL', 'L', 'gal'];
+    $totalVolumeLiters = Label::where('date_created', '>=', now()->subDays(30))
+        ->whereIn('units', ['Milliliters', 'Liters', 'Gallons'])
+        ->selectRaw("
+            SUM(
+                CASE
+                    WHEN units = 'Milliliters' THEN quantity / 1000
+                    WHEN units = 'Gallons' THEN quantity * 3.78541
+                    WHEN units = 'Liters' THEN quantity
+                    ELSE 0
+                END
+            ) AS total_volume_liters
+        ")
+        ->value('total_volume_liters');
 
-    // Get the date 30 days ago
-    $thirtyDaysAgo = Carbon::now()->subDays(30);
-
-    // Get all labels created in the last 30 days
-    $labels = Label::where(DB::raw('date(label.date_created / 1000, "unixepoch")'), '>=', $thirtyDaysAgo)->get();
-
-    // Initialize variable for total liquid volume
-    $totalLiquidVolume = 0;
-
-    // Loop through labels to sum quantities based on units
-    foreach ($labels as $label) {
-        if (in_array(strtolower($label->units), $liquidUnits)) {
-            $totalLiquidVolume += $label->quantity;
-        }
-    }
-
-    // Return the total liquid volume as a response
-    return response()->json([
-        'total_liquid_volume' => $totalLiquidVolume,
-    ]);
+    return response()->json(['total_volume_liters' => $totalVolumeLiters], 200);
 }
 
 
@@ -615,13 +627,13 @@ public function unwantedMaterialSummary(Request $request)
                 'contents.chemical_name',
                 'label.units',
                 DB::raw('SUM(label.quantity * (contents.percentage / 100)) AS total_contributed_quantity'),
-                DB::raw('date(label.date_created / 1000, "unixepoch") AS readable_date')
+                DB::raw('date(label.date_created) AS readable_date')
 
             );
 
         // Filter by date range if provided
         if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween(DB::raw('date(label.date_created / 1000, "unixepoch")'), [$request->start_date, $request->end_date]);
+            $query->whereBetween(DB::raw('date(label.date_created)'), [$request->start_date, $request->end_date]);
         }
 
         // Filter by chemical name if provided
@@ -656,7 +668,7 @@ public function unwantedMaterialSummary(Request $request)
         $today = now();
 
         // Count the labels created in the last 7 days
-        $labelCount = Label::whereBetween(DB::raw('date(label.date_created / 1000, "unixepoch")'), [$sevenDaysAgo,$today])->count();
+        $labelCount = Label::whereBetween(DB::raw('date(label.date_created)'), [$sevenDaysAgo,$today])->count();
 
         // Return the count in a JSON response
         return response()->json(['label_count' => $labelCount],200);

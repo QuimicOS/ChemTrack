@@ -57,8 +57,8 @@ class UserController extends Controller
         $user->name = $validatedData['name'];
         $user->last_name = $validatedData['last_name'];
         $user->email = $validatedData['email'];
-        $user->role = $validatedData['role'] ?? null;
-        $user->department = $validatedData['department'] ?? null;
+        $user->role = $validatedData['role'];
+        $user->department = $validatedData['department'];
         $user->user_status = 'Accepted';
         $user->certification_status = 0; // Default certification status
         $user->room_number = $validatedData['room_number'] ?? null;
