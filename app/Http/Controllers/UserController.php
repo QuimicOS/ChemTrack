@@ -44,28 +44,50 @@ class UserController extends Controller
     {
         // Validate input data
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:user,email',
-            'role' => 'nullable|string|max:255',
-            'department' => 'nullable|string|max:255',
-            'room_number' => 'nullable|string|max:255|exists:laboratory,room_number',
+            'user.name' => 'required|string|max:255',
+            'user.last_name' => 'required|string|max:255',
+            'user.email' => 'required|string|email|max:255|unique:user,email',
+            'user.role' => 'nullable|string|max:255',
+            'user.department' => 'nullable|string|max:255',
+            'rooms' => 'array|nullable', // Validate room numbers as an array
+            'rooms.*.room_number' => 'required|string|exists:laboratory,room_number', // Each room must exist in `laboratory`
         ]);
     
-        // Create the user with default certification status
-        $user = new User();
-        $user->name = $validatedData['name'];
-        $user->last_name = $validatedData['last_name'];
-        $user->email = $validatedData['email'];
-        $user->role = $validatedData['role'];
-        $user->department = $validatedData['department'];
-        $user->user_status = 'Accepted';
-        $user->certification_status = 0; // Default certification status
-        $user->room_number = $validatedData['room_number'] ?? null;
-        $user->save();
+        DB::beginTransaction();
+        try {
+            // Create the user with default certification and user status
+            $userData = $validatedData['user'];
+            $user = new User();
+            $user->name = $userData['name'];
+            $user->last_name = $userData['last_name'];
+            $user->email = $userData['email'];
+            $user->role = $userData['role'] ?? null;
+            $user->department = $userData['department'] ?? null;
+            $user->user_status = 'Accepted'; // Default status
+            $user->certification_status = 0; // Default certification status
+            $user->save();
     
-        return response()->json(['message' => 'User created successfully!', 'user' => $user], 201);
+            // Handle room associations in the pivot table
+            if (!empty($validatedData['rooms'])) {
+                foreach ($validatedData['rooms'] as $room) {
+                    DB::table('rooms')->insert([
+                        'user_id' => $user->id,
+                        'room_number' => $room['room_number'], // Room number from request
+                        'lab_status' => null, // Default to null or set a specific value if needed
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+    
+            DB::commit();
+            return response()->json(['message' => 'User created successfully!', 'user' => $user], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Failed to create user.', 'error' => $e->getMessage()], 500);
+        }
     }
+    
     
 
 
@@ -293,17 +315,28 @@ public function searchUserByEmail($email)
         return response()->json(['error' => 'Invalid email format'], 400);
     }
 
-    // Find the user by email
-    $user = User::where('email', $email)->first();
+    // Find the user by email with their associated room numbers
+    $user = User::where('email', $email)
+        ->leftJoin('rooms', 'user.id', '=', 'rooms.user_id') // Join with rooms table
+        ->select(
+            'user.id',
+            'user.email',
+            'user.role',
+            'user.created_at',
+            DB::raw('GROUP_CONCAT(rooms.room_number, ", ") as room_numbers') // Concatenate room numbers
+        )
+        ->groupBy('user.id', 'user.email', 'user.role', 'user.created_at') // Group by user fields
+        ->first();
 
     // If user is not found, return an error response
     if (!$user) {
         return response()->json(['error' => 'User not found'], 404);
     }
 
-    // Return the user details
+    // Return the user details with room numbers
     return response()->json($user, 200);
 }
+
 
 
 
@@ -330,57 +363,86 @@ public function getCertifiedUsers()
 
 public function getRequestedUsers()
 {
-    // Fetch all users with user_status = "requested"
-    $requestedUsers = User::where('user_status', 'Requested')->get();
+    $requestedUsers = DB::table('user')
+        ->leftJoin('rooms', 'user.id', '=', 'rooms.user_id') // Join with rooms table
+        ->select(
+            'user.id',
+            'user.email',
+            'user.role',
+            'user.created_at',
+            DB::raw('GROUP_CONCAT(rooms.room_number,  ", ") as room_numbers') // Concatenate room numbers
+        )
+        ->where('user.user_status', 'Requested')
+        ->groupBy('user.id', 'user.email', 'user.role', 'user.created_at') // Group by user fields
+        ->get();
 
     // Check if there are any requested users
     if ($requestedUsers->isEmpty()) {
         return response()->json(['message' => 'No requested users found'], 404);
     }
 
-    // Return the requested users
+    // Return the data
     return response()->json(['requested_users' => $requestedUsers], 200);
 }
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-////////CONTROLLER that will create a new user from scratch with the user_status always set to "requested" when the role is professor
-    public function createStaffUser(Request $request)
-    {
-        // Validate incoming data
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:user',
-            'department' => 'required|string|max:255',
-            'room_number' => 'required|exists:laboratory,room_number'
+////////Role request that will create a new user from scratch with the user_status always set to "requested" when the role is professor
+
+
+
+public function createStaffUser(Request $request)
+{
+    $validatedData = $request->validate([
+        'user.name' => 'required|string|max:255',
+        'user.last_name' => 'required|string|max:255',
+        'user.email' => 'required|string|email|max:255|unique:user',
+        'user.department' => 'required|string|max:255',
+        'rooms' => 'array|nullable', // Validate room numbers as an array
+        'rooms.*.room_number' => 'required|string|exists:laboratory,room_number', // Each room must exist in `laboratory`
+        'rooms.*.lab_status' => 'nullable|string|max:255', // Optional lab status
+    ]);
+
+    DB::beginTransaction();
+    try {
+        // Create the user with default attributes
+        $userData = $validatedData['user'];
+        $user = User::create([
+            'name' => $userData['name'],
+            'last_name' => $userData['last_name'],
+            'email' => $userData['email'],
+            'department' => $userData['department'],
+            'role' => 'Staff', // Default role
+            'certification_status' => false, // Default certification status
+            'user_status' => 'Requested', // Default user status
         ]);
 
-        // Set default attributes
-        $user = new User();
-        $user->name = $validatedData['name'];
-        $user->last_name = $validatedData['last_name'];
-        $user->email = $validatedData['email'];
-        $user->department = $validatedData['department'];
-        $user->room_number = $validatedData['room_number'];
-        $user->role = 'Staff'; // Always "staff" for this function
-        $user->certification_status = false; // Default false
-        $user->user_status = 'Requested'; // Default "requested"
+        // Handle room associations in the pivot table
+        if (!empty($validatedData['rooms'])) {
+            foreach ($validatedData['rooms'] as $room) {
+                DB::table('rooms')->insert([
+                    'user_id' => $user->id,
+                    'room_number' => $room['room_number'], // Room number from request
+                    'lab_status' => $room['lab_status'] ?? null, // Optional lab status
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
 
-        // Save user to the database
-        $user->save();
-
-        // Return a response
-        return response()->json([
-            'message' => 'Staff user created successfully.',
-            'user' => $user
-        ], 201);
+        DB::commit();
+        return response()->json(['success' => true, 'data' => $user], 201);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
     }
+}
 
-
-
+    
+    
 
 
 

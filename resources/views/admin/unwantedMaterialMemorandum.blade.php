@@ -105,7 +105,7 @@ searchButton.addEventListener('click', function () {
         })
         .then(data => {
             if (data.length === 0) {
-                alert('UH oh');
+                alert('Label not found or Label is not completed yet');
             } else {
                 // Clear previous results
                 searchedLabels = [];

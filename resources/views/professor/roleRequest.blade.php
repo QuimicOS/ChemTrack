@@ -161,15 +161,19 @@ function submitRoleRequest() {
     const lastNameField = document.getElementById('lastName');
     const emailField = document.getElementById('email');
     const departmentField = document.getElementById('department');
-    const roomNumberField = document.querySelector('.room-number');
+    const roomNumberFields = document.querySelectorAll('.room-number');
 
     // Prepare the request payload
     const roleRequestData = {
-        name: nameField.value.trim(),
-        last_name: lastNameField.value.trim(),
-        email: emailField.value.trim(),
-        department: departmentField.value.trim(),
-        room_number: roomNumberField.value.trim() // Single room number for now
+        user: {
+            name: nameField.value.trim(),
+            last_name: lastNameField.value.trim(),
+            email: emailField.value.trim(),
+            department: departmentField.value.trim(),
+        },
+        rooms: Array.from(roomNumberFields).map(field => ({
+            room_number: field.value.trim(),
+        }))
     };
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -187,7 +191,7 @@ function submitRoleRequest() {
         .then(response => {
             if (!response.ok) {
                 return response.json().then(errorData => {
-                    throw new Error(errorData.message || 'Error creating user');
+                    throw new Error(JSON.stringify(errorData.errors || errorData.message || 'Error creating user'));
                 });
             }
             return response.json(); // Parse the JSON response
@@ -202,9 +206,10 @@ function submitRoleRequest() {
         })
         .catch(error => {
             console.error('Error creating user:', error);
-            alert('Failed to create user. Check the console for details.');
+            alert(`Failed to create user: ${error.message}`);
         });
 }
+
 
 // Attach event listeners to input fields to toggle the submit button state
 document.getElementById('name').addEventListener('input', toggleSubmitButton);

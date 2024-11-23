@@ -84,9 +84,9 @@
                 <label for="role" class="form-label">Role</label>
                 <select class="form-control" id="role">
                     <option value="" disabled selected>Select Role</option>
-                    <option value="Admin">Admin</option>
+                    <option value="Administrator">Administrator</option>
                     <option value="Professor">Professor</option>
-                    <option value="TA">Teaching Assistant/Lab Technician/Student</option>
+                    <option value="Staff">Teaching Assistant/Lab Technician/Student</option>
                 </select>
                 <small class="text-danger" id="roleError"></small>
             </div>
@@ -163,11 +163,19 @@
                     <input type="hidden" id="editUserId"> <!-- Hidden userId field -->
                     <div class="mb-3">
                         <label for="editLaboratory" class="form-label">Room Number</label>
-                        <input type="text" id="editLaboratory" class="form-control">
+                        <select class="form-select" id="editLaboratory" required>
+                            <option value="" selected>Select Room Number</option>
+                        </select>                    
                     </div>
                     <div class="mb-3">
                         <label for="editRole" class="form-label">Role</label>
-                        <input type="text" id="editRole" class="form-control">
+                        <select class="form-select" id="editRole">
+                            <option value="" disabled selected>Select Role</option>
+                            <option value="Administrator">Administator</option>
+                            <option value="Professor">Professor</option>
+                            <option value="Staff">Teaching Assistant/Lab Technician/Student</option>
+                        </select>
+                        <!-- <input type="text" id="editRole" class="form-select"> -->
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -233,6 +241,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 <script>
 
+let labData = [];
 // Function to add new room fields
 function addRoomNumberField() {
     const roomNumberContainer = document.getElementById('roomNumberContainer');
@@ -321,7 +330,6 @@ function validateForm() {
     document.getElementById('lastNameError').textContent = '';
     document.getElementById('emailError').textContent = '';
     document.getElementById('departmentError').textContent = '';
-    document.getElementById('laboratoryError').textContent = '';
     document.getElementById('roleError').textContent = '';
 
     // Validate Name and Last Name: Characters only
@@ -358,12 +366,27 @@ function validateForm() {
         isValid = false;
     }
 
-    // Get Room Number (Optional)
-    const roomNumber = document.querySelector('.room-number').value.trim();
+    // Validate Room Numbers
+    const roomNumberFields = document.querySelectorAll('.room-number');
+    const roomNumbers = Array.from(roomNumberFields).map(field => ({
+        room_number: field.value.trim(),
+    }));
 
     // Submit form if valid
     if (isValid) {
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        // Payload structured to match the backend
+        const roleRequestData = {
+            user: {
+                name: firstName,
+                last_name: lastName,
+                email: email,
+                department: department,
+                role: role,
+            },
+            rooms: roomNumbers,
+        };
 
         fetch('/newUsers', {
             method: 'POST',
@@ -372,14 +395,7 @@ function validateForm() {
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': csrfToken,
             },
-            body: JSON.stringify({
-                name: firstName,
-                last_name: lastName,
-                email: email,
-                department: department,
-                room_number: roomNumber || null,
-                role: role,
-            }),
+            body: JSON.stringify(roleRequestData),
         })
             .then(response => {
                 if (!response.ok) {
@@ -401,54 +417,91 @@ function validateForm() {
     }
 }
 
+
+
+function populateLabDropdowns(data) {
+        const roomNumberSelect = document.getElementById('editLaboratory');
+        roomNumberSelect.innerHTML = '<option value="" selected>Select Room Number</option>';
+
+        data.forEach(lab => {
+            roomNumberSelect.add(new Option(`${lab.room_number}`, lab.room_number));
+        });
+        }
+
 // Function to render submitted requested users
 function renderSubmittedRequestsTable() {
     const tableBody = document.getElementById('submittedRequestsTableBody');
     tableBody.innerHTML = ''; // Clear existing table rows
 
+
     // Fetch users with 'requested' status
     fetch('/users/requested', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-        },
-    })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(errorData => {
-                    throw new Error(errorData.message || 'Error fetching requested users');
-                });
-            }
-            return response.json(); // Parse JSON if response is OK
-        })
-        .then(data => {
-            // Check if data is empty
-            if (!data.requested_users || data.requested_users.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="5" class="text-center">No requested users found</td></tr>`;
-                return;
-            }
-
-            // Populate the table with user data
-            data.requested_users.forEach(user => {
-                const row = `
-                    <tr>
-                        <td>${user.email}</td>
-                        <td>${user.room_number || 'N/A'}</td>
-                        <td>${user.role || 'N/A'}</td>
-                        <td>${new Date(user.created_at).toLocaleString()}</td>
-                        <td>
-                            <button class="btn btn-success btn-sm" onclick="acceptRequest(${user.id})">Accept</button>
-                            <button class="btn btn-danger btn-sm" onclick="denyRequest(${user.id})">Deny</button>
-                        </td>
-                    </tr>
-                `;
-                tableBody.innerHTML += row;
+    method: 'GET',
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    },
+})
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                throw new Error(errorData.message || 'Error fetching requested users');
             });
-        })
-        .catch(error => {
-            console.error('Error:', error.message);
-            tableBody.innerHTML = `<tr><td colspan="5" class="text-center">Error fetching requested users</td></tr>`;
+        }
+        return response.json(); // Parse JSON if response is OK
+    })
+    .then(data => {
+        const tableBody = document.getElementById('submittedRequestsTableBody');
+        tableBody.innerHTML = ''; // Clear existing rows
+
+        // Check if data is empty
+        if (!data.requested_users || data.requested_users.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center">No requested users found</td></tr>`;
+            return;
+        }
+
+        // Populate the table with user data
+        data.requested_users.forEach(user => {
+            const roomNumbers = user.room_numbers || 'N/A'; // Use 'room_numbers' from backend
+
+            const row = `
+                <tr>
+                    <td>${user.email}</td>
+                    <td>${roomNumbers}</td> <!-- Updated to display room_numbers -->
+                    <td>${user.role || 'N/A'}</td>
+                    <td>${new Date(user.created_at).toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-success btn-sm" onclick="acceptRequest(${user.id})">Accept</button>
+                        <button class="btn btn-danger btn-sm" onclick="denyRequest(${user.id})">Deny</button>
+                    </td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+    })
+    .catch(error => {
+        console.error('Error:', error.message);
+        const tableBody = document.getElementById('submittedRequestsTableBody');
+        tableBody.innerHTML = `<tr><td colspan="5" class="text-center">Error fetching requested users</td></tr>`;
+    });
+
+
+
+
+
+
+        fetch('/laboratories')
+            .then(response => response.json())
+            .then(data => {
+                labData = data;
+                populateLabDropdowns(data);
+            })
+            .catch(error => console.error('Error fetching laboratories:', error));
+
+
+            document.getElementById("editLaboratory").addEventListener("change", function () {
+            const selectedRoom = this.value;
+            const labDetails = labData.find(lab => lab.room_number === selectedRoom);
         });
 }
 
@@ -526,10 +579,15 @@ function renderEditUsersTable(userList) {
     tableBody.innerHTML = ''; // Clear previous results
 
     userList.forEach(user => {
+        // Handle multiple room numbers (as a string or array)
+        const roomNumbers = user.room_numbers ? 
+            (Array.isArray(user.room_numbers) ? user.room_numbers.join(', ') : user.room_numbers) 
+            : 'N/A';
+
         const row = `<tr>
             <td>${user.email}</td>
-            <td>${user.room_number || 'N/A'}</td>
-            <td>${user.role}</td>
+            <td>${roomNumbers}</td> <!-- Updated to show multiple room numbers -->
+            <td>${user.role || 'N/A'}</td>
             <td>
                 <button class="btn btn-primary btn-sm" onclick="openEditModal('${user.id}')">Edit</button>
                 <button class="btn btn-danger btn-sm" onclick="openDeleteModal('${user.id}')">Delete</button>
@@ -543,6 +601,7 @@ function renderEditUsersTable(userList) {
         tableBody.innerHTML = `<tr><td colspan="4" class="text-center">No users found</td></tr>`;
     }
 }
+
 
 
 
