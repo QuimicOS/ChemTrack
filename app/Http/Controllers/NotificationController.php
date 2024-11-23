@@ -183,6 +183,57 @@ class NotificationController extends Controller
     }
     
 
+    public function unreadNotificationsCount()
+    {
+        $unreadCount = Notification::where('send_to', 'Administrator')
+            ->where('status_of_notification', 0) 
+            ->count();
+
+        return response()->json($unreadCount);
+    }
+    
+
+    public function getNotificationTypes()
+    {
+        $notificationTypes = Notification::where('send_to', 'Administrator')
+            ->where('status_of_notification', 0) // Only unread notifications
+            ->select('notification_type')
+            ->distinct()
+            ->get();
+    
+        return response()->json($notificationTypes);
+    }
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // GET ALL NOTIFICATIONS WITH STATUS UNREAD PER USER
     public function getPendingNotifications(Request $request)
     {

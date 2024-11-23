@@ -50,11 +50,11 @@ class Label extends Model
             ->where('status_of_label', 1)
             ->sum('quantity');
 
-            if ($totalQuantity > 55) {
+            if ($totalQuantity >= 55) {
                 Notification::create([
                     'notification_type' => 7, 
                     'message' => "The total quantity of chemicals in room {$label->room_number} has exceeded 55 gallons.",
-                    'send_to' => 'Admin',
+                    'send_to' => 'Administrator',
                     'status_of_notification' => 0, 
                     'label_id' => $label->label_id,
                 ]);

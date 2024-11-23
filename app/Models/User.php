@@ -42,7 +42,7 @@ class User extends Authenticatable implements MustVerifyEmail
         static::created(function ($user) {
             if ($user->user_status === 'Requested') {
                 Notification::create([
-                    'send_to' => 'Admin', 
+                    'send_to' => 'Administrator', 
                     'status_of_notification' => 0, 
                     'notification_type' => 6, 
                     'message' => "A Professor has requested {$user->role} access for {$user->email}",

@@ -130,16 +130,12 @@
                 <div class="dropdown me-3">
                   <button class="btn btn-light position-relative" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-bell"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationCount">
-                        4
-                    </span>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notificationCount">
+                    </span>                    
                   </button>
-                  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
-                    <li><a class="dropdown-item notification-link" href="{{ route('admin/notifications') }}" data-notification="pickup">New pickup request</a></li>
-                    <li><a class="dropdown-item notification-link" href="{{ route('admin/notifications') }}" data-notification="lab-edit">Invalidated pickup request</a></li>
-                    <li><a class="dropdown-item notification-link" href="{{ route('admin/notifications') }}" data-notification="chemical-add">New Chemical added</a></li>
-                    <li><a class="dropdown-item notification-link" href="{{ route('admin/notifications') }}" data-notification="chemical-add">New User request</a></li>
-                  </ul>
+                  <ul class="dropdown-menu dropdown-menu-end" id="dynamicNotificationsMenu" aria-labelledby="dropdownMenuButton">
+                    <!-- Menu items will be dynamically populated here -->
+                </ul>
                 </div>
 
                 <!-- Username and Sign Out -->
@@ -206,6 +202,77 @@
     <!-- JS for managing notification count -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const notificationCountElement = document.getElementById('notificationCount');
+            const menu = document.getElementById('dynamicNotificationsMenu');
+
+            fetch('/notifications/types')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error fetching notification types: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Clear the menu
+                    menu.innerHTML = '';
+
+                    // Notification type titles
+                    const notificationTitles = {
+                        0: 'New Pickup Request(s)',
+                        1: 'Invalidated Pickup Request(s)',
+                        3: 'Label(s) Without Pickup',
+                        4: 'Label(s) Overdue!',
+                        5: 'New Chemical(s) Added',
+                        6: 'New User Request(s)',
+                        7: 'Maximum Capacity Reached',
+                        8: 'P Materials Capacity Reached'
+                    };
+
+                    // Add menu items dynamically based on available types
+                    data.forEach(notification => {
+                        const type = notification.notification_type;
+                        if (notificationTitles[type]) {
+                            const listItem = document.createElement('li');
+                            listItem.innerHTML = `
+                                <a class="dropdown-item notification-link" href="{{ route('admin/notifications') }}" data-notification="${type}">
+                                    ${notificationTitles[type]}
+                                </a>
+                            `;
+                            menu.appendChild(listItem);
+                        }
+                    });
+
+                    // If no notifications are available
+                    if (data.length === 0) {
+                        menu.innerHTML = '<li><span class="dropdown-item">No Notifications Available</span></li>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    menu.innerHTML = '<li><span class="dropdown-item text-danger">Error Loading Notifications</span></li>';
+                });
+
+
+
+            // Fetch unread notifications count
+            fetch('/notificationUnreadCount')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error fetching notifications: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(count => {
+                    if (count > 0) {
+                        notificationCountElement.textContent = count; // Update the badge with the unread count
+                        notificationCountElement.classList.remove('d-none'); // Show the badge
+                    } else {
+                        notificationCountElement.classList.add('d-none'); // Hide the badge if no notifications
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching notifications count:', error);
+                });
             let unreadCount = 3;
             const notificationBadge = document.getElementById('notificationCount');
 
