@@ -128,15 +128,13 @@
 
                 <!-- Notification Bell Icon -->
                 <div class="dropdown me-3">
-                  <button class="btn btn-light position-relative" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-bell"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationCount">
-                        1
-                    </span>
-                  </button>
-                  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
-                    <li><a class="dropdown-item notification-link" href="{{ route('professor/notifications') }}" data-notification="pickup">Label 5 Months</a></li>
-                  </ul>
+                    <button class="btn btn-light position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-bell"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notificationCount"></span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" id="notificationMenu" aria-labelledby="notificationDropdown">
+                        <li class="dropdown-item">No Notifications Available</li>
+                    </ul>
                 </div>
 
                 <!-- Username and Sign Out -->
@@ -198,24 +196,56 @@
 
     <!-- JS for managing notification count -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let unreadCount = 3;  // Initial unread notification count
+        document.addEventListener('DOMContentLoaded', function () {
             const notificationBadge = document.getElementById('notificationCount');
-
-            // Handle clicking on a notification
-            document.querySelectorAll('.notification-link').forEach(function(link) {
-                link.addEventListener('click', function() {
-                    if (unreadCount > 0) {
-                        unreadCount--;
+            const notificationMenu = document.getElementById('notificationMenu');
+    
+            // Fetch professor notifications
+            fetch('/notificationUserCount')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error fetching notifications: ${response.status}`);
                     }
-
-                    if (unreadCount === 0) {
-                        notificationBadge.style.display = 'none';
-                    } else {
-                        notificationBadge.textContent = unreadCount;
+                    return response.json();
+                })
+                .then(data => {
+                    // Clear the notification menu
+                    notificationMenu.innerHTML = '';
+    
+                    if (data.length === 0) {
+                        // No notifications
+                        notificationMenu.innerHTML = '<li class="dropdown-item">No Notifications Available</li>';
+                        notificationBadge.classList.add('d-none');
+                        return;
                     }
+    
+                    // Update notification count badge
+                    let totalNotifications = 0;
+                    data.forEach(notification => {
+                        totalNotifications += notification.count;
+    
+                        // Add notification type to dropdown menu
+                        const notificationType = notification.notification_type === 2
+                            ? 'Label 5 Months'
+                            : 'Label 6 Months';
+                        
+                        notificationMenu.innerHTML += `
+                            <li>
+                                <a class="dropdown-item notification-link" href="{{ route('professor/notifications') }}">
+                                    ${notificationType} (${notification.count})
+                                </a>
+                            </li>
+                        `;
+                    });
+    
+                    // Display badge with total notifications
+                    notificationBadge.textContent = totalNotifications;
+                    notificationBadge.classList.remove('d-none');
+                })
+                .catch(error => {
+                    console.error('Error fetching notifications:', error);
+                    notificationMenu.innerHTML = '<li class="dropdown-item">No Notifications</li>';
                 });
-            });
         });
     </script>
 </body>

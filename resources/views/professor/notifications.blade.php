@@ -43,10 +43,16 @@
     <hr class="my-4">
 </div>
 
-<!-- Read Notifications Section -->
+<!-- Pickups Due Section -->
 <h3 class="mt-5">Labels Due For Pickup Request</h3>
 <div id="todoList">
     <!-- Read notifications will be dynamically loaded here -->
+</div>
+
+<!-- Active Notifications Section -->
+<h3>Invalidated Pickup Requests</h3>
+<div id="userNotificationsList">
+    <!-- Active notifications will be dynamically loaded here -->
 </div>
 
 @endsection
@@ -55,6 +61,7 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     fetchNotifications('/todoList', 'todoList');
+    fetchNotifications('/notificationUserUnreads', 'userNotificationsList');
 });
 
 function fetchNotifications(url, containerId) {
@@ -107,7 +114,7 @@ function markAsDone(notificationId, labelId) {
         .then(response => response.json())
         .then(data => {
             if (data.message === "Pickup request not found") {
-                alert("Please do a pickup request for this label.");
+                alert("Please make a pickup request for this label.");
                 return;
             }
 

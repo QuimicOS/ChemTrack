@@ -130,48 +130,78 @@ class NotificationController extends Controller
         return response()->json(['Read Notifications:' => $notifications], 200);
     }
 
-    public function getToDo(Request $request)
+
+    public function getUserNotifications()
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|string',
-        ]);
-    
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-    
-        $validatedData = $validator->validated();
-    
-        // Find the user by email
-        $user = User::where('email', $validatedData['email'])->first();
+        $user = Auth::user();
     
         if (!$user) {
-            return response()->json(['message' => 'User not found.'], 404);
+            return response()->json(['message' => 'User is not authenticated.'], 403);
         }
     
-        // Use the user's room_number to filter notifications
-        $notifications = Notification::where('send_to', $user->room_number)
-            ->where('status_of_notification', 0) // Unread notifications only
-            ->orderBy('created_at', 'asc') // Ascending order
+        $userRooms = DB::table('rooms')
+            ->where('user_id', $user->id)
+            ->where('lab_status', 'Assigned')
+            ->pluck('room_number'); 
+    
+        if ($userRooms->isEmpty()) {
+            return response()->json(['message' => 'No assigned rooms found for this user.'], 404);
+        }
+    
+        $notifications = Notification::whereIn('send_to', $userRooms) 
+            ->where('status_of_notification', 0) 
+            ->where('notification_type', 1)
+            ->orderBy('created_at', 'asc') 
             ->get();
     
         if ($notifications->isEmpty()) {
             return response()->json(['message' => 'No notifications found.'], 404);
         }
     
-        return response()->json(['TODO' => $notifications], 200);
+        return response()->json(['todo_list' => $notifications], 200);
     }
+
+
+    public function countUserNotifications()
+    {
+        $user = Auth::user();
+    
+        $userRooms = DB::table('rooms')
+            ->where('user_id', $user->id)
+            ->where('lab_status', 'Assigned')
+            ->pluck('room_number');
+    
+        $notificationCount = Notification::whereIn('send_to', $userRooms)
+            ->where('status_of_notification', 0) 
+            ->whereIn('notification_type', [1, 2])
+            ->count();
+    
+        return response()->json(['count' => $notificationCount]);
+    }
+    
+
+
     
     public function todoList()
     {
         $user = Auth::user();
     
-        if (!$user || !$user->room_number) {
-            return response()->json(['message' => 'User is not authenticated or room number is missing.'], 403);
+        if (!$user) {
+            return response()->json(['message' => 'User is not authenticated.'], 403);
         }
     
-        $notifications = Notification::where('send_to', $user->room_number) 
+        $userRooms = DB::table('rooms')
+            ->where('user_id', $user->id)
+            ->where('lab_status', 'Assigned')
+            ->pluck('room_number'); 
+    
+        if ($userRooms->isEmpty()) {
+            return response()->json(['message' => 'No assigned rooms found for this user.'], 404);
+        }
+    
+        $notifications = Notification::whereIn('send_to', $userRooms) 
             ->where('status_of_notification', 0) 
+            ->where('notification_type', 2)
             ->orderBy('created_at', 'asc') 
             ->get();
     

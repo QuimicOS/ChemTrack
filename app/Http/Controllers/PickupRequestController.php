@@ -87,11 +87,11 @@ class PickupRequestController extends Controller
 // ------------------------------------------------------------------------------------------------------ 
 
     // Creates a Pickup Request using a valid LABEL_ID
-    public function createPickupRequest(Request $request) 
+    public function createPickupRequest(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'label_id' => 'required|integer',
-            'timeframe' => 'required|string'
+            'timeframe' => 'required|string',
         ]);
     
         // Verify input data
@@ -102,46 +102,59 @@ class PickupRequestController extends Controller
     
         // Verify Authenticated User
         $user = Auth::user();
-            if (!$user || !$user->room_number) {
-            return response()->json(['message' => 'User is not authorized or is assigned a room number.'], 404);
+        if (!$user) {
+            return response()->json(['message' => 'User is not authorized.'], 404);
         }
-
-        // Verify Label existance
+    
+        // Verify Label existence
         $label = Label::find($validatedData['label_id']);
         if (!$label) {
             return response()->json(['success' => false, 'error' => 'Label not found'], 404);
         }
-
+    
         // Verify Label Status
         if ($label->status_of_label == 0) {
             return response()->json(['success' => false, 'error' => 'The label is invalid and cannot be used for a Pickup Request.'], 400);
         }
-
-        // Verify Room Number, unless the user is an Administrator
-        if ($user->role !== 'Administrator' && $user->room_number !== $label->room_number) {
-            return response()->json(['success' => false, 'error' => 'User is not authorized to create a Pickup Request for this label.'], 403);
+    
+        // Check Room Access
+        if ($user->role !== 'Administrator') {
+            // Fetch the user's assigned rooms from the rooms table
+            $userRooms = DB::table('rooms')
+                ->where('user_id', $user->id)
+                ->where('lab_status', 'Assigned') // Only assigned rooms
+                ->pluck('room_number');
+    
+            // Check if the label's room_number matches any of the user's rooms
+            if (!$userRooms->contains($label->room_number)) {
+                return response()->json(['success' => false, 'error' => 'User is not authorized to create a Pickup Request for this label.'], 403);
+            }
         }
-
+    
         // Verify existing Pickup Requests
         $existingPickupRequest = PickupRequest::where('label_id', $validatedData['label_id'])->first();
         if ($existingPickupRequest) {
             return response()->json(['success' => false, 'error' => 'A Pickup Request already exists for this label.'], 409);
         }
+    
+        // Create Pickup Request
         $pickupRequest = PickupRequest::create(array_merge(
             $validatedData,
             [
-                'status_of_pickup' => 2, 
+                'status_of_pickup' => 2,
                 'completion_date' => null,
                 'completion_method' => null,
             ]
         ));
+    
         return response()->json(['success' => true, 'data' => $pickupRequest], 201);
     }
+    
     
 
     // INVALIDATE PICKUP REQUEST
     public function invalidatePickupRequest(Request $request)
-{
+    {
     $pickupRequest = PickupRequest::find($request->pickup_id);
     
     if (!$pickupRequest) {
@@ -152,7 +165,7 @@ class PickupRequestController extends Controller
     $pickupRequest->save();
     
     return response()->json(['success' => true, 'message' => 'Pickup request invalidated successfully']);
-}
+    }
 
 
     //CHANGE STATUS OF LABEL AND PICKUP TO COMPLETED
@@ -238,20 +251,39 @@ class PickupRequestController extends Controller
         return response()->json($pickupCount, 200);
     }
 
-    // RETURNS DATABASE INFORMATION THROUGH FOREIGN KEYSpublic function getAllPickupRequests()
+    // RETURNS DATABASE INFORMATION THROUGH FOREIGN KEYS
     public function getAllPickupRequests()
     {
-        $pickupRequests = PickupRequest::with(['label.user', 'label.laboratory'])->get();
-
+        $user = Auth::user();
+    
+        // If the user is not an Administrator, fetch their assigned rooms
+        if ($user->role !== 'Administrator') {
+            $userRooms = DB::table('rooms')
+                ->where('user_id', $user->id)
+                ->where('lab_status', 'Assigned')
+                ->pluck('room_number');
+    
+            // Get pickup requests only for the user's rooms
+            $pickupRequests = PickupRequest::with(['label.user', 'label.laboratory'])
+                ->whereHas('label', function ($query) use ($userRooms) {
+                    $query->whereIn('room_number', $userRooms);
+                })
+                ->get();
+        } else {
+            // If the user is an Administrator, retrieve all pickup requests
+            $pickupRequests = PickupRequest::with(['label.user', 'label.laboratory'])->get();
+        }
+    
+        // Map the data to the desired structure
         $data = $pickupRequests->map(function ($pickupRequest) {
             $chemicals = DB::table('contents')
                 ->where('label_id', $pickupRequest->label_id)
                 ->pluck('chemical_name');
-
+    
             return [
                 'Pickup ID' => $pickupRequest->id,
                 'Label ID' => $pickupRequest->label ? $pickupRequest->label->label_id : null,
-                'Chemical(s)' => $chemicals, 
+                'Chemical(s)' => $chemicals,
                 'Building Name' => $pickupRequest->label ? $pickupRequest->label->building : null,
                 'Room Number' => $pickupRequest->label ? $pickupRequest->label->room_number : null,
                 'Container Size' => $pickupRequest->label ? $pickupRequest->label->container_size : null,
@@ -260,9 +292,10 @@ class PickupRequestController extends Controller
                 'Status' => $pickupRequest->status_of_pickup,
             ];
         });
-
+    
         return response()->json($data, 200);
     }
+    
     
     
 

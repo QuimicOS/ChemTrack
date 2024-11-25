@@ -38,7 +38,7 @@ class PickupRequest extends Model
                 'send_to' => 'Administrator',
                 'status_of_notification' => 0,
                 'notification_type' => 0,
-                'message' => 'A new Pickup Request has beed made for Label: ' . $pickupRequest->label_id,
+                'message' => "A new Pickup Request has beed made by {$pickupRequest->label->created_by} for Label {$pickupRequest->label_id} in {$pickupRequest->label->room_number}, {$pickupRequest->label->building} for a container of {$pickupRequest->label->container_size}.",
                 'label_id' => $pickupRequest->label->label_id,
                 'pickup_id' => $pickupRequest->id,
             ]);
@@ -50,6 +50,21 @@ class PickupRequest extends Model
 
             Notification::create([
                 'send_to' => 'Administrator',
+                'status_of_notification' => 0,
+                'notification_type' => 1,
+                'message' => 'The Pickup Request: ' . $pickupInvalid->id . ' has been invalidated.',
+                'label_id' => $pickupInvalid->label->label_id,
+                'pickup_id' => $pickupInvalid->id,
+            ]);
+        }
+        });
+        
+        static::updated(function ($pickupInvalid) {
+            // Trigger a notification (use a service or event instead of directly calling a controller)
+            if($pickupInvalid->status_of_pickup===0){
+
+            Notification::create([
+                'send_to' => $pickupInvalid->label->room_number,
                 'status_of_notification' => 0,
                 'notification_type' => 1,
                 'message' => 'The Pickup Request: ' . $pickupInvalid->id . ' has been invalidated.',

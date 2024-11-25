@@ -50,7 +50,7 @@ class LaboratoryController extends Controller
         public function getAllLabs()
         {
             $labs = Laboratory::select('department', 'building_name', 'room_number', 'lab_name', 'professor_investigator')
-                              ->where('lab_status', 'Active') // Optional: only get active labs
+                              ->where('lab_status', 'Assigned') // Optional: only get Assigned labs
                               ->get();
     
             return response()->json($labs);
@@ -169,7 +169,7 @@ class LaboratoryController extends Controller
         
             // Step 3: Query the database
             $laboratories = Laboratory::where('room_number', $roomNumber)
-                ->where('lab_status', 'Active')
+                ->where('lab_status', 'Assigned')
                 ->select('id', 'department', 'building_name', 'room_number', 'lab_name', 'professor_investigator', 'department_director')
                 ->get();
         

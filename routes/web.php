@@ -448,12 +448,10 @@ Route::post('/contents', [ContentController::class, 'store'])->name('contents.st
 
 
 
-
-
-
-
 Route::get('/labels/{id}', [LabelController::class, 'show']);
 
+
+// -------------------------------------Pickup Request Routes--------------------------------------------------
 Route::post('/createPickupRequest', [PickupRequestController::class, 'createPickupRequest']);
 
 Route::get('/getPickupRequests', [PickupRequestController::class, 'getAllPickupRequests']);
@@ -468,34 +466,41 @@ Route::put('/editLabel/{id}', [LabelController::class, 'updateLabel'])->name('ed
 
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 // -------------------------------------Notification Routes--------------------------------------------------
 Route::put('/notificationRead', action: [NotificationController::class, 'markAsRead']);
+
 Route::get('/notificationAdminActives', action: [NotificationController::class, 'adminGetUnreadNotifications']);
+
 Route::get('/notificationAdminRead', action: [NotificationController::class, 'adminGetReadNotifications']);
+
 Route::get('/notificationAdminOverdues', action: [NotificationController::class, 'adminGetOverdueNotifications']);
-Route::get('/notificationGetToDo', action: [NotificationController::class, 'getToDo']);
+
+Route::get('/notificationUserUnreads', action: [NotificationController::class, 'getUserNotifications']);
+
+Route::get('/notificationUserCount', action: [NotificationController::class, 'countUserNotifications']);
+
 Route::get('/create5Months', action: [LabelController::class, 'getValidLabels']);
 
 Route::get('/todoList', action: [NotificationController::class, 'todoList']);
+
 Route::post('/checkPickupRequest', [LabelController::class, 'checkPickupRequest']);
+
 Route::get('/notificationUnreadCount', action: [NotificationController::class, 'unreadNotificationsCount']);
+
 Route::get('/notifications/types', [NotificationController::class, 'getNotificationTypes']);
-
 // ------------------------------------------------------------------------------------------------------
-
-
-
-
 
 // -------------------------------------Chemical Routes--------------------------------------------------
 Route::post('/chemicalCreate', [ChemicalController::class, 'addChemical']); 
+
 Route::put('/chemicalInvalidate', [ChemicalController::class, 'deleteChemical']); 
+
 Route::put('/chemicalModify', [ChemicalController::class, 'editChemical']); 
+
 Route::get('/chemicalCasNumber', [ChemicalController::class, 'getCasNumber']); 
+
 Route::get('/chemicalSearch', [ChemicalController::class, 'searchChemicalName']);
 // ------------------------------------------------------------------------------------------------------
 

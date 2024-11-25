@@ -32,7 +32,7 @@ class Laboratory extends Model
 
         static::creating(function ($laboratory) {
             if (is_null($laboratory->lab_status)) {
-                $laboratory->lab_status = 'Active';
+                $laboratory->lab_status = 'Assigned';
             }
         });
     }
