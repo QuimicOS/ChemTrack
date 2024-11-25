@@ -331,6 +331,7 @@ function addRoomNumberField() {
 }
 
 // Function to validate and add new user
+// Function to validate and add new user
 function validateForm() {
     let isValid = true;
 
@@ -377,9 +378,10 @@ function validateForm() {
 
     // Validate Room Numbers
     const roomNumberFields = document.querySelectorAll('.room-number');
-    const roomNumbers = Array.from(roomNumberFields).map(field => ({
-        room_number: field.value.trim(),
-    }));
+    const roomNumbers = Array.from(roomNumberFields)
+        .map(field => field.value.trim())
+        .filter(room => room !== "") // Filter out empty room numbers
+        .map(room => ({ room_number: room })); // Map to required format
 
     // Submit form if valid
     if (isValid) {
@@ -394,7 +396,7 @@ function validateForm() {
                 department: department,
                 role: role,
             },
-            rooms: roomNumbers,
+            rooms: roomNumbers, // Send only valid rooms
         };
 
         fetch('/newUsers', {
@@ -425,6 +427,7 @@ function validateForm() {
             });
     }
 }
+
 
 
 
@@ -471,12 +474,12 @@ function renderSubmittedRequestsTable() {
 
         // Populate the table with user data
         data.requested_users.forEach(user => {
-            const roomNumbers = user.room_numbers || 'N/A'; // Use 'room_numbers' from backend
+            const roomNumbers = user.room_numbers; // Use 'room_numbers' from backend
 
             const row = `
                 <tr>
                     <td>${user.email}</td>
-                    <td>${roomNumbers}</td> <!-- Updated to display room_numbers -->
+                    <td>${roomNumbers}</td>
                     <td>${user.role || 'N/A'}</td>
                     <td>${new Date(user.created_at).toLocaleString()}</td>
                     <td>
@@ -590,7 +593,7 @@ function renderEditUsersTable(userList) {
     userList.forEach(user => {
         // Handle multiple room numbers (as a string or array)
         const roomNumbers = user.room_numbers ? 
-            (Array.isArray(user.room_numbers) ? user.room_numbers.join(', ') : user.room_numbers) 
+            (Array.isArray(user.room_numbers) ? user.room_numbers.join() : user.room_numbers) 
             : 'N/A';
 
         const row = `<tr>

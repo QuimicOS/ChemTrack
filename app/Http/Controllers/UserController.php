@@ -510,11 +510,14 @@ public function roleManagementEditUser(Request $request, $id)
             // Find room numbers to delete
             $roomNumbersToDelete = array_diff($existingRoomNumbers, $newRoomNumbers);
 
-            // Add new room numbers
+            // Add new room numbers with lab_status set to "Assigned"
             foreach ($roomNumbersToAdd as $roomNumber) {
                 DB::table('rooms')->insert([
                     'user_id' => $user->id,
                     'room_number' => $roomNumber,
+                    'lab_status' => 'Assigned', // Ensure new room numbers are assigned
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             }
 
@@ -533,6 +536,7 @@ public function roleManagementEditUser(Request $request, $id)
         return response()->json(['error' => 'Failed to update user', 'details' => $e->getMessage()], 500);
     }
 }
+
 
 
 
