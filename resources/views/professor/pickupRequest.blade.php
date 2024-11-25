@@ -1,5 +1,6 @@
 @extends('professor.templateProfessor')
 
+<meta name="csrf-token" content="{{ csrf_token() }}">
 @section('title', 'Pickup Request - ChemTrack')
 
 @section('content')
@@ -7,7 +8,7 @@
         .content-area {
             margin-left: 120px;
             padding: 1.25rem;
-            margin-top: 25px; /* Push content to be right below the navbar */
+            margin-top: 25px;
         }
         .time-select {
             margin-top: 20px;
@@ -15,7 +16,6 @@
             border: 2px dashed #D8BFD8;
             border-radius: 10px;
         }
-
         .time-select select {
             width: 100%;
             text-align: center;
@@ -23,103 +23,89 @@
             border: 1px solid #ced4da;
             padding: 5px;
         }
-
         .time-select .row {
             align-items: center;
-            margin-bottom: 10px; /* Reduce space between rows */
+            margin-bottom: 10px;
         }
-
         .col-auto span {
             display: block;
-            width: 30px; /* Shrink the width */
+            width: 30px;
             text-align: center;
         }
-
         .form-label {
-            margin-bottom: 5px; /* Reduce the label spacing */
+            margin-bottom: 5px;
         }
-
-        .request-btn {
-            margin-top: 20px;
+        fieldset {
+            border: 1px solid #ccc;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background-color: #f8f9fa;
         }
-
-        .request-btn button {
-            background-color: #1E90FF;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .request-btn button:hover {
-            background-color: #4682B4;
+        legend {
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 0 0.5rem;
         }
     </style>
 
-    <!-- Main Content with Time Selection -->
     <div class="content-area container">
-        <!-- Title -->
         <div class="text-center mb-4">
             <h1 class="display-5">Pickup Request</h1>
             <hr class="my-4">
         </div>
 
-        <!-- Label ID Input -->
-        <div class="mb-4">
-            <label for="labelID" class="form-label">LABEL ID:</label>
-            <input type="text" class="form-control w-50 mx-auto" id="labelID" placeholder="Enter Label ID" required>
-            <div class="invalid-feedback">Please enter a valid numeric Label ID.</div>
-        </div>
+        <fieldset>
+            <div class="mb-4">
+                <label for="labelID" class="form-label">LABEL ID:<span class="text-danger">*</span></label>
+                <input type="text" class="form-control w-50 mx-auto" id="labelID" placeholder="Enter Label ID" required oninput="validateLabelID()">
+                <div class="invalid-feedback">Please enter a valid numeric Label ID.</div>
+            </div>
 
-        <!-- Time Selection Section -->
-        <div class="time-select">
-            @php
-                $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-            @endphp
+            <div class="time-select">
+                @php
+                    $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+                @endphp
 
-            @foreach($days as $day)
-                <div class="row">
-                    <div class="col">
-                        <label for="{{ strtolower($day) }}Start" class="form-label">{{ $day }}</label>
+                @foreach($days as $day)
+                    <div class="row">
+                        <div class="col">
+                            <label for="{{ strtolower($day) }}Start" class="form-label">{{ $day }}</label>
+                        </div>
+                        <div class="col">
+                            <select id="{{ strtolower($day) }}Start" class="form-control">
+                                <option value="-">-</option>
+                                <option value="08:00 AM">8:00 AM</option>
+                                <option value="09:00 AM">9:00 AM</option>
+                                <option value="10:00 AM">10:00 AM</option>
+                                <option value="11:00 AM">11:00 AM</option>
+                                <option value="12:00 PM">12:00 PM</option>
+                                <option value="1:00 PM">1:00 PM</option>
+                                <option value="2:00 PM">2:00 PM</option>
+                                <option value="3:00 PM">3:00 PM</option>
+                            </select>
+                        </div>
+                        <div class="col-auto text-center">
+                            <span>to</span>
+                        </div>
+                        <div class="col">
+                            <select id="{{ strtolower($day) }}End" class="form-control">
+                                <option value="-">-</option>
+                                <option value="09:00 AM">9:00 AM</option>
+                                <option value="10:00 AM">10:00 AM</option>
+                                <option value="11:00 AM">11:00 AM</option>
+                                <option value="12:00 PM">12:00 PM</option>
+                                <option value="1:00 PM">1:00 PM</option>
+                                <option value="2:00 PM">2:00 PM</option>
+                                <option value="3:00 PM">3:00 PM</option>
+                                <option value="4:00 PM">4:00 PM</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="col">
-                        <select id="{{ strtolower($day) }}Start" class="form-control">
-                            <option value="-">-</option>
-                            <option value="08:00 AM">8:00 AM</option>
-                            <option value="09:00 AM">9:00 AM</option>
-                            <option value="10:00 AM">10:00 AM</option>
-                            <option value="11:00 AM">11:00 AM</option>
-                            <option value="12:00 PM">12:00 PM</option>
-                            <option value="1:00 PM">1:00 PM</option>
-                            <option value="2:00 PM">2:00 PM</option>
-                            <option value="3:00 PM">3:00 PM</option>
-                        </select>
-                    </div>
-                    <div class="col-auto text-center">
-                        <span>to</span>
-                    </div>
-                    <div class="col">
-                        <select id="{{ strtolower($day) }}End" class="form-control">
-                            <option value="-">-</option>
-                            <option value="09:00 AM">9:00 AM</option>
-                            <option value="10:00 AM">10:00 AM</option>
-                            <option value="11:00 AM">11:00 AM</option>
-                            <option value="12:00 PM">12:00 PM</option>
-                            <option value="1:00 PM">1:00 PM</option>
-                            <option value="2:00 PM">2:00 PM</option>
-                            <option value="3:00 PM">3:00 PM</option>
-                            <option value="4:00 PM">4:00 PM</option>
-                        </select>
-                    </div>
-                </div>
-            @endforeach
-        </div>
+                @endforeach
+            </div>
+        </fieldset>
 
-        <!-- Request Button -->
-        <div class="request-btn">
-            <button class="btn btn-outline-primary" id="requestBtn" disabled>REQUEST</button>
-        </div>
+        <button class="btn btn-success" id="requestBtn" disabled>REQUEST</button>
     </div>
 
     <!-- Modal for Review and Submit -->
@@ -142,91 +128,85 @@
             </div>
         </div>
     </div>
+@endsection
 
-    <!-- Bootstrap JS and Popper.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
-
-    <!-- JavaScript for Pickup Request Validation -->
-    <script>
-        // Validate the form to enable/disable request button
-        const labelID = document.getElementById('labelID');
-        const requestBtn = document.getElementById('requestBtn');
+@section('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
-        
+
+        // Validate Label ID and Time Selection
+        window.validateLabelID = function () {
+        const labelID = document.getElementById('labelID');
+        labelID.value = labelID.value.replace(/\D/g, ''); // Allow only numeric input
+        validateForm(); // Ensure the form validation is called
+        };
+
+
         function validateForm() {
-            const labelValue = labelID.value.trim();
-            const isValidLabelID = /^\d+$/.test(labelValue); // Check if Label ID is numeric
-            labelID.classList.toggle('is-invalid', !isValidLabelID); // Toggle invalid class based on validity
-            
-            let isTimeSelectionValid = true;
-            let hasValidDay = false; // Track if at least one valid time is selected
-            
-            // Ensure both start and end times are selected or neither
-            days.forEach(day => {
-                const start = document.getElementById(day + 'Start').value;
-                const end = document.getElementById(day + 'End').value;
-                if ((start === '-' && end !== '-') || (start !== '-' && end === '-')) {
-                    isTimeSelectionValid = false;
-                } else if (start !== '-' && end !== '-') {
-                    hasValidDay = true;
-                }
-            });
-            
-            // Enable request button only if Label ID and time selection are valid
-            requestBtn.disabled = !(isValidLabelID && isTimeSelectionValid && hasValidDay);
-        }
+        const labelValue = document.getElementById('labelID').value;
+        const isValidLabelID = labelValue !== ''; // Valid if not empty
+
+        let isTimeSelectionValid = true;
+        let hasValidDay = false;
+
+        const timeRegex = /^(\d{1,2}):(\d{2})\s?(AM|PM)$/; // Regex to validate time format (e.g., 8:00 AM)
         
-        // Add event listeners to validate form on input changes
-        labelID.addEventListener('input', validateForm);
+        days.forEach(day => {
+            const start = document.getElementById(day + 'Start').value;
+            const end = document.getElementById(day + 'End').value;
+
+            // Check if one dropdown is filled but the other is not
+            if ((start === '-' && end !== '-') || (start !== '-' && end === '-')) {
+                isTimeSelectionValid = false;
+            }
+
+            // Check if both start and end times are selected
+            if (start !== '-' && end !== '-') {
+                hasValidDay = true;
+
+                // Validate time format
+                if (!timeRegex.test(start) || !timeRegex.test(end)) {
+                    isTimeSelectionValid = false;
+                } else {
+                    // Parse times to check the order
+                    const [startHours, startMinutes, startPeriod] = start.match(timeRegex).slice(1);
+                    const [endHours, endMinutes, endPeriod] = end.match(timeRegex).slice(1);
+
+                    // Convert 12-hour format to 24-hour format for comparison
+                    const startTimeInMinutes = 
+                        (parseInt(startHours) % 12 + (startPeriod === 'PM' ? 12 : 0)) * 60 + parseInt(startMinutes);
+                    const endTimeInMinutes = 
+                        (parseInt(endHours) % 12 + (endPeriod === 'PM' ? 12 : 0)) * 60 + parseInt(endMinutes);
+
+                    // If the start time is greater than or equal to the end time, the timeframe is invalid
+                    if (startTimeInMinutes >= endTimeInMinutes) {
+                        isTimeSelectionValid = false;
+                    }
+                }
+            }
+        });
+
+    // Disable or enable the request button based on validation
+    document.getElementById('requestBtn').disabled = !(isValidLabelID && isTimeSelectionValid && hasValidDay);
+}
+
+
+        document.getElementById('labelID').addEventListener('input', validateLabelID);
         days.forEach(day => {
             document.getElementById(day + 'Start').addEventListener('change', validateForm);
             document.getElementById(day + 'End').addEventListener('change', validateForm);
         });
-        
-        // Function to download JSON file with label ID and selected times
-        function downloadJSONFile() {
-            let timeframe = '';
-            
-            days.forEach(day => {
-                const start = document.getElementById(day + 'Start').value;
-                const end = document.getElementById(day + 'End').value;
-                if (start !== '-' && end !== '-') {
-                    // Concatenate day and hours in the desired format
-                    timeframe += `${day.charAt(0).toUpperCase() + day.slice(1)}: ${start} to ${end}, `;
-                }
-            });
-    
-            // Remove trailing comma and space
-            timeframe = timeframe.slice(0, -2);
-    
-            const data = {
-                labelID: labelID.value,
-                timeframe: timeframe
-            };
-            
-            const jsonContent = JSON.stringify(data, null, 2);
-            const blob = new Blob([jsonContent], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-        
-             // Create and trigger download link
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `pickup_request_${labelID.value}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        
-            URL.revokeObjectURL(url); // Clean up URL object
-        }
-        
-        // Show modal for confirmation and populate with selected times
-        requestBtn.addEventListener('click', function () {
-            document.getElementById('modalLabelID').innerText = labelID.value;
+
+        // Initial validation call to ensure button state is set
+        validateForm();
+
+        // Show modal and populate with selected times
+        document.getElementById('requestBtn').addEventListener('click', function () {
+            document.getElementById('modalLabelID').innerText = document.getElementById('labelID').value;
             const modalTimeList = document.getElementById('modalTimeList');
-            modalTimeList.innerHTML = ''; // Clear any existing list items
+            modalTimeList.innerHTML = '';
         
-            // Populate modal with selected times
             days.forEach(day => {
                 const start = document.getElementById(day + 'Start').value;
                 const end = document.getElementById(day + 'End').value;
@@ -236,28 +216,85 @@
                     modalTimeList.appendChild(li);
                 }
             });
-        
-            // Display confirmation modal
+
             const confirmRequestModal = new bootstrap.Modal(document.getElementById('confirmRequestModal'));
             confirmRequestModal.show();
         });
-        
-        // Handle confirm button click in modal, download JSON, and reset form
-        document.getElementById('confirmRequest').addEventListener('click', function () {
-            downloadJSONFile();
-            
-            alert('Pickup Request submited');
-            const confirmRequestModal = bootstrap.Modal.getInstance(document.getElementById('confirmRequestModal'));
-            confirmRequestModal.hide();
-        
-            // Reset form fields
-            labelID.value = '';
-            days.forEach(day => {
-                document.getElementById(day + 'Start').value = '-';
-                document.getElementById(day + 'End').value = '-';
-            });
-            validateForm();
+
+       // Function to create a pickup request and post data to the server
+    function createPickupRequest(labelID, timeframe) {
+    console.log("Create Pickup Request Function Called");
+
+    const requestData = {
+        label_id: labelID,
+        timeframe: timeframe
+    };
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    fetch(`/createPickupRequest`, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrfToken
+    },
+    body: JSON.stringify(requestData)
+    })
+    .then(response => {
+        console.log("Response Status:", response.status);
+        return response.json().then(data => {
+            if (!response.ok) {
+                // If the response is not OK, throw the error message
+                const errorMessage = data.errors 
+                    ? Object.values(data.errors).flat().join(', ')  // Combine validation errors
+                    : data.error || data.message || 'An error occurred.';
+                throw new Error(errorMessage);
+            }
+            return data;
         });
-    </script>
-           
+    })
+    .then(data => {
+        console.log('Pickup request created successfully:', data);
+        alert('Pickup request created successfully!');
+        resetForm();
+    })
+    .catch(error => {
+        console.error('Error:', error.message);
+        alert(`Failed to create pickup request: ${error.message}`);
+    });
+
+}
+
+
+// Function to reset the form after successful submission
+function resetForm() {
+    document.getElementById('labelID').value = '';
+    days.forEach(day => {
+        document.getElementById(day + 'Start').value = '-';
+        document.getElementById(day + 'End').value = '-';
+    });
+    validateForm(); // Revalidate to disable the button if necessary
+}
+
+// Triggering the createPickupRequest function on confirm button click
+document.getElementById('confirmRequest').addEventListener('click', function () {
+    const labelID = document.getElementById('labelID').value;
+    let timeframe = '';
+
+    days.forEach(day => {
+        const start = document.getElementById(day + 'Start').value;
+        const end = document.getElementById(day + 'End').value;
+        if (start !== '-' && end !== '-') {
+            timeframe += `${day.charAt(0).toUpperCase() + day.slice(1)}: ${start} to ${end}, `;
+        }
+    });
+
+    timeframe = timeframe.slice(0, -2); // Remove trailing comma
+    createPickupRequest(labelID, timeframe); // Call the function with label ID and timeframe
+});
+
+    });
+</script>
 @endsection
+

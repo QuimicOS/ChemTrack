@@ -1,19 +1,14 @@
 @extends('staff/templateStaff')
 
+<meta name="csrf-token" content="{{ csrf_token() }}">
 @section('title', 'Notifications - ChemTrack')
 
 @section('content')
 <style>
-    .content-area {
-        margin-left: 270px;
-        padding: 1.25rem;
-        margin-top: 70px;
-    }
-
     .notification-item {
         border: 1px solid #ccc;
         padding: 15px;
-        margin-bottom: 20px; /* Increased margin to add more space between notifications */
+        margin-bottom: 20px;
         border-radius: 5px;
         background-color: #f9f9f9;
     }
@@ -22,8 +17,20 @@
         background-color: #e9ecef;
     }
 
-    .notification-item .notification-header {
+    .notification-header {
         font-weight: bold;
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+
+    .notification-body {
+        margin-bottom: 10px;
+        font-size: 1rem;
+    }
+
+    .notification-timestamp {
+        font-size: 0.8rem;
+        color: #888;
     }
 
     .notification-actions {
@@ -36,43 +43,93 @@
     <hr class="my-4">
 </div>
 
-<!-- Active Notifications Section -->
-<h3>Active Notifications</h3>
-<div id="activeNotificationsList">
-    <!-- Sorted by date from newest to oldest -->
+<!-- Pickups Due Section -->
+<h3 class="mt-5">Labels Due For Pickup Request</h3>
+<div id="todoList">
+    <!-- Read notifications will be dynamically loaded here -->
+</div>
 
-    <!-- 1. Label 5 Months -->
-    <div class="notification-item unread" id="notification_1">
-        <div class="notification-header">Label 5 Months - Lab 203</div>
-        <div class="notification-body">Maria Gomez has notified that the label for Sodium Chloride in Lab 203 has reached 5 months without a pickup request.</div>
-        <div class="notification-details">Label ID: 12345, Room: 203, Chemical: Sodium Chloride</div>
-        <div class="notification-timestamp">Oct 25, 2024, 10:15 AM</div>
-        <div class="notification-actions">
-            <button class="btn btn-success mark-as-read" onclick="markAsRead(1)">Mark as Read</button>
-        </div>
-    </div>
-<!-- Read Notifications Section -->
-<h3 class="mt-5">Read Notifications</h3>
-<div id="readNotificationsList">
-    <!-- Read notifications will be appended here after marking as read -->
+<!-- Active Notifications Section -->
+<h3>Invalidated Pickup Requests</h3>
+<div id="userNotificationsList">
+    <!-- Active notifications will be dynamically loaded here -->
 </div>
 
 @endsection
 
 @section('scripts')
 <script>
-    // Mark a notification as read
-    function markAsRead(notificationId) {
-        const notificationItem = document.getElementById('notification_' + notificationId);
-        notificationItem.classList.remove('unread');
-        const markAsReadButton = notificationItem.querySelector('.mark-as-read');
-        
-        if (markAsReadButton) {
-            markAsReadButton.remove(); // Remove the "Mark as Read" button
-        }
+document.addEventListener("DOMContentLoaded", function () {
+    fetchNotifications('/todoList', 'todoList');
+    fetchNotifications('/notificationUserUnreads', 'userNotificationsList');
+});
 
-        // Move notification to "Read Notifications" section
-        document.getElementById('readNotificationsList').appendChild(notificationItem);
-    }
+function fetchNotifications(url, containerId) {
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            console.log(`Fetched data for ${containerId}:`, data);
+
+            const notifications = Object.values(data)[0];
+            const container = document.getElementById(containerId);
+            container.innerHTML = ''; // Clear container
+
+            if (!Array.isArray(notifications) || notifications.length === 0) {
+                container.innerHTML = '<p>No notifications found.</p>';
+                return;
+            }
+
+            notifications.forEach(notification => {
+                const div = document.createElement('div');
+                div.className = `notification-item ${notification.status_of_notification === 0 ? 'unread' : ''}`;
+                div.id = `notification_${notification.id}`;
+                div.innerHTML = `
+                    <p class="notification-body">${notification.message}</p>
+                    <p class="notification-timestamp">Created At: ${new Date(notification.created_at).toLocaleString()}</p>
+                    <div class="notification-actions">
+                        <button onclick="markAsDone(${notification.id}, ${notification.label_id})" class="btn btn-success">Mark as Done</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        })
+        .catch(error => {
+            console.error(`Error fetching ${containerId}:`, error);
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<p>Error loading notifications. Please try again later.</p>`;
+        });
+}
+
+function markAsDone(notificationId, labelId) {
+    console.log(`Checking pickup request for label ${labelId}...`);
+
+    fetch(`/checkPickupRequest`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ label_id: labelId })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message === "Pickup request not found") {
+                alert("Please make a pickup request for this label.");
+                return;
+            }
+
+            alert("Notification marked as done successfully.");
+            // Remove the notification from the To-Do list
+            const item = document.getElementById(`notification_${notificationId}`);
+            if (item) {
+                item.remove();
+            }
+        })
+        .catch(error => {
+            console.error(`Error checking pickup request for label ${labelId}:`, error);
+            alert("An error occurred. Please try again.");
+        });
+}
+
 </script>
 @endsection

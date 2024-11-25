@@ -128,15 +128,13 @@
 
                 <!-- Notification Bell Icon -->
                 <div class="dropdown me-3">
-                  <button class="btn btn-light position-relative" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-bell"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationCount">
-                        1
-                    </span>
-                  </button>
-                  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
-                    <li><a class="dropdown-item notification-link" href="{{ route('staff/notifications') }}" data-notification="pickup">Label 5 Months</a></li>
-                  </ul>
+                    <button class="btn btn-light position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-bell"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notificationCount"></span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" id="notificationMenu" aria-labelledby="notificationDropdown">
+                        <li class="dropdown-item">No Notifications Available</li>
+                    </ul>
                 </div>
 
                 <!-- Username and Sign Out -->
