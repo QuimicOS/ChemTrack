@@ -622,10 +622,16 @@ public function unwantedMaterialSummary(Request $request)
             ->join('contents', 'label.label_id', '=', 'contents.label_id')
             ->select(
                 'contents.chemical_name',
-                'label.units',
-                DB::raw('SUM(label.quantity * (contents.percentage / 100)) AS total_contributed_quantity'),
-                DB::raw('date(label.date_created) AS readable_date')
-
+                DB::raw("SUM(CASE 
+                    WHEN label.units = 'Milliliters' THEN (label.quantity * (contents.percentage / 100)) / 1000 -- Convert ml to L
+                    WHEN label.units = 'Gallons' THEN (label.quantity * (contents.percentage / 100)) * 3.78541 -- Convert gal to L
+                    WHEN label.units = 'Liters' THEN (label.quantity * (contents.percentage / 100)) -- Already in L
+                    ELSE 0 END) AS total_liquid_quantity"),
+                DB::raw("SUM(CASE 
+                    WHEN label.units = 'Grams' THEN (label.quantity * (contents.percentage / 100)) / 1000 -- Convert g to kg
+                    WHEN label.units = 'Pounds' THEN (label.quantity * (contents.percentage / 100)) * 0.453592 -- Convert lbs to kg
+                    WHEN label.units = 'Kilograms' THEN (label.quantity * (contents.percentage / 100)) -- Already in kg
+                    ELSE 0 END) AS total_solid_quantity")
             );
 
         // Filter by date range if provided
@@ -638,12 +644,11 @@ public function unwantedMaterialSummary(Request $request)
             $query->where('contents.chemical_name', $request->chemical_name);
         }
 
-        $query->groupBy('contents.chemical_name', 'label.units', 'readable_date');
+        $query->groupBy('contents.chemical_name');
 
         $results = $query->get();
 
         return response()->json($results, 200);
-
     } catch (\Exception $e) {
         \Log::error("Unwanted Material Summary Error: " . $e->getMessage());
         return response()->json(['error' => 'Internal Server Error'], 500);
