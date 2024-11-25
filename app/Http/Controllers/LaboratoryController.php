@@ -187,7 +187,7 @@ class LaboratoryController extends Controller
         
             // Step 3: Query the database
             $laboratories = Laboratory::where('room_number', $roomNumber)
-                ->where('lab_status', 'Asigned')
+                ->where('lab_status', 'Assigned')
                 ->select('id', 'department', 'building_name', 'room_number', 'lab_name', 'professor_investigator', 'department_director')
                 ->get();
         
