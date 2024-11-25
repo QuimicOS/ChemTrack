@@ -1,29 +1,20 @@
 @extends('staff.templateStaff')
 
-@section('title', 'Add Chemicals')
+@section('title', 'Add Chemical')
 <meta name="csrf-token" content="{{ csrf_token() }}">
 @section('content')
 <style>
-    /* Align content area with sidebar and navbar */
     .content-area {
-        margin-left: 120px; /* Consistent with sidebar width */
+        margin-left: 120px;
         padding: 1.25rem;
-        margin-top: 25px; /* Ensure alignment with other sections */
-    }
-    .table-container {
-        margin-top: 20px;
+        margin-top: 25px;
     }
     .form-label {
         font-weight: bold;
     }
-    .btn-primary, .btn-secondary {
+    .btn-primary, .btn-success {
         font-weight: bold;
     }
-    .error-message {
-        color: red;
-        font-size: 0.9em;
-    }
-    /* Add styling for fieldsets and legends for clarity */
     fieldset {
         border: 1px solid #ccc;
         padding: 1.5rem;
@@ -38,122 +29,126 @@
 </style>
 
 <div class="content-area container">
-    <!-- Title -->
     <div class="text-center mb-4">
-        <h1 class="display-5">Add Chemicals</h1>
+        <h1 class="display-5">Add Chemical</h1>
         <hr class="my-4">
     </div>
 
-    <!-- Form Section (Add Chemical) -->
     <fieldset>
         <legend>Chemical Details</legend>
-        <div class="mb-5">
-            <form id="chemicalForm" class="row">
-                <div class="col-md-5">
-                    <label for="chemicalName" class="form-label">Chemical Name</label>
-                    <input type="text" class="form-control" id="chemicalName" placeholder="Enter Chemical Name" required>
-                    <div class="error-message" id="chemicalNameError"></div>
-                </div>
-                <div class="col-md-5">
-                    <label for="casNumber" class="form-label">CAS Number</label>
-                    <input type="text" class="form-control" id="casNumber" placeholder="Enter CAS Number" required>
-                    <div class="error-message" id="casNumberError"></div>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="button" class="btn btn-primary w-100" id="addChemicalBtn" onclick="validateForm()" disabled>Add Chemical</button>
-                </div>
-            </form>
-        </div>
+        <form id="chemicalForm" class="row">
+            <div class="col-md-5">
+                <label for="chemicalName" class="form-label">Chemical Name</label>
+                <input type="text" class="form-control" id="chemicalName" placeholder="Enter Chemical Name" required minlength="3">
+                <div class="invalid-feedback">Please enter a valid chemical name (at least 3 characters).</div>
+            </div>
+            <div class="col-md-5">
+                <label for="casNumber" class="form-label">CAS Number</label>
+                <input type="text" class="form-control" id="casNumber" placeholder="Format XXXXX-XX-X" required>
+                <div class="invalid-feedback">CAS Number format should be 'XXXXXX-XX-X'.</div>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-success w-100 fw-bold" id="addChemicalBtn" disabled>Add Chemical</button>
+            </div>
+        </form>
     </fieldset>
 </div>
 @endsection
 
 @section('scripts')
 <script>
-// Function to toggle Add Chemical button based on field validity
+// CSRF token for secure requests
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+// Select fields and buttons
+const chemicalNameInput = document.getElementById('chemicalName');
+const casNumberInput = document.getElementById('casNumber');
+const addChemicalBtn = document.getElementById('addChemicalBtn');
+
+// Enable/Disable Add Button Based on Validation
 function toggleAddChemicalButton() {
-    const chemicalName = document.getElementById('chemicalName').value;
-    const casNumber = document.getElementById('casNumber').value;
-    const isChemicalNameValid = /^[a-zA-Z0-9\s%.,-]+$/.test(chemicalName) && /[a-zA-Z]/.test(chemicalName); // Requires at least one letter
-    const isCasNumberValid = /^\d{2,6}-\d{2}-\d{1}$/.test(casNumber); // Matches format XXXXXX-XX-X
-
-    console.log("Chemical Name Valid:", isChemicalNameValid); // Debug log
-    console.log("CAS Number Valid:", isCasNumberValid);       // Debug log
-
-    // Enable button only if both fields are valid
-    document.getElementById('addChemicalBtn').disabled = !(isChemicalNameValid && isCasNumberValid);
+    const chemicalName = chemicalNameInput.value.trim();
+    const casNumber = casNumberInput.value.trim();
+    const isChemicalNameValid = /^[a-zA-Z0-9\s%.,-]+$/.test(chemicalName) && /[a-zA-Z]/.test(chemicalName);
+    const isCasNumberValid = /^\d{2,6}-\d{2}-\d{1}$/.test(casNumber);
+    addChemicalBtn.disabled = !(isChemicalNameValid && isCasNumberValid);
 }
 
-// Add event listeners to trigger validation as user types
-document.getElementById('chemicalName').addEventListener('input', () => {
-    console.log("Chemical Name Input Changed"); // Debug log
-    toggleAddChemicalButton();
-});
-document.getElementById('casNumber').addEventListener('input', () => {
-    console.log("CAS Number Input Changed"); // Debug log
-    toggleAddChemicalButton();
-});
-
-// Function to validate form and add chemical if valid
-function validateForm() {
-    console.log("Validate Form Called"); // Debug log
-
-    // Clear previous error messages
-    document.getElementById('chemicalNameError').textContent = '';
-    document.getElementById('casNumberError').textContent = '';
-
-    const chemicalName = document.getElementById('chemicalName').value.trim();
-    const casNumber = document.getElementById('casNumber').value.trim();
-
-    addChemical(chemicalName, casNumber);
-}
-
-// Function to add chemical and post data to the server
-function addChemical(chemicalName, casNumber) {
-    console.log("Add Chemical Function Called"); // Debug log
-
-    const chemicalData = {
-        chemical_name: chemicalName,
-        cas_number: casNumber,
-        //status_of_chemical: 1 // Set status as active by default
-    };
-
-     // Get the CSRF token from the meta tag
-     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-    fetch(`/chemicalCreate`, {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': csrfToken, // Include the CSRF token here
-    },
-    body: JSON.stringify({
-        chemical_name: chemicalName,
-        cas_number: casNumber
-    })
-})
-    .then(response => {
-        console.log("Response Status:", response.status); // Debug log
-        if (!response.ok) {
-            throw new Error('Failed to add chemical');
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Chemical added successfully:', data); // Debug log
-        clearForm();
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to add chemical. Please try again.');
-    });
-}
-
-// Function to clear form fields
+// Clear Form After Successful Addition
 function clearForm() {
-    document.getElementById('chemicalForm').reset();
-    document.getElementById('addChemicalBtn').disabled = true; // Reset Add Chemical button to disabled state
+    chemicalNameInput.value = '';
+    casNumberInput.value = '';
+    addChemicalBtn.disabled = true;
 }
+
+// Event Listeners for Input Validation
+chemicalNameInput.addEventListener('input', toggleAddChemicalButton);
+casNumberInput.addEventListener('input', toggleAddChemicalButton);
+
+// Add Chemical Functionality
+function addChemical() {
+    const chemicalName = chemicalNameInput.value.trim().toLowerCase();
+    const casNumber = casNumberInput.value.trim();
+
+    // Check if chemical already exists
+    fetch(`/chemicalSearch?chemical_name=${encodeURIComponent(chemicalName)}`)
+        .then(response => {
+            if (response.ok) {
+                return response.json(); // Parse JSON for valid responses
+            } else if (response.status === 404) {
+                return []; // Return an empty array on 404 (no matching chemical)
+            } else {
+                throw new Error(`Error while checking chemical existence: ${response.statusText}`);
+            }
+        })
+        .then(data => {
+            // Check for duplicates
+            const duplicate = data.find(
+                chem => chem.cas_number === casNumber && chem.chemical_name.toLowerCase() === chemicalName
+            );
+
+            if (duplicate) {
+                alert("This chemical already exists.");
+                return Promise.reject('Duplicate chemical found.'); // Exit the promise chain
+            }
+
+            // Proceed to add the chemical
+            return fetch('/chemicalCreate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify({
+                    chemical_name: chemicalName,
+                    cas_number: casNumber,
+                    status_of_chemical: 1, // Set status as active by default
+                }),
+            });
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Chemical added successfully!');
+                clearForm(); // Clear the form fields
+            } else {
+                return response.json().then(errData => {
+                    throw new Error(errData.message || 'Failed to add chemical.');
+                });
+            }
+        })
+        .catch(error => {
+            if (error !== 'Duplicate chemical found.') {
+                console.error('Error:', error);
+                alert('Failed to add chemical. Please try again.');
+            }
+        });
+}
+
+
+
+
+// Event Listener for Add Button
+addChemicalBtn.addEventListener('click', addChemical);
 </script>
 @endsection

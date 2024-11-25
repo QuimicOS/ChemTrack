@@ -379,5 +379,41 @@ class QuizController extends Controller
             ];
         }
     }
+
+    public function passQuiz(Request $request)
+{
+    try {
+        $email = $request->input('email');
+
+        if (!$email) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Email is required.',
+            ], 400);
+        }
+
+        // Update certification status and date
+        $updateResult = $this->updateCertificationStatusInternal($email);
+
+        if ($updateResult['success']) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Certification status updated successfully.',
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'error' => $updateResult['message'],
+            ], 500);
+        }
+    } catch (\Exception $e) {
+        Log::error('An error occurred while granting a passing grade:', ['error' => $e->getMessage()]);
+        return response()->json([
+            'success' => false,
+            'error' => 'An unexpected error occurred.',
+        ], 500);
+    }
+}
+
     
 }

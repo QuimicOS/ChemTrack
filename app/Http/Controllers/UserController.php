@@ -359,6 +359,29 @@ public function getCertifiedUsers()
     return response()->json(['certified_students' => $certifiedStudents], 200);
 }
 
+public function expireUserCertification($id)
+{
+    // Fetch the user by ID
+    $user = User::find($id);
+
+    // Check if the user exists
+    if (!$user) {
+        return response()->json(['error' => 'User not found'], 404);
+    }
+
+    // Update certification status and certification date
+    $user->update([
+        'certification_status' => 0, // Expired
+        'certification_date' => null, // Clear certification date
+    ]);
+
+    // Return a success response
+    return response()->json([
+        'message' => 'Certification has expired.',
+        'user' => $user,
+    ]);
+}
+
 
 
 public function getRequestedUsers()

@@ -15,6 +15,8 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\CreateAdminLabelNotification::class,
+        \App\Console\Commands\ExpiredUsers::class,
+
     ];
     
 
@@ -31,7 +33,12 @@ class Kernel extends ConsoleKernel
     
     $schedule->command('notifications:cleanup')->daily();
     //php artisan notifications:cleanup
+   
+    $schedule->command('users:expire-certifications')->daily();
+
+
     }
+
 
     /**
      * Register the commands for the application.

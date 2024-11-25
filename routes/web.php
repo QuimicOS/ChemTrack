@@ -13,6 +13,9 @@ use App\Http\Controllers\ContentController;
 use App\Http\Controllers\chemicalController;
 use App\Http\Controllers\ManageQuizController;
 use App\Http\Controllers\QuizController;
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\ProfessorMiddleware;
+use App\Http\Middleware\StaffMiddleware;
 
 
 
@@ -31,7 +34,7 @@ Route::get('auth/saml2/arrival', function () {
     $user = Auth::user();
 
     if (!$user) {
-        return redirect()->route('auth.saml.login');
+        return redirect()->route('aboutUs');
     }
 
 
@@ -102,7 +105,7 @@ Route::get('accessDenied', function () {
 
 
 ////////////////////////////////ADMIN ROUTES//////////////////////////////////////////////
-// Route::middleware(['auth', 'admin'])->group(function(){
+Route::middleware(['auth', AdminMiddleware::class])->group(function(){
 
     Route::get('admin/homeAdmin', function () {
         return view('admin/homeAdmin');
@@ -223,6 +226,8 @@ Route::get('accessDenied', function () {
     Route::get('/users/{id}', [UserController::class, 'getUserDetailsByID']);
 
     Route::put('/users/{id}', [UserController::class, 'roleManagementEditUser']);// update the user room number and role only
+    Route::put('/users/{id}/expire-certification', [UserController::class, 'expireUserCertification']);
+
 
 
 
@@ -254,11 +259,13 @@ Route::get('accessDenied', function () {
     ////   Quiz Management Routes
     Route::get('admin/manageQuiz', [ManageQuizController::class, 'show'])->name('admin.manageQuiz.show');
     Route::post('admin/manageQuiz/save', [ManageQuizController::class, 'save'])->name('admin.manageQuiz.save');
+    Route::post('/update-certification-status', [UserController::class, 'updateCertificationStatus'])->name('update.certificate');
 
 
 
 
-// });
+
+});
 
 
 
@@ -275,7 +282,7 @@ Route::get('accessDenied', function () {
 
 
 ////////////////////////////////PROFESSOR ROUTES//////////////////////////////////////////////
-// Route::middleware(['auth', 'professor'])->group(function(){
+Route::middleware(['auth',ProfessorMiddleware::class])->group(function(){
 
     Route::get('professor/homeProfessor', function () {
         return view('professor/homeProfessor');
@@ -333,7 +340,7 @@ Route::get('accessDenied', function () {
     Route::post('/professors/users', [UserController::class, 'createStaffUser']); //create a user with status = requested and role = staff
 
 
-// });
+});
 
 
 
@@ -350,7 +357,7 @@ Route::get('accessDenied', function () {
 
 ////////////////////////////////STAFF ROUTES//////////////////////////////////////////////
 
-Route::middleware(['auth', 'staff'])->group(function(){
+Route::middleware(['auth', StaffMiddleware::class])->group(function(){
 
     Route::get('staff/homeStaff', function () {
         return view('staff/homeStaff');
@@ -448,10 +455,12 @@ Route::post('/contents', [ContentController::class, 'store'])->name('contents.st
 
 
 
+
+
+
+
 Route::get('/labels/{id}', [LabelController::class, 'show']);
 
-
-// -------------------------------------Pickup Request Routes--------------------------------------------------
 Route::post('/createPickupRequest', [PickupRequestController::class, 'createPickupRequest']);
 
 Route::get('/getPickupRequests', [PickupRequestController::class, 'getAllPickupRequests']);
@@ -466,41 +475,34 @@ Route::put('/editLabel/{id}', [LabelController::class, 'updateLabel'])->name('ed
 
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 // -------------------------------------Notification Routes--------------------------------------------------
 Route::put('/notificationRead', action: [NotificationController::class, 'markAsRead']);
-
 Route::get('/notificationAdminActives', action: [NotificationController::class, 'adminGetUnreadNotifications']);
-
 Route::get('/notificationAdminRead', action: [NotificationController::class, 'adminGetReadNotifications']);
-
 Route::get('/notificationAdminOverdues', action: [NotificationController::class, 'adminGetOverdueNotifications']);
-
-Route::get('/notificationUserUnreads', action: [NotificationController::class, 'getUserNotifications']);
-
-Route::get('/notificationUserCount', action: [NotificationController::class, 'countUserNotifications']);
-
+Route::get('/notificationGetToDo', action: [NotificationController::class, 'getToDo']);
 Route::get('/create5Months', action: [LabelController::class, 'getValidLabels']);
 
 Route::get('/todoList', action: [NotificationController::class, 'todoList']);
-
 Route::post('/checkPickupRequest', [LabelController::class, 'checkPickupRequest']);
-
 Route::get('/notificationUnreadCount', action: [NotificationController::class, 'unreadNotificationsCount']);
-
 Route::get('/notifications/types', [NotificationController::class, 'getNotificationTypes']);
+
 // ------------------------------------------------------------------------------------------------------
+
+
+
+
 
 // -------------------------------------Chemical Routes--------------------------------------------------
 Route::post('/chemicalCreate', [ChemicalController::class, 'addChemical']); 
-
 Route::put('/chemicalInvalidate', [ChemicalController::class, 'deleteChemical']); 
-
 Route::put('/chemicalModify', [ChemicalController::class, 'editChemical']); 
-
 Route::get('/chemicalCasNumber', [ChemicalController::class, 'getCasNumber']); 
-
 Route::get('/chemicalSearch', [ChemicalController::class, 'searchChemicalName']);
 // ------------------------------------------------------------------------------------------------------
 
@@ -582,7 +584,7 @@ Route::get('/quiz', function () {
 //// Quiz Routes for Users
 Route::get('/quiz', [QuizController::class, 'show'])->name('quiz.show');
 Route::post('/quiz/submit', [QuizController::class, 'submit'])->name('quiz.submit');
-
+Route::post('/quiz/pass', [QuizController::class, 'passQuiz'])->name('quiz.pass');
 Route::post('/update-certification-status', [UserController::class, 'updateCertificationStatus'])->name('update.certificate');
 
 

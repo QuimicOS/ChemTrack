@@ -9,30 +9,39 @@
         <hr class="my-4">
     </div>
 
-    <div class="alert alert-info">
-        The quiz consists of {{ count($questions) }} multiple-choice questions. You must answer at least {{ ceil(count($questions) * 0.7) }} questions correctly to pass.
-    </div>
+    @if (count($questions) === 0)
+        <div class="alert alert-warning text-center">
+            No questions are available at the moment. You have been granted a passing grade for completing the training.
+        </div>
+        <div class="text-center mt-4">
+            <button class="btn btn-success" onclick="grantPassingGrade()">Proceed</button>
+        </div>
+    @else
+        <div class="alert alert-info">
+            The quiz consists of {{ count($questions) }} multiple-choice questions. You must answer at least {{ ceil(count($questions) * 0.7) }} questions correctly to pass.
+        </div>
 
-    <form id="quizForm" method="POST" action="{{ route('quiz.submit') }}">
-        @csrf
-        <div id="quizQuestions" style="background-color: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-height: 500px; overflow-y: auto;">
-            @foreach ($questions as $index => $question)
-            <div class="mb-3">
-                <label>{{ $index + 1 }}. {{ $question['text'] }}</label>
-                @foreach ($question['options'] as $optionIndex => $option)
-                <div class="form-check">
-                    <input type="radio" class="form-check-input" name="question{{ $question['id'] }}" value="{{ chr(97 + $optionIndex) }}" required onchange="checkAllAnswered()">
-                    <label class="form-check-label">{{ chr(65 + $optionIndex) }}. {{ $option }}</label>
+        <form id="quizForm" method="POST" action="{{ route('quiz.submit') }}">
+            @csrf
+            <div id="quizQuestions" style="background-color: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-height: 500px; overflow-y: auto;">
+                @foreach ($questions as $index => $question)
+                <div class="mb-3">
+                    <label>{{ $index + 1 }}. {{ $question['text'] }}</label>
+                    @foreach ($question['options'] as $optionIndex => $option)
+                    <div class="form-check">
+                        <input type="radio" class="form-check-input" name="question{{ $question['id'] }}" value="{{ chr(97 + $optionIndex) }}" required onchange="checkAllAnswered()">
+                        <label class="form-check-label">{{ chr(65 + $optionIndex) }}. {{ $option }}</label>
+                    </div>
+                    @endforeach
                 </div>
                 @endforeach
             </div>
-            @endforeach
-        </div>
 
-        <div class="text-center mt-4">
-            <button type="button" class="btn btn-success" id="submitQuizBtn" onclick="submitQuiz()" disabled>Submit Quiz</button>
-        </div>
-    </form>
+            <div class="text-center mt-4">
+                <button type="button" class="btn btn-success" id="submitQuizBtn" onclick="submitQuiz()" disabled>Submit Quiz</button>
+            </div>
+        </form>
+    @endif
 </div>
 
 <div class="modal fade" id="resultsModal" tabindex="-1" aria-labelledby="resultsModalLabel" aria-hidden="true">
@@ -45,7 +54,7 @@
             <div class="modal-body" id="modalResultContent"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
-            </div>            
+            </div>
         </div>
     </div>
 </div>
@@ -53,6 +62,32 @@
 
 @section('scripts')
 <script>
+    function grantPassingGrade() {
+        const email = "{{ Auth::user()->email }}"; // Logged-in user's email
+
+        fetch("{{ route('quiz.pass') }}", {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email: email }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Certification granted successfully! Redirecting...");
+                window.location.href = "{{ route('home') }}";
+            } else {
+                alert("Failed to grant certification. Please contact support.");
+            }
+        })
+        .catch(error => {
+            alert("An unexpected error occurred. Check the console for details.");
+            console.error(error);
+        });
+    }
+
     function checkAllAnswered() {
         const totalQuestions = {{ count($questions) }};
         const answeredQuestions = document.querySelectorAll('#quizQuestions .form-check-input[type="radio"]:checked').length;
@@ -60,22 +95,22 @@
     }
 
     function submitQuiz() {
-    const formData = new FormData(document.getElementById('quizForm'));
-    const answers = {};
-    formData.forEach((value, key) => {
-        answers[key] = value;
-    });
+        const formData = new FormData(document.getElementById('quizForm'));
+        const answers = {};
+        formData.forEach((value, key) => {
+            answers[key] = value;
+        });
 
-    const email = "{{ Auth::user()->email }}"; // Fetch the logged-in user's email
+        const email = "{{ Auth::user()->email }}"; // Fetch the logged-in user's email
 
-    fetch("{{ route('quiz.submit') }}", {
-        method: "POST",
-        headers: {
-            "X-CSRF-TOKEN": "{{ csrf_token() }}",
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ answers: answers, email: email }),
-    })
+        fetch("{{ route('quiz.submit') }}", {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ answers: answers, email: email }),
+        })
         .then(response => response.json())
         .then(data => {
             const resultModal = new bootstrap.Modal(document.getElementById('resultsModal'));
@@ -104,9 +139,7 @@
             alert("An unexpected error occurred. Check the console for details.");
             console.error(error);
         });
-}
-
-
+    }
 
     document.addEventListener('DOMContentLoaded', checkAllAnswered);
 </script>

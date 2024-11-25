@@ -22,38 +22,30 @@
         <!-- Training Video -->
         <div class="text-center my-4">
             <h4 class="mb-3">Training Video</h4>
-            <video id="trainingVideo" width="100%" height="600" controls>
-                <source src="{{ asset('training/Safety.mp4') }}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-            <p class="mt-2">Watch the entire video to enable the "Take Quiz" button.</p>
+            <iframe 
+                src="https://drive.google.com/file/d/1icbg77Xe8DvSq1y6gyPjMNDKZ1TqJPzP/preview" 
+                width="100%" 
+                height="600" 
+                allow="autoplay"
+                allowfullscreen>
+            </iframe>
+            <p class="mt-2">Please review the video and proceed to the quiz.</p>
         </div>
 
         <!-- Action Buttons -->
         <div class="d-flex justify-content-center mt-4">
-            <button id="takeQuizBtn" class="btn btn-primary" disabled>Take Quiz</button>
+            <button id="takeQuizBtn" class="btn btn-primary">Take Quiz</button>
         </div>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const video = document.getElementById('trainingVideo');
         const takeQuizBtn = document.getElementById('takeQuizBtn');
 
-        // Ensure button is initially disabled
-        takeQuizBtn.disabled = true;
-
-        // Enable button when the video ends
-        video.onended = function() {
-            takeQuizBtn.disabled = false;
-        };
-
-        // Add click event to redirect when enabled
+        // Redirect to the quiz when the button is clicked
         takeQuizBtn.addEventListener('click', function () {
-            if (!takeQuizBtn.disabled) {
-                window.location.href = "{{ route('quiz.show') }}";
-                }
+            window.location.href = "{{ route('quiz.show') }}";
         });
     });
 </script>

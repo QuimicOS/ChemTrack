@@ -253,35 +253,32 @@ function renderTable(laboratories) {
 
 function searchRoom() {
     const searchValue = searchRoomField.value.trim();
-    if (!searchValue) return alert("Please enter a room number to search.");
+    if (!searchValue) return alert('Please enter a room number to search.');
 
     fetch(`/labs/room?room_number=${encodeURIComponent(searchValue)}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        }
+            'X-CSRF-TOKEN': csrfToken,
+        },
     })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(errorData => {
-                // Clear the table if no active lab is found
-                document.getElementById('laboratoryTableBody').innerHTML = '';
-                document.querySelector('.table-container').style.display = 'none';
-                console.log("Lab not found as active anymore.");
-                alert("Lab not found or already deleted.");
-                throw new Error(errorData.error);
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        renderTable(data);  // Render active labs if found
-    })
-    .catch(error => {
-        console.error('Error fetching labs:', error);
-    });
+        .then((response) => {
+            if (!response.ok) {
+                // Gracefully handle 404 errors
+                document.getElementById('laboratoryTableBody').innerHTML = `
+                    <tr><td colspan="7" class="text-center">No laboratories found</td></tr>`;
+                document.querySelector('.table-container').style.display = 'block';
+                throw new Error('Lab not found');
+            }
+            return response.json();
+        })
+        .then((data) => {
+            renderTable(data); // Render the results if successful
+        })
+        .catch((error) => {
+            console.error('Error fetching labs:', error);
+        });
 }
 
 function editLab(id) {
@@ -290,78 +287,85 @@ function editLab(id) {
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        }
+            'X-CSRF-TOKEN': csrfToken,
+        },
     })
-    .then(response => response.json())
-    .then(data => {
-        // Populate modal fields with fetched data
-        document.getElementById('editDepartment').value = data.department;
-        document.getElementById('editBuilding').value = data.building_name;
-        document.getElementById('editRoomNumber').value = data.room_number;
-        document.getElementById('editLabName').value = data.lab_name;
-        document.getElementById('editProfessor').value = data.professor_investigator;
-        document.getElementById('editDepartmentDirector').value = data.department_director;
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`Failed to fetch lab with ID ${id}`);
+            }
+            return response.json();
+        })
+        .then((data) => {
+            // Populate modal fields
+            document.getElementById('editDepartment').value = data.department || '';
+            document.getElementById('editBuilding').value = data.building_name || '';
+            document.getElementById('editRoomNumber').value = data.room_number || '';
+            document.getElementById('editLabName').value = data.lab_name || '';
+            document.getElementById('editProfessor').value = data.professor_investigator || '';
+            document.getElementById('editDepartmentDirector').value = data.department_director || '';
 
-        // Store the ID for use when saving changes
-        document.getElementById('editModal').setAttribute('data-lab-id', id);
+            // Set lab ID in modal
+            document.getElementById('editModal').setAttribute('data-lab-id', id);
 
-        // Open the modal
-        const editModal = document.getElementById('editModal');
-        const modalInstance = new bootstrap.Modal(editModal);
-        modalInstance.show();
-    })
-    .catch(error => {
-        console.error('Error fetching laboratory details:', error);
-        alert('Failed to load laboratory details for editing.');
-    });
+            // Show modal
+            const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+            editModal.show();
+        })
+        .catch((error) => {
+            console.error('Error fetching laboratory details:', error);
+            alert('Failed to load laboratory details. Please try again.');
+        });
 }
 
 function saveEdit() {
-    // Retrieve the lab ID from the modal's data attribute
     const labId = document.getElementById('editModal').getAttribute('data-lab-id');
 
-    // Gather updated data from the input fields in the edit modal
+    if (!labId) {
+        alert('Invalid laboratory ID. Unable to save changes.');
+        return;
+    }
+
     const updatedLabData = {
         department: document.getElementById('editDepartment').value.trim(),
         building_name: document.getElementById('editBuilding').value.trim(),
         room_number: document.getElementById('editRoomNumber').value.trim(),
         lab_name: document.getElementById('editLabName').value.trim(),
         professor_investigator: document.getElementById('editProfessor').value.trim(),
-        department_director: document.getElementById('editDepartmentDirector').value.trim()
+        department_director: document.getElementById('editDepartmentDirector').value.trim(),
     };
 
-    // Send the updated data to the server via a PUT request
     fetch(`/editLabs/${labId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
+            'X-CSRF-TOKEN': csrfToken,
         },
-        body: JSON.stringify(updatedLabData)
+        body: JSON.stringify(updatedLabData),
     })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(data => {
-                console.error('Validation errors:', data.errors);
-                throw new Error('Failed to save laboratory changes');
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        alert('Laboratory updated successfully!');
-        const editModal = document.getElementById('editModal');
-        const modalInstance = bootstrap.Modal.getInstance(editModal);
-        modalInstance.hide(); // Close the modal after saving
-        searchRoom(); // Refresh the list to show updated data
-    })
-    .catch(error => {
-        console.error('Error saving laboratory changes:', error);
-        //alert('Failed to save changes. Please check validation errors.');
-    });
+        .then((response) => {
+            if (!response.ok) {
+                return response.json().then((data) => {
+                    console.error('Validation errors:', data.errors || 'Unknown error');
+                    throw new Error('Failed to save laboratory changes');
+                });
+            }
+            return response.json();
+        })
+        .then(() => {
+            alert('Laboratory updated successfully!');
+            const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+            editModal.hide(); // Close the modal
+            searchRoom(); // Optionally refresh the table
+        })
+        .catch((error) => {
+            console.error('Error saving laboratory changes:', error);
+            alert('Failed to save changes. Please check the inputs and try again.');
+        });
 }
+
+
 
 function deleteLab(id) {
     if (!confirm("Are you sure you want to delete this laboratory?")) {
@@ -412,52 +416,36 @@ function validateAndAddLab() {
         department_director: directorField.value.trim(),
     };
 
-    // First, check if a lab with the same room number already exists
-    fetch(`/labs/room?room_number=${encodeURIComponent(labData.room_number)}`, {
-        method: 'GET',
+    // Directly submit the new laboratory data to the backend
+    fetch('/labs', {
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        }
+            'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify(labData),
     })
-    .then(response => {
-        if (response.ok) {
-            // If a lab is found with this room number, prevent the addition
-            alert('A laboratory with this room number already exists.');
-            throw new Error('Duplicate lab');
-        }
-        // If no lab is found (404), proceed to create the new lab
-        return fetch('/labs', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
-            },
-            body: JSON.stringify(labData)
-        });
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(data => {
-                console.error('Validation errors:', data.errors);
-                throw new Error('Failed to add laboratory');
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        alert('Laboratory added successfully!');
-        clearForm();
-    })
-    .catch(error => {
-        if (error.message !== 'Duplicate lab') {
+        .then((response) => {
+            if (!response.ok) {
+                return response.json().then((data) => {
+                    console.error('Validation errors:', data.errors || 'Unknown error');
+                    throw new Error('Failed to add laboratory');
+                });
+            }
+            return response.json();
+        })
+        .then(() => {
+            alert('Laboratory added successfully!');
+            clearForm(); // Clear the form fields
+        })
+        .catch((error) => {
             console.error('Error adding laboratory:', error);
             alert('Failed to add laboratory. Please check validation errors.');
-        }
-    });
+        });
 }
+
+
 
 
 // Event listeners

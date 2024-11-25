@@ -52,7 +52,7 @@
             </div>
             <div class="col-md-5">
                 <label for="casNumber" class="form-label">CAS Number</label>
-                <input type="text" class="form-control" id="casNumber" placeholder="Enter CAS Number" required>
+                <input type="text" class="form-control" id="casNumber" placeholder="Format XXXXX-XX-X (2-6 digits, 2 digits, 1 digit)" required>
                 <div class="invalid-feedback">CAS Number format should be 'XXXXXX-XX-X'.</div>
             </div>
             <div class="col-md-2 d-flex align-items-end">
@@ -187,7 +187,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Are you sure you want to delete this chemical?
+                <p>Are you sure you want to delete this chemical?</p>
+                <ul>
+                    <li><strong>Chemical Name:</strong> <span id="chemicalToDeleteName"></span></li>
+                    <li><strong>CAS Number:</strong> <span id="chemicalToDeleteCas"></span></li>
+                </ul>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
@@ -196,6 +200,7 @@
         </div>
     </div>
 </div>
+
 
 
 
@@ -253,31 +258,73 @@ casNumberInput.addEventListener('input', toggleAddChemicalButton);
 
 // Add chemical to the database
 function addChemical() {
-    const chemicalName = chemicalNameInput.value.trim();
+    const chemicalName = chemicalNameInput.value.trim().toLowerCase();
     const casNumber = casNumberInput.value.trim();
 
-    fetch('/chemicalCreate', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfToken,
-        },
-        body: JSON.stringify({ chemical_name: chemicalName, cas_number: casNumber, status_of_chemical: 1 })
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Failed to add chemical');
-        return response.json();
-    })
-    .then(() => {
-        alert('Chemical added successfully!');
-        clearForm(); // Clear the form without updating the table
-    })
-    .catch(error => {
-        console.error('Error adding chemical:', error);
-        alert('Failed to add chemical. Please try again.');
-    });
+    // Check if chemical already exists
+    fetch(`/chemicalSearch?chemical_name=${encodeURIComponent(chemicalName)}`)
+        .then(response => {
+            if (response.ok) {
+                return response.json(); // Parse JSON for valid responses
+            } else if (response.status === 404) {
+                return []; // Return an empty array on 404
+            } else {
+                throw new Error(`Failed to search for chemical. Status: ${response.status}`);
+            }
+        })
+        .then(data => {
+            if (!Array.isArray(data)) {
+                throw new Error("Invalid data format received.");
+            }
+
+            const duplicate = data.find(
+                chem => chem.cas_number === casNumber && chem.chemical_name.toLowerCase() === chemicalName
+            );
+            if (duplicate) {
+                alert("This chemical already exists.");
+                return;
+            }
+
+            // Proceed with adding the chemical
+            return fetch('/chemicalCreate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                },
+                body: JSON.stringify({
+                    chemical_name: chemicalName,
+                    cas_number: casNumber,
+                    status_of_chemical: 1, // Set status as active by default
+                }),
+            });
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Failed to add chemical. Status: ${response.status}`);
+            }
+            alert('Chemical added successfully!');
+            clearForm(); // Clear the form fields
+        })
+        .catch(error => {
+            if (error.message.includes("404")) {
+                console.warn("404 Error: Likely no matching chemicals found. Proceeding without issue.");
+            } 
+        });
 }
+
+// Clear form fields after successful addition
+function clearForm() {
+    chemicalNameInput.value = '';
+    casNumberInput.value = '';
+    addChemicalBtn.disabled = true;
+}
+
+// Event listener for Add Chemical button
+//
+addChemicalBtn.disabled = true; // Disable Add Chemical button after clearing
+
 
 
 // Render chemicals in the table
@@ -286,18 +333,20 @@ function renderTable(chemicals) {
     tableBody.innerHTML = '';
 
     chemicals.forEach(chemical => {
-        const row = `<tr>
-                        <td>${chemical.chemical_name}</td>
-                        <td>${chemical.cas_number}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary" onclick="editChemical(${chemical.id})">Edit</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteChemical(${chemical.id})">Delete</button>
-                        </td>
-                    </tr>`;
+        const row = `
+            <tr>
+                <td>${chemical.chemical_name}</td>
+                <td>${chemical.cas_number}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editChemical(${chemical.id})">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="openDeleteModal(${chemical.id})">Delete</button>
+                </td>
+            </tr>`;
         tableBody.innerHTML += row;
     });
     tableContainer.style.display = 'block';
 }
+
 
 // Search chemicals by name
 function searchChemical() {
@@ -401,6 +450,71 @@ function deleteChemical(chemicalId) {
         alert('Failed to delete chemical. Please try again.');
     });
 }
+
+// Global variable to store the chemical ID for deletion
+let chemicalToDeleteId = null;
+
+// Function to open the delete confirmation modal
+function openDeleteModal(chemicalId) {
+    // Find the chemical to delete
+    const chemical = chemicals.find(c => c.id === chemicalId);
+
+    if (!chemical) {
+        alert("Chemical not found.");
+        return;
+    }
+
+    // Set the chemical ID for deletion
+    chemicalToDeleteId = chemicalId;
+
+    // Populate the modal with chemical details
+    document.getElementById('chemicalToDeleteName').textContent = chemical.chemical_name;
+    document.getElementById('chemicalToDeleteCas').textContent = chemical.cas_number;
+
+    // Show the modal
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
+    deleteModal.show();
+}
+
+// Confirm and delete the chemical
+document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+    if (!chemicalToDeleteId) {
+        alert("No chemical selected for deletion.");
+        return;
+    }
+
+    // Call the delete API
+    fetch(`/chemicalInvalidate`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify({ chemical_id: chemicalToDeleteId }),
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Failed to delete chemical.");
+            }
+            return response.json();
+        })
+        .then(() => {
+            // Remove the deleted chemical from the table
+            chemicals = chemicals.filter(c => c.id !== chemicalToDeleteId);
+            renderTable(chemicals);
+
+            // Close the modal and show a success alert
+            const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmationModal'));
+            deleteModal.hide();
+            alert('Chemical has been deleted.');
+        })
+        .catch(error => {
+            console.error('Error deleting chemical:', error);
+            alert('Failed to delete chemical. Please try again.');
+        });
+});
+
 
 // Event listeners for button actions
 addChemicalBtn.addEventListener('click', addChemical);
