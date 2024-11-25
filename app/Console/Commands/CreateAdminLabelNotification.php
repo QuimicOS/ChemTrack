@@ -47,7 +47,7 @@ class CreateAdminLabelNotification extends Command
                 $today = Carbon::now();
                 if ($today->between($fiveAndHalfMonths, $sixMonths)) {
                     Notification::create([
-                        'send_to' => 'Admin', 
+                        'send_to' => 'Administrator', 
                         'notification_type' => 3,
                         'status_of_notification' => 0, 
                         'message' => "Label {$label->label_id} in Room {$label->room_number}, {$label->building} has been pending for over 5.5 months.",
@@ -108,7 +108,7 @@ class CreateAdminLabelNotification extends Command
                 $today = Carbon::now()->toDateString();
                 if ($today >= $sixMonths) {
                     Notification::create([
-                        'send_to' => 'Admin', 
+                        'send_to' => 'Administrator', 
                         'notification_type' => 4,
                         'status_of_notification' => 0, 
                         'message' => "Label {$label->label_id} in Room {$label->room_number}, {$label->building} is overdue!",

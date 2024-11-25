@@ -68,10 +68,12 @@
                     <th scope="col">Container Capacity</th>
                     <th scope="col">Pickup Requested</th>
                     <th scope="col">Completion Date</th>
+                    <th scope="col">Message</th>
                     <th scope="col">Status</th>
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
+            
             <tbody>
                 <!-- Rows will be populated dynamically via JavaScript -->
             </tbody>
@@ -89,7 +91,10 @@
             </div>
             <div class="modal-body">
                 <p><strong>Pickup ID:</strong> <span id="modalPickupID"></span></p>
-                <p>Are you sure you want to invalidate this pickup request?</p>
+                <div class="form-group">
+                    <label for="invalidateReason"><strong>Reason for Invalidation:</strong></label>
+                    <textarea id="invalidateReason" class="form-control" rows="3" placeholder="Enter reason for invalidation" required></textarea>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -172,12 +177,13 @@ function populateTable(data) {
         const row = [
             request["Pickup ID"] || '-',
             request["Label ID"] || '-',
-            chemicalNames,  // Join array items for Chemical Name
+            chemicalNames, // Join array items for Chemical Name
             request["Building Name"] || '-',
             request["Room Number"] || '-',
             `${request["Container Size"] || '-'} ${request.units || ''}`,
             request["Request Date"] ? new Date(request["Request Date"]).toLocaleDateString() : '-',
             request["Completion Date"] ? new Date(request["Completion Date"]).toLocaleDateString() : '-',
+            request["Message"] || '-', // Display message or default '-'
             formatStatus(request.Status),
             request.Status === 2 ? `<button class="btn btn-danger" onclick="showModal('${request["Pickup ID"]}')">Invalidate</button>` : ''
         ];
@@ -186,6 +192,7 @@ function populateTable(data) {
 
     table.draw();
 }
+
 
 function formatStatus(status) {
     switch (status) {
@@ -205,29 +212,46 @@ function showModal(pickupID) {
 }
 
 function confirmInvalidate() {
+    const reason = document.getElementById('invalidateReason').value.trim();
+
+    if (!reason) {
+        alert('Please provide a reason for invalidation.');
+        return;
+    }
+
     fetch('/pickupInvalidate', {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ pickup_id: selectedPickupID })
+    method: 'PUT',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    },
+    body: JSON.stringify({
+        pickup_id: selectedPickupID,
+        message: reason // Include the reason
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message || 'Pickup request invalidated successfully!');
-            fetchPickupRequests(); // Refresh the table data
-            const modal = bootstrap.Modal.getInstance(document.getElementById('invalidateModal'));
-            modal.hide();
-        } else {
-            alert(data.message || 'Failed to invalidate pickup request.');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to invalidate pickup request. Please try again.');
-    });
+})
+.then(response => {
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
+    return response.json();
+})
+.then(data => {
+    if (data.success) {
+        alert(data.message || 'Pickup request invalidated successfully!');
+        fetchPickupRequests(); // Refresh the table
+        const modal = bootstrap.Modal.getInstance(document.getElementById('invalidateModal'));
+        modal.hide();
+    } else {
+        alert(data.message || 'Failed to invalidate pickup request.');
+    }
+})
+.catch(error => {
+    console.error('Error:', error);
+    alert('Failed to invalidate pickup request. Please try again.');
+});
+
 }
+
 </script>
 @endsection

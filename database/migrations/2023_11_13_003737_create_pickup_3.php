@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('completion_method', 255)->nullable();
             $table->date('completion_date')->nullable();
             $table->tinyInteger('status_of_pickup')->default(2); 
+            $table->string('message', 255)->nullable();
             $table->timestamps();
         });
     }

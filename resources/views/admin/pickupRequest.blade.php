@@ -136,11 +136,12 @@
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
         // Validate Label ID and Time Selection
-        function validateLabelID() {
-            const labelID = document.getElementById('labelID');
-            labelID.value = labelID.value.replace(/\D/g, ''); // Numeric only
-            validateForm();
-        }
+        window.validateLabelID = function () {
+        const labelID = document.getElementById('labelID');
+        labelID.value = labelID.value.replace(/\D/g, ''); // Allow only numeric input
+        validateForm(); // Ensure the form validation is called
+        };
+
 
         function validateForm() {
         const labelValue = document.getElementById('labelID').value;
@@ -232,22 +233,25 @@
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     fetch(`/createPickupRequest`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify(requestData)
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrfToken
+    },
+    body: JSON.stringify(requestData)
     })
     .then(response => {
         console.log("Response Status:", response.status);
-        return response.text().then(text => {
-            console.log("Raw Response Text:", text); // Log raw response
+        return response.json().then(data => {
             if (!response.ok) {
-                throw new Error(text); // Use raw text in error
+                // If the response is not OK, throw the error message
+                const errorMessage = data.errors 
+                    ? Object.values(data.errors).flat().join(', ')  // Combine validation errors
+                    : data.error || data.message || 'An error occurred.';
+                throw new Error(errorMessage);
             }
-            return JSON.parse(text); // Attempt to parse JSON
+            return data;
         });
     })
     .then(data => {
@@ -256,9 +260,10 @@
         resetForm();
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to create pickup request. Please try again.');
+        console.error('Error:', error.message);
+        alert(`Failed to create pickup request: ${error.message}`);
     });
+
 }
 
 

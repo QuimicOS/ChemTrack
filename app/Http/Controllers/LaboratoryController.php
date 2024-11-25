@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class LaboratoryController extends Controller
 {
@@ -48,13 +49,30 @@ class LaboratoryController extends Controller
         }
     
         public function getAllLabs()
-        {
+    {
+        // Retrieve the authenticated user
+        $user = Auth::user();
+
+        // If the user is an administrator, retrieve all laboratories
+        if ($user->role === 'Administrator') {
             $labs = Laboratory::select('department', 'building_name', 'room_number', 'lab_name', 'professor_investigator')
-                              ->where('lab_status', 'Assigned') // Optional: only get Assigned labs
-                              ->get();
-    
-            return response()->json($labs);
+                            ->where('lab_status', 'Active') // Optional: only get active labs
+                            ->get();
+        } else {
+            // For non-administrator users, retrieve only the room numbers assigned to them
+            $labs = Laboratory::select('room_number')
+                            ->where('lab_status', 'Active') // Optional: only get active labs
+                            ->whereIn('room_number', function ($query) use ($user) {
+                                $query->select('room_number')
+                                        ->from('rooms')
+                                        ->where('user_id', $user->id);
+                            })
+                            ->get();
         }
+
+        return response()->json($labs, 200);
+    }
+
     
         // Fetch laboratory by room number to autofill lab name and investigator
         public function getLabByRoomNumber($room_number)
@@ -169,7 +187,7 @@ class LaboratoryController extends Controller
         
             // Step 3: Query the database
             $laboratories = Laboratory::where('room_number', $roomNumber)
-                ->where('lab_status', 'Assigned')
+                ->where('lab_status', 'Active')
                 ->select('id', 'department', 'building_name', 'room_number', 'lab_name', 'professor_investigator', 'department_director')
                 ->get();
         

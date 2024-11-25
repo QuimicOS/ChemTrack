@@ -16,6 +16,7 @@ class PickupRequest extends Model
         'status_of_pickup',
         'timeframe',
         'completion_method',
+        'message',
         'label_id'
     ];
 

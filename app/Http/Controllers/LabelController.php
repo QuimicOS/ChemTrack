@@ -101,81 +101,121 @@ class LabelController extends Controller
 
     /////////////////// a label by ID /////////////////////////////////////////
     public function updateLabel(Request $request, $id)
-    {
-        try {
-            // Step 1: Validate the request data
-            $data = $request->validate([
-                'quantity' => 'required|numeric',
-                'units' => 'required|string',
-                //'label_size' => 'required|string',
-                'chemicals' => 'required|array',
-                'chemicals.*.chemical_name' => 'required|string',
-                'chemicals.*.cas_number' => 'required|string',
-                'chemicals.*.percentage' => 'required|numeric',
-            ]);
-    
-            // Step 2: Update the label itself
-            $label = Label::findOrFail($id);
-            $label->update([
-                'quantity' => $data['quantity'],
-                'units' => $data['units'],
-                //'label_size' => $data['label_size']
-            ]);
-    
-            // Step 3: Handle the chemicals in the 'contents' table
-            $submittedCasNumbers = array_column($data['chemicals'], 'cas_number');
-    
-            // Fetch current chemicals linked to the label
-            $currentChemicals = DB::table('contents')
-                ->where('label_id', $id)
-                ->pluck('cas_number', 'id'); // Pluck CAS numbers with their IDs
-    
-            // Determine chemicals to delete
-            $chemicalsToDelete = $currentChemicals->filter(function ($casNumber) use ($submittedCasNumbers) {
-                return !in_array($casNumber, $submittedCasNumbers);
-            });
-    
-            // Delete chemicals that are no longer present in the request
-            if ($chemicalsToDelete->isNotEmpty()) {
-                DB::table('contents')->whereIn('id', $chemicalsToDelete->keys())->delete();
-            }
-    
-            // Step 4: Add or update chemicals
-            foreach ($data['chemicals'] as $chemical) {
-                $existingChemical = DB::table('contents')
-                    ->where('label_id', $id)
-                    ->where('cas_number', $chemical['cas_number'])
-                    ->first();
-    
-                if ($existingChemical) {
-                    // Update existing chemical
-                    DB::table('contents')->where('id', $existingChemical->id)->update([
-                        'chemical_name' => $chemical['chemical_name'],
-                        'percentage' => $chemical['percentage'],
-                        'updated_at' => now(),
-                    ]);
-                } else {
-                    // Insert new chemical
-                    DB::table('contents')->insert([
-                        'label_id' => $id,
-                        'chemical_name' => $chemical['chemical_name'],
-                        'cas_number' => $chemical['cas_number'],
-                        'percentage' => $chemical['percentage'],
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
-    
-            return response()->json(['success' => true]);
-        } catch (ValidationException $e) {
-            return response()->json(['error' => 'Validation failed', 'messages' => $e->errors()], 422);
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-            return response()->json(['error' => 'An error occurred while updating the label'], 500);
+{
+    try {
+        // Step 1: Validate the request data
+        $data = $request->validate([
+            'quantity' => 'required|numeric',
+            'units' => 'required|string',
+            'chemicals' => 'required|array',
+            'chemicals.*.chemical_name' => 'required|string',
+            'chemicals.*.cas_number' => 'required|string',
+            'chemicals.*.percentage' => 'required|numeric',
+        ]);
+
+        // Step 2: Fetch the label and its room number
+        $label = Label::findOrFail($id);
+
+        // Check if the label status is "Pending"
+        if ($label->status_of_label !== 1) {
+            return response()->json(['error' => 'Only pending labels can be edited.'], 403);
         }
+
+        // Fetch the room number associated with the label
+        $roomNumber = $label->room_number;
+
+        // Step 3: Ensure the user has access to the room or is an administrator
+        $user = auth()->user(); // Get the currently authenticated user
+
+        // If the user is an administrator, allow them to edit the label
+        if ($user->role === 'Administrator') {
+            Log::info("Administrator (User ID: {$user->id}) is editing label ID $id");
+        } else {
+            // Otherwise, check if the user is associated with the room
+            $room = DB::table('rooms')
+                ->where('room_number', $roomNumber)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$room) {
+                Log::warning("User ID {$user->id} is not authorized to edit label ID $id in room $roomNumber");
+                return response()->json(['error' => 'You do not have permission to edit this label.'], 403);
+            }
+        }
+
+        // Step 4: Update the label itself
+        $label->update([
+            'quantity' => $data['quantity'],
+            'units' => $data['units'],
+        ]);
+
+        // Debug: Log label update
+        Log::info("Label ID $id updated successfully with quantity: {$data['quantity']} and units: {$data['units']}");
+
+        // Step 5: Handle the chemicals in the 'contents' table
+        $submittedCasNumbers = array_column($data['chemicals'], 'cas_number');
+
+        // Fetch current chemicals linked to the label
+        $currentChemicals = DB::table('contents')
+            ->where('label_id', $id)
+            ->pluck('cas_number', 'id'); // Pluck CAS numbers with their IDs
+
+        // Determine chemicals to delete
+        $chemicalsToDelete = $currentChemicals->filter(function ($casNumber) use ($submittedCasNumbers) {
+            return !in_array($casNumber, $submittedCasNumbers);
+        });
+
+        // Debug: Log chemicals to delete
+        Log::info("Chemicals to delete: " . implode(', ', $chemicalsToDelete->values()->toArray()));
+
+        // Delete chemicals no longer in the request
+        if ($chemicalsToDelete->isNotEmpty()) {
+            DB::table('contents')->whereIn('id', $chemicalsToDelete->keys())->delete();
+        }
+
+        // Step 6: Add or update chemicals
+        foreach ($data['chemicals'] as $chemical) {
+            $existingChemical = DB::table('contents')
+                ->where('label_id', $id)
+                ->where('cas_number', $chemical['cas_number'])
+                ->first();
+
+            if ($existingChemical) {
+                // Update existing chemical
+                DB::table('contents')->where('id', $existingChemical->id)->update([
+                    'chemical_name' => $chemical['chemical_name'],
+                    'percentage' => $chemical['percentage'],
+                    'updated_at' => now(),
+                ]);
+                // Debug: Log chemical update
+                Log::info("Updated chemical with CAS: {$chemical['cas_number']} in label ID $id");
+            } else {
+                // Insert new chemical
+                DB::table('contents')->insert([
+                    'label_id' => $id,
+                    'chemical_name' => $chemical['chemical_name'],
+                    'cas_number' => $chemical['cas_number'],
+                    'percentage' => $chemical['percentage'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                // Debug: Log new chemical insertion
+                Log::info("Added new chemical with CAS: {$chemical['cas_number']} to label ID $id");
+            }
+        }
+
+        // Return success response
+        return response()->json(['success' => true]);
+    } catch (ValidationException $e) {
+        // Log validation errors
+        Log::error("Validation error: " . json_encode($e->errors()));
+        return response()->json(['error' => 'Validation failed', 'messages' => $e->errors()], 422);
+    } catch (Exception $e) {
+        // Log general errors
+        Log::error("Error updating label: " . $e->getMessage());
+        return response()->json(['error' => 'An error occurred while updating the label'], 500);
     }
-    
+}
     
 
     

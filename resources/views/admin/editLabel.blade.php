@@ -121,7 +121,7 @@
 
         <!-- Submit Button -->
         <div class="d-grid gap-2 submit-section">
-            <button class="btn btn-success" id="updateLabel" type="button" disabled>Update Label</button>
+            <button class="btn btn-success" id="updateLabel" type="button" disabled>Update Label and Generate PDF</button>
         </div>
     </div>
 </div>

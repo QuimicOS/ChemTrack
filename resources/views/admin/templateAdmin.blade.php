@@ -185,7 +185,7 @@
 
     <!-- Footer -->
     <footer class="footerprimary">
-        <p>Â© 2024 ChemTrack UPRM. All rights reserved.</p>
+        <p>© 2024 ChemTrack UPRM. All rights reserved.</p>
         <nav class="d-flex justify-content-center">
             <a href="{{ route('admin/contactUs') }}" class="text-muted mx-3">Contact Us</a>
             <a href="{{ route('admin/aboutUs') }}" class="text-muted mx-3">About Us</a>

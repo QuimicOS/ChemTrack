@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         \App\Console\Commands\CreateAdminLabelNotification::class,
         \App\Console\Commands\ExpiredUsers::class,
+        \App\Console\Commands\DeleteOldRecords::class,
 
     ];
     
@@ -36,7 +37,7 @@ class Kernel extends ConsoleKernel
    
     $schedule->command('users:expire-certifications')->daily();
 
-
+    $schedule->command('cleanup:delete-old-records')->daily();
     }
 
 
