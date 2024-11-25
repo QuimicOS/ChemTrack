@@ -73,7 +73,7 @@ class UserController extends Controller
                     DB::table('rooms')->insert([
                         'user_id' => $user->id,
                         'room_number' => $room['room_number'], // Room number from request
-                        'lab_status' => null, // Default to null or set a specific value if needed
+                        'lab_status' => 'Assigned', // Default to null or set a specific value if needed
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
