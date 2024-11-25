@@ -14,6 +14,18 @@
         margin-top: 20px;
     }
 
+    /* Add styling for fieldsets and legends for clarity */
+    fieldset {
+        border: 1px solid #ccc;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background-color: #f8f9fa;
+    }
+    legend {
+        font-size: 1.2rem;
+        font-weight: bold;
+        padding: 0 0.5rem;
+    }
     .content {
         margin-top: 40px;
     }
@@ -25,8 +37,9 @@
 </div>
 
 <!-- Form Inputs -->
+<fieldset>
 <div class="mb-4">
-    <label for="labelID" class="form-label">Label ID <span class="text-danger">*</span></label>
+    <label for="labelID" class="form-label">LABEL ID:<span class="text-danger">*</span></label>
     <input type="text" class="form-control w-50 mx-auto" id="labelID" placeholder="Enter Label ID" required oninput="validateLabelID()">
     <div id="labelIDFeedback" class="invalid-feedback text-center">
         Please enter a valid numeric Label ID.
@@ -40,9 +53,9 @@
         The reason must be at least 4 characters long.
     </div>
 </div>
-
+</fieldset>
 <div class="text-center">
-    <button class="btn btn-outline-danger" id="invalidateBtn" onclick="showModal()" disabled>Invalidate</button>
+    <button class="btn btn-danger" id="invalidateBtn" onclick="showModal()" disabled>Invalidate</button>
 </div>
 
 <!-- Modal for Invalidation Confirmation -->
@@ -67,24 +80,31 @@
 </div>
 
 <script>
+    // Ensure only numeric characters in Label ID input
     function validateLabelID() {
-        const labelID = document.getElementById('labelID').value;
+        const labelIDInput = document.getElementById('labelID');
         const feedback = document.getElementById('labelIDFeedback');
-        
-        if (/^\d+$/.test(labelID)) {
-            document.getElementById('labelID').classList.remove('is-invalid');
+
+        // Replace non-numeric characters
+        labelIDInput.value = labelIDInput.value.replace(/\D/g, '');
+
+        // Check if Label ID is valid (non-empty numeric value)
+        if (labelIDInput.value) {
+            labelIDInput.classList.remove('is-invalid');
             feedback.style.display = 'none';
         } else {
-            document.getElementById('labelID').classList.add('is-invalid');
+            labelIDInput.classList.add('is-invalid');
             feedback.style.display = 'block';
         }
         validateForm();
     }
 
+    // Validate Reason for Invalidation input
     function validateReason() {
         const reason = document.getElementById('reason').value;
         const feedback = document.getElementById('reasonFeedback');
         
+        // Check if reason length is at least 4 characters
         if (reason.length >= 4) {
             document.getElementById('reason').classList.remove('is-invalid');
             feedback.style.display = 'none';
@@ -95,19 +115,21 @@
         validateForm();
     }
 
+    // Enable Invalidate button only if both inputs are valid
     function validateForm() {
         const labelID = document.getElementById('labelID').value;
         const reason = document.getElementById('reason').value;
         const invalidateBtn = document.getElementById('invalidateBtn');
 
         // Enable the Invalidate button only if both fields are valid
-        if (/^\d+$/.test(labelID) && reason.length >= 4) {
+        if (labelID && reason.length >= 4) {
             invalidateBtn.disabled = false;
         } else {
             invalidateBtn.disabled = true;
         }
     }
 
+    // Show modal for invalidation confirmation
     function showModal() {
         const labelID = document.getElementById('labelID').value;
         const reason = document.getElementById('reason').value;
@@ -121,36 +143,46 @@
         modal.show();
     }
 
-    function invalidateLabel() {
-        const labelID = document.getElementById('labelID').value;
-        
-        // Create JSON data
-        const jsonData = JSON.stringify({
-            label_id: labelID,
-            label_status: "INVALID",
-            message: "Label has been invalidated due to " + document.getElementById('reason').value
-        });
+    // Invalidate label and download JSON with invalidation info
+// Invalidate label and send PUT request to backend
+function invalidateLabel() {
+    const labelID = document.getElementById('labelID').value;
+    const reason = document.getElementById('reason').value;
 
-        // Create a Blob from the JSON data and download it
-        const blob = new Blob([jsonData], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `invalidate_label_${labelID}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+    // Create the JSON data to send
+    const jsonData = {
+        message: reason
+    };
 
-        // Display success message
-        alert('Label has been successfully invalidated!');
+    // Send PUT request to backend
+    fetch(`/invalid/${labelID}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': `Bearer ${localStorage.getItem('token')}` // Include token if using token authentication
+        },
+        body: JSON.stringify(jsonData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Label has been successfully invalidated!');
 
-        // Close the modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('invalidateModal'));
-        modal.hide();
+            // Close modal and reset form
+            const modal = bootstrap.Modal.getInstance(document.getElementById('invalidateModal'));
+            modal.hide();
+            document.getElementById('labelID').value = '';
+            document.getElementById('reason').value = '';
+            validateForm(); // Disable button after reset
+        } else {
+            alert(data.error || 'An error occurred while invalidating the label.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while invalidating the label.');
+    });
+}
 
-        // Clear the form fields
-        document.getElementById('labelID').value = '';
-        document.getElementById('reason').value = '';
-        validateForm();  // Recheck form validity to disable the Invalidate button
-    }
 </script>
 @endsection

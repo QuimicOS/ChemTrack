@@ -327,15 +327,14 @@ class LabelController extends Controller
         ]);
     
         try {
-            // Fetch the authenticated user's room_number
+            // Fetch the authenticated user
             $user = Auth::user();
-            if (!$user || !$user->room_number) {
-                return response()->json(['error' => 'User does not have a valid room number'], 403);
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized: User not authenticated'], 401);
             }
     
             // Fetch the label by ID
             $label = DB::table('label')->where('label_id', $id)->first();
-    
             if (!$label) {
                 return response()->json(['error' => 'Label not found'], 404);
             }
@@ -345,9 +344,17 @@ class LabelController extends Controller
                 return response()->json(['error' => 'Label is already invalidated'], 400);
             }
     
-            // Validate that the user's room_number matches the label's room_number
-            if ($user->role !== 'Administrator' && $label->room_number !== $user->room_number) {
-                return response()->json(['error' => 'Unauthorized: User does not have permission to invalidate this label'], 403);
+            // If user is not an Administrator, validate access to the label's room number
+            if ($user->role !== 'Administrator') {
+                // Check if the user has permission for the label's room number
+                $hasAccess = DB::table('rooms')
+                    ->where('user_id', $user->id)
+                    ->where('room_number', $label->room_number)
+                    ->exists();
+    
+                if (!$hasAccess) {
+                    return response()->json(['error' => 'Unauthorized: User does not have permission to invalidate this label'], 403);
+                }
             }
     
             // Update the label to "Invalid"
@@ -367,21 +374,11 @@ class LabelController extends Controller
                 return response()->json(['error' => 'Error invalidating label'], 500);
             }
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error invalidating label'], 500);
+            return response()->json(['error' => 'Error invalidating label', 'details' => $e->getMessage()], 500);
         }
     }
     
     
-    
-    
-
-
-
-
-
-
-
-
 
 
 

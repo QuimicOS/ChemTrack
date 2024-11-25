@@ -31,7 +31,7 @@ Route::get('auth/saml2/arrival', function () {
     $user = Auth::user();
 
     if (!$user) {
-        return redirect()->route('aboutUs');
+        return redirect()->route('auth.saml.login');
     }
 
 

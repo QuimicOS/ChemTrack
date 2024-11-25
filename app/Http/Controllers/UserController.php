@@ -455,23 +455,61 @@ public function createStaffUser(Request $request)
 
 
 
-    public function roleManagementEditUser(Request $request, $id)
-    {
-        $user = User::find($id);
-        if (!$user) {
-            return response()->json(['error' => 'User not found'], 404);
+public function roleManagementEditUser(Request $request, $id)
+{
+    // Validate input data
+    $validatedData = $request->validate([
+        'role' => 'required|string|max:255',
+        'room_numbers' => 'array', // Expect an array of room numbers
+        'room_numbers.*' => 'required|string|exists:laboratory,room_number', // Validate each room number
+    ]);
+
+    DB::beginTransaction();
+    try {
+        // Update the user role in the `users` table
+        $user = User::findOrFail($id);
+        $user->role = $validatedData['role'];
+        $user->save();
+
+        // Handle room numbers
+        if (isset($validatedData['room_numbers'])) {
+            // Fetch current room numbers for the user
+            $existingRoomNumbers = DB::table('rooms')
+                ->where('user_id', $user->id)
+                ->pluck('room_number')
+                ->toArray();
+
+            $newRoomNumbers = $validatedData['room_numbers'];
+
+            // Find room numbers to add
+            $roomNumbersToAdd = array_diff($newRoomNumbers, $existingRoomNumbers);
+
+            // Find room numbers to delete
+            $roomNumbersToDelete = array_diff($existingRoomNumbers, $newRoomNumbers);
+
+            // Add new room numbers
+            foreach ($roomNumbersToAdd as $roomNumber) {
+                DB::table('rooms')->insert([
+                    'user_id' => $user->id,
+                    'room_number' => $roomNumber,
+                ]);
+            }
+
+            // Delete room numbers that are no longer included
+            DB::table('rooms')
+                ->where('user_id', $user->id)
+                ->whereIn('room_number', $roomNumbersToDelete)
+                ->delete();
         }
 
-        // Validate and update user data
-        $validatedData = $request->validate([
-            'room_number' => 'required|string|max:255',
-            'role' => 'required|string|max:255', 
+        DB::commit();
 
-        ]);
-
-        $user->update($validatedData);
-        return response()->json($user);
+        return response()->json(['success' => 'User updated successfully!'], 200);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['error' => 'Failed to update user', 'details' => $e->getMessage()], 500);
     }
+}
 
 
 

@@ -141,7 +141,7 @@
 
                 <!-- Username and Sign Out -->
                 <span class="navbar-text me-3"><b>{{Auth::user()->name}}</b></span>
-                <a href="{{ route('home') }}" class="btn btn-danger">Sign Out</a>
+                <a href="{{ route('auth.saml.logout') }}" class="btn btn-danger">Sign Out</a>
             </div>
         </div>
     </nav>
@@ -170,7 +170,7 @@
 
         <!-- Sign Out in Sidebar -->
         <div class="sign-out">
-            <a href="{{ route('home') }}" class="btn btn-danger">Sign Out</a>
+            <a href="{{ route('auth.saml.logout') }}" class="btn btn-danger">Sign Out</a>
         </div>
     </div>
 

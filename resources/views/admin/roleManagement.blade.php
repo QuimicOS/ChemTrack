@@ -161,12 +161,21 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="editUserId"> <!-- Hidden userId field -->
+
                     <div class="mb-3">
-                        <label for="editLaboratory" class="form-label">Room Number</label>
-                        <select class="form-select" id="editLaboratory" required>
-                            <option value="" selected>Select Room Number</option>
-                        </select>                    
+                        <label for="editRoomNumbers" class="form-label">Room Numbers</label>
+                        <div id="editRoomNumberContainer">
+                            <!-- Existing room numbers will be rendered dynamically -->
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control room-number" placeholder="Enter room number (e.g., S-122)">
+                                <button type="button" class="btn btn-outline-success" onclick="addEditRoomNumberField()">+</button>
+                            </div>
+                        </div>
                     </div>
+
+
+
+
                     <div class="mb-3">
                         <label for="editRole" class="form-label">Role</label>
                         <select class="form-select" id="editRole">
@@ -605,6 +614,7 @@ function renderEditUsersTable(userList) {
 
 
 
+
 // Function to search for a user by a email
 function searchUsername() {
     const searchValue = document.getElementById('searchUsername').value.trim();
@@ -642,7 +652,75 @@ function searchUsername() {
 
 
 
-// Open edit modal with selected user info
+// Populate existing room numbers in edit modal
+function populateEditRoomNumbers(roomNumbers) {
+    const editRoomNumberContainer = document.getElementById('editRoomNumberContainer');
+    editRoomNumberContainer.innerHTML = ''; // Clear existing fields
+
+    // Loop through existing room numbers
+    roomNumbers.forEach((room, index) => {
+        const fieldGroup = document.createElement('div');
+        fieldGroup.classList.add('input-group', 'mb-2');
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-control room-number';
+        input.value = room;
+        input.placeholder = 'Enter room number (e.g., S-122)';
+        input.required = true;
+
+        const actionButton = document.createElement('button');
+        actionButton.type = 'button';
+
+        // If it's the first room, show "plus" button to add fields
+        if (index === 0) {
+            actionButton.className = 'btn btn-outline-success';
+            actionButton.textContent = '+';
+            actionButton.onclick = addEditRoomNumberField;
+        } else {
+            // For additional fields, show "minus" button to remove
+            actionButton.className = 'btn btn-outline-danger';
+            actionButton.textContent = '-';
+            actionButton.onclick = () => fieldGroup.remove();
+        }
+
+        fieldGroup.appendChild(input);
+        fieldGroup.appendChild(actionButton);
+        editRoomNumberContainer.appendChild(fieldGroup);
+    });
+
+    // If there are no existing room numbers, create one input with "plus" button
+    if (roomNumbers.length === 0) {
+        addEditRoomNumberField();
+    }
+}
+
+// Add new room number field in edit modal
+function addEditRoomNumberField() {
+    const editRoomNumberContainer = document.getElementById('editRoomNumberContainer');
+
+    const fieldGroup = document.createElement('div');
+    fieldGroup.classList.add('input-group', 'mb-2');
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'form-control room-number';
+    input.placeholder = 'Enter room number (e.g., S-122)';
+    input.required = true;
+
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'btn btn-outline-danger';
+    removeButton.textContent = '-';
+    removeButton.onclick = () => fieldGroup.remove();
+
+    fieldGroup.appendChild(input);
+    fieldGroup.appendChild(removeButton);
+    editRoomNumberContainer.appendChild(fieldGroup);
+}
+
+
+// Open edit modal with user data
 function openEditModal(userId) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
@@ -661,12 +739,12 @@ function openEditModal(userId) {
             return response.json();
         })
         .then(user => {
-            // Populate the modal
-            document.getElementById('editLaboratory').value = user.room_number;
+            document.getElementById('editUserId').value = user.id;
             document.getElementById('editRole').value = user.role;
 
-            // Store the userId in a hidden field
-            document.getElementById('editUserId').value = user.id;
+            // Handle multiple room numbers
+            const roomNumbers = user.room_number ? user.room_number.split(',') : [];
+            populateEditRoomNumbers(roomNumbers);
 
             const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
             editModal.show();
@@ -678,18 +756,22 @@ function openEditModal(userId) {
 }
 
 
-
-
-
-// Save edited changes
+// Save edited user data, including room numbers
 function saveEdit() {
     const userId = document.getElementById('editUserId').value;
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const role = document.getElementById('editRole').value;
+
+    // Gather all room numbers (including dynamically added fields)
+    const roomNumbers = Array.from(document.querySelectorAll('#editRoomNumberContainer .room-number'))
+        .map(input => input.value.trim())
+        .filter(value => value); // Exclude empty values
 
     const updatedData = {
-        room_number: document.getElementById('editLaboratory').value,
-        role: document.getElementById('editRole').value,
+        role, // Send role as usual
+        room_numbers: roomNumbers // Send room numbers as an array
     };
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     fetch(`/users/${userId}`, {
         method: 'PUT',
@@ -710,14 +792,17 @@ function saveEdit() {
             }
             return response.json();
         })
-        .then(data => {
+        .then(() => {
             alert('User updated successfully!');
-            renderSubmittedRequestsTable();
+            const editModal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+            editModal.hide();
+            renderSubmittedRequestsTable(); // Refresh the table
         })
         .catch(error => {
             console.error(error);
         });
 }
+
 
 
 
