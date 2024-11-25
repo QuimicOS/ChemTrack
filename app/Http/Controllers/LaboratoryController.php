@@ -56,12 +56,12 @@ class LaboratoryController extends Controller
         // If the user is an administrator, retrieve all laboratories
         if ($user->role === 'Administrator') {
             $labs = Laboratory::select('department', 'building_name', 'room_number', 'lab_name', 'professor_investigator')
-                            ->where('lab_status', 'Active') // Optional: only get active labs
+                            ->where('lab_status', 'Assigned') // Optional: only get active labs
                             ->get();
         } else {
             // For non-administrator users, retrieve only the room numbers assigned to them
             $labs = Laboratory::select('room_number')
-                            ->where('lab_status', 'Active') // Optional: only get active labs
+                            ->where('lab_status', 'Assigned') // Optional: only get active labs
                             ->whereIn('room_number', function ($query) use ($user) {
                                 $query->select('room_number')
                                         ->from('rooms')
@@ -187,7 +187,7 @@ class LaboratoryController extends Controller
         
             // Step 3: Query the database
             $laboratories = Laboratory::where('room_number', $roomNumber)
-                ->where('lab_status', 'Active')
+                ->where('lab_status', 'Asigned')
                 ->select('id', 'department', 'building_name', 'room_number', 'lab_name', 'professor_investigator', 'department_director')
                 ->get();
         
