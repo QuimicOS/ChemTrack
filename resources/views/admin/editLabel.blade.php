@@ -374,56 +374,58 @@ document.addEventListener("DOMContentLoaded", function () {
  * Update label functionality and print updated label
  */
  document.getElementById('updateLabel').addEventListener('click', function () {
-    const labelID = document.getElementById('labelID').value.trim();
-    const chemicalRows = document.querySelectorAll('#chemicalTable tbody tr');
-
-    let totalPercentage = 0;
-
-    chemicalRows.forEach(row => {
-        const percentage = parseFloat(row.querySelector('.percentage')?.value.trim());
-        if (!isNaN(percentage)) {
-            totalPercentage += percentage;
+        const labelID = document.getElementById('labelID').value.trim();
+        if (!labelID) {
+            alert('Label ID is required!');
+            return;
         }
-    });
 
-    if (totalPercentage !== 100) {
-        alert(`The total percentage must equal 100%. Current total: ${totalPercentage}%`);
-        return; // Prevent the update if the total is not valid
-    }
+        const updatedData = {
+            quantity: document.getElementById('stored').value.trim(),
+            units: document.getElementById('units').value,
+            label_size: document.getElementById('labelSize').value,
+            chemicals: Array.from(document.querySelectorAll('#chemicalTable tbody tr')).map(row => ({
+                chemical_name: row.querySelector('.chemical-name')?.value.trim(),
+                cas_number: row.querySelector('.cas-number')?.value.trim(),
+                percentage: row.querySelector('.percentage')?.value.trim(),
+            })),
+        };
 
-    // Proceed with the update
-    const updatedData = {
-        quantity: document.getElementById('stored').value.trim(),
-        units: document.getElementById('units').value,
-        label_size: document.getElementById('labelSize').value,
-        chemicals: Array.from(chemicalRows).map(row => ({
-            chemical_name: row.querySelector('.chemical-name')?.value.trim(),
-            cas_number: row.querySelector('.cas-number')?.value.trim(),
-            percentage: row.querySelector('.percentage')?.value.trim(),
-        })),
-    };
-
-    fetch(`/editLabel/${labelID}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': crsfToken,
-        },
-        body: JSON.stringify(updatedData),
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Label updated successfully!');
-                // Optionally reload or reset the form
-            } else {
-                alert(data.error || 'Error updating label.');
-            }
+        fetch(`/editLabel/${labelID}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': crsfToken,
+            },
+            body: JSON.stringify(updatedData),
         })
-        .catch(error => console.error('Error updating label:', error));
-});
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Label updated successfully!');
 
-
+                    // Fetch the updated label data for printing
+                    fetch(`/label/${labelID}`)
+                        .then(response => response.json())
+                        .then(updatedLabelData => {
+                            if (updatedLabelData.error) {
+                                alert('Error fetching updated label data for printing.');
+                            } else {
+                                // Print the updated label
+                                updatedLabelData.chemicals = updatedData.chemicals;
+                                generatePDF(updatedLabelData);
+                            }
+                        })
+                        .catch(error => {
+                            alert('Error fetching updated label data for printing.');
+                            console.error(error);
+                        });
+                } else {
+                    alert(data.error || 'Error updating label.');
+                }
+            })
+            .catch(error => console.error('Error updating label:', error));
+    });
 
     // Initialize chemical list on page load
     fetchChemicalList();

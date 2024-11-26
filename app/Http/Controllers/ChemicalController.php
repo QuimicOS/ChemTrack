@@ -231,9 +231,8 @@ class ChemicalController extends Controller
     }
 
     public function index()
-{
-    $chemicals = Chemical::all(); // Assuming `Chemical` is the model
-    return response()->json($chemicals);
-}
-
+    {
+        $chemicals = Chemical::where('status_of_chemical', '!=', 0)->get(); // Fetch only active chemicals
+        return response()->json($chemicals);
+    }
 }
