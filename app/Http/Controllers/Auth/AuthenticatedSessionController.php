@@ -14,10 +14,12 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): View
+    public function create(): RedirectResponse
     {
-        return view('auth.login');
-    }
+        return redirect('auth/saml2/arrival'); 
+        // return redirect('auth/saml/login');   
+  
+     }
 
     /**
      * Handle an incoming authentication request.
