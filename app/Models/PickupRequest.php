@@ -17,7 +17,8 @@ class PickupRequest extends Model
         'timeframe',
         'completion_method',
         'message',
-        'label_id'
+        'label_id',
+        'user_id'
     ];
 
     /**
@@ -39,7 +40,7 @@ class PickupRequest extends Model
                 'send_to' => 'Administrator',
                 'status_of_notification' => 0,
                 'notification_type' => 0,
-                'message' => "A new Pickup Request has beed made by {$pickupRequest->label->created_by} for Label {$pickupRequest->label_id} in {$pickupRequest->label->room_number}, {$pickupRequest->label->building} for a container of {$pickupRequest->label->container_size}.",
+                'message' => "A new Pickup Request has been made by {$pickupRequest->label->created_by} for Label {$pickupRequest->label_id} in {$pickupRequest->label->room_number}, {$pickupRequest->label->building} for a container of {$pickupRequest->label->container_size}.",
                 'label_id' => $pickupRequest->label->label_id,
                 'pickup_id' => $pickupRequest->id,
             ]);
@@ -53,7 +54,7 @@ class PickupRequest extends Model
                 'send_to' => 'Administrator',
                 'status_of_notification' => 0,
                 'notification_type' => 1,
-                'message' => 'The Pickup Request: ' . $pickupInvalid->id . ' has been invalidated.',
+                'message' => "Pickup Request {$pickupInvalid->id} has been invalidated. Reason for invalidation: {$pickupInvalid->message}.",
                 'label_id' => $pickupInvalid->label->label_id,
                 'pickup_id' => $pickupInvalid->id,
             ]);
@@ -68,7 +69,7 @@ class PickupRequest extends Model
                 'send_to' => $pickupInvalid->label->room_number,
                 'status_of_notification' => 0,
                 'notification_type' => 1,
-                'message' => 'The Pickup Request: ' . $pickupInvalid->id . ' has been invalidated.',
+                'message' => "Pickup Request {$pickupInvalid->id} has been invalidated. Reason for invalidation: {$pickupInvalid->message}.",
                 'label_id' => $pickupInvalid->label->label_id,
                 'pickup_id' => $pickupInvalid->id,
             ]);

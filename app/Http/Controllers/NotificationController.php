@@ -91,7 +91,7 @@ class NotificationController extends Controller
         $notifications = Notification::where('send_to', 'Administrator')
             ->where('status_of_notification', operator: 0)
             ->where('notification_type', operator: 4)
-            ->orderBy('created_at', 'asc') 
+            ->orderBy('created_at', 'desc') 
             ->get();
 
         if ($notifications->isEmpty()) {
@@ -106,7 +106,7 @@ class NotificationController extends Controller
         $notifications = Notification::where('send_to', 'Administrator')
             ->where('status_of_notification', 0)
             ->whereNot('notification_type', operator: 4)
-            ->orderBy('created_at', 'asc') 
+            ->orderBy('created_at', 'desc') 
             ->get();
 
         if ($notifications->isEmpty()) {
@@ -120,7 +120,7 @@ class NotificationController extends Controller
     {
         $notifications = Notification::where('send_to', 'Administrator')
             ->where('status_of_notification', 1)
-            ->orderBy('created_at', 'asc') 
+            ->orderBy('created_at', 'desc') 
             ->get();
 
         if ($notifications->isEmpty()) {
@@ -151,7 +151,7 @@ class NotificationController extends Controller
         $notifications = Notification::whereIn('send_to', $userRooms) 
             ->where('status_of_notification', 0) 
             ->where('notification_type', 1)
-            ->orderBy('created_at', 'asc') 
+            ->orderBy('created_at', 'desc') 
             ->get();
     
         if ($notifications->isEmpty()) {
@@ -202,7 +202,7 @@ class NotificationController extends Controller
         $notifications = Notification::whereIn('send_to', $userRooms) 
             ->where('status_of_notification', 0) 
             ->where('notification_type', 2)
-            ->orderBy('created_at', 'asc') 
+            ->orderBy('created_at', 'desc') 
             ->get();
     
         if ($notifications->isEmpty()) {
@@ -285,7 +285,7 @@ class NotificationController extends Controller
 
         $notifications = Notification::where('user_id', $user->id)
             ->where('status_of_notification', 0) // 0 represents Unread
-            ->orderBy('created_at', 'asc')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         if ($notifications->isEmpty()) {

@@ -35,7 +35,7 @@ class Chemical extends Model
                 'send_to' => 'Administrator',
                 'status_of_notification' => 0,
                 'notification_type' => 5,
-                'message' => 'A new chemical has been created: ' . $chemical->chemical_name . ' with CAS Number: ' .$chemical->cas_number,
+                'message' => "A new chemical has been created: {$chemical->chemical_name} with CAS Number: {$chemical->cas_number}",
                 'chemical_id' => $chemical->id,
             ]);
         });

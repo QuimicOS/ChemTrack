@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -44,23 +46,58 @@ class Label extends Model
     public static function boot()
     {
         parent::boot();
-
+    
+        // Notify when room exceeds 55 gallons
         static::created(function ($label) {
-            $totalQuantity = Label::where('room_number', $label->room_number)
-            ->where('status_of_label', 1)
-            ->sum('quantity');
-
-            if ($totalQuantity >= 55) {
-                Notification::create([
-                    'notification_type' => 7, 
-                    'message' => "The total quantity of chemicals in room {$label->room_number} has exceeded 55 gallons.",
-                    'send_to' => 'Administrator',
-                    'status_of_notification' => 0, 
-                    'label_id' => $label->label_id,
-                ]);
+            try {
+                // Get all labels in the same room with status = 1 (active)
+                $labelsInRoom = Label::where('room_number', $label->room_number)
+                    ->where('status_of_label', 1)
+                    ->get();
+    
+                // Calculate total quantity in gallons
+                $totalGallons = $labelsInRoom->reduce(function ($total, $label) {
+                    if (!$label->quantity || !$label->units) {
+                        return $total; // Skip labels with missing data
+                    }
+    
+                    // Convert quantities to gallons based on units
+                    switch ($label->units) {
+                        case 'Milliliters':
+                            $quantityInGallons = $label->quantity / 3785.41;
+                            break;
+                        case 'Liters':
+                            $quantityInGallons = $label->quantity / 3.78541;
+                            break;
+                        case 'Gallons':
+                            $quantityInGallons = $label->quantity;
+                            break;
+                        default:
+                            $quantityInGallons = 0; // Ignore unsupported units
+                    }
+    
+                    return $total + $quantityInGallons;
+                }, 0);
+    
+                // Create a notification if the total exceeds 55 gallons
+                if ($totalGallons >= 55) {
+                    Notification::create([
+                        'notification_type' => 7,
+                        'message' => "The total quantity of chemicals in room {$label->room_number} has exceeded 55 gallons.",
+                        'send_to' => 'Administrator',
+                        'status_of_notification' => 0,
+                        'label_id' => $label->label_id,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::error("Error in 55-gallon notification: " . $e->getMessage());
             }
-        });
+        });            
     }
+    
+    
+    
+    
 
     // Relationships
 
@@ -68,6 +105,11 @@ class Label extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'created_by', 'email');
+    }
+
+    public function contents()
+    {
+        return $this->hasMany(Content::class, 'label_id', 'label_id');
     }
 
     // Many-to-Many relationship with Chemical through the 'contents' pivot table
