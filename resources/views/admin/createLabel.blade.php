@@ -1,4 +1,4 @@
-@extends('admin.templateAdmin')
+@extends('admin/templateAdmin')
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 @section('title', 'Create Label - ChemTrack')
@@ -79,17 +79,10 @@
             <legend>Location Details</legend>
             <div class="mb-3">
                 <label for="roomNumber" class="form-label">Room Number</label>
-                <input
-                    type="text"
-                    class="form-control"
-                    id="roomNumber"
-                    placeholder="Type Room Number"
-                    autocomplete="off"
-                    required
-                />
-                <ul id="roomSuggestions" class="list-group" style="position: absolute; z-index: 1000; width: 100%; display: none;"></ul>
+                <select class="form-select" id="roomNumber" required>
+                    <option value="" selected>Select Room Number</option>
+                </select>
             </div>
-            
             <div class="mb-3">
                 <label for="department" class="form-label">Department</label>
                 <input type="text" class="form-control" id="department" placeholder="Select Room Number to autofill" readonly>
@@ -227,53 +220,6 @@
             })
             .catch(error => console.error('Error fetching laboratories:', error));
 
-        const roomNumberInput = document.getElementById("roomNumber");
-        const roomSuggestions = document.getElementById("roomSuggestions");
-
-        // Show matching room numbers as the user types
-        roomNumberInput.addEventListener("input", function () {
-            const query = this.value.trim().toLowerCase();
-            roomSuggestions.innerHTML = ""; // Clear previous suggestions
-
-            if (query.length > 0) {
-                const matches = labData.filter((lab) =>
-                    lab.room_number.toLowerCase().startsWith(query)
-                );
-
-                matches.forEach((match) => {
-                    const suggestionItem = document.createElement("li");
-                    suggestionItem.className = "list-group-item list-group-item-action";
-                    suggestionItem.textContent = match.room_number;
-                    suggestionItem.addEventListener("click", function () {
-                        selectRoom(match);
-                    });
-                    roomSuggestions.appendChild(suggestionItem);
-                });
-
-                roomSuggestions.style.display = "block";
-            } else {
-                roomSuggestions.style.display = "none";
-            }
-        });
-
-        // Hide suggestions when the input loses focus
-        roomNumberInput.addEventListener("blur", function () {
-            setTimeout(() => {
-                roomSuggestions.style.display = "none";
-            }, 200); // Delay to allow click events on suggestions
-        });
-
-        // Populate fields when a room is selected
-        function selectRoom(labDetails) {
-            roomNumberInput.value = labDetails.room_number;
-            document.getElementById("labName").value = labDetails.lab_name || "N/A";
-            document.getElementById("principalInvestigator").value =
-                labDetails.professor_investigator || "N/A";
-            document.getElementById("department").value = labDetails.department || "N/A";
-            document.getElementById("building").value = labDetails.building_name || "N/A";
-            roomSuggestions.style.display = "none";
-        }
-
         // Fetch chemicals and set up autocomplete
         fetch('/chemicals')
             .then(response => response.json())
@@ -283,6 +229,19 @@
                 setupAutocompleteForChemicals(); // Apply autocomplete to all chemical name fields
             })
             .catch(error => console.error('Error fetching chemicals:', error));
+
+        // Update lab details based on room number selection
+        document.getElementById("roomNumber").addEventListener("change", function () {
+            const selectedRoom = this.value;
+            const labDetails = labData.find(lab => lab.room_number === selectedRoom);
+
+            if (labDetails) {
+            document.getElementById("labName").value = labDetails.lab_name || "N/A";
+            document.getElementById("principalInvestigator").value = labDetails.professor_investigator || "N/A";
+            document.getElementById("department").value = labDetails.department || "N/A";
+            document.getElementById("building").value = labDetails.building_name || "N/A";
+            }
+        });
 
         // Add a new row for chemicals in the table
         document.getElementById('addRow').addEventListener('click', function () {
