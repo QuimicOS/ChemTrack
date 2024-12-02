@@ -25,15 +25,42 @@ class UserController extends Controller
 
 
     // GET a single user by ID (Read operation)
-    public function getUserDetailsByID($id)
-    {
-        $user = User::find($id);
-        if (!$user) {
-            return response()->json(['error' => 'User not found'], 404);
-        }
+// GET a single user by ID (Read operation)
+public function getUserDetailsByID($id)
+{
+    // Fetch user with associated room numbers
+    $user = DB::table('user') // Adjusted table name
+        ->leftJoin('rooms', 'user.id', '=', 'rooms.user_id')
+        ->select(
+            'user.id as user_id', // Explicitly alias columns to avoid ambiguity
+            'user.name',
+            'user.last_name',
+            'user.email',
+            'user.role',
+            'user.department',
+            'user.user_status',
+            DB::raw('GROUP_CONCAT(rooms.room_number) as room_numbers') // Group and concatenate room numbers
+        )
+        ->where('user.id', $id)
+        ->groupBy(
+            'user.id',
+            'user.name',
+            'user.last_name',
+            'user.email',
+            'user.role',
+            'user.department',
+            'user.user_status'
+        )
+        ->first();
 
-        return response()->json($user);
+    if (!$user) {
+        return response()->json(['error' => 'User not found'], 404);
     }
+
+    return response()->json($user);
+}
+
+    
 
 
 
@@ -42,21 +69,38 @@ class UserController extends Controller
     // POST - Create a new user (Create operation)/////////////
     public function createUser(Request $request)
     {
-        // Validate input data
-        $validatedData = $request->validate([
-            'user.name' => 'required|string|max:255',
-            'user.last_name' => 'required|string|max:255',
-            'user.email' => 'required|string|email|max:255|unique:user,email',
-            'user.role' => 'nullable|string|max:255',
-            'user.department' => 'nullable|string|max:255',
-            'rooms' => 'array|nullable', // Validate room numbers as an array
-            'rooms.*.room_number' => 'required|string|exists:laboratory,room_number', // Each room must exist in `laboratory`
-        ]);
-    
         DB::beginTransaction();
         try {
-            // Create the user with default certification and user status
-            $userData = $validatedData['user'];
+            $data = $request->all();
+    
+            // Check if email is already in use
+            if (User::where('email', $data['user']['email'])->exists()) {
+                return response()->json([
+                    'message' => 'The email provided is already associated with an account. Please use a different email.'
+                ], 422); // Unprocessable Content
+            }
+    
+            // Check if the rooms exist and are active
+            $invalidRooms = [];
+            if (!empty($data['rooms'])) {
+                foreach ($data['rooms'] as $room) {
+                    if (!Laboratory::where('room_number', $room['room_number'])
+                                   ->where('lab_status', 'Assigned')
+                                   ->exists()) {
+                        $invalidRooms[] = $room['room_number'];
+                    }
+                }
+            }
+    
+            if (!empty($invalidRooms)) {
+                return response()->json([
+                    'message' => 'One or more selected rooms are not active laboratories or do not exist.',
+                    'invalid_rooms' => $invalidRooms,
+                ], 422);
+            }
+    
+            // Create the user
+            $userData = $data['user'];
             $user = new User();
             $user->name = $userData['name'];
             $user->last_name = $userData['last_name'];
@@ -68,12 +112,12 @@ class UserController extends Controller
             $user->save();
     
             // Handle room associations in the pivot table
-            if (!empty($validatedData['rooms'])) {
-                foreach ($validatedData['rooms'] as $room) {
+            if (!empty($data['rooms'])) {
+                foreach ($data['rooms'] as $room) {
                     DB::table('rooms')->insert([
                         'user_id' => $user->id,
                         'room_number' => $room['room_number'], // Room number from request
-                        'lab_status' => 'Assigned', // Default to null or set a specific value if needed
+                        'lab_status' => 'Assigned', // Default to 'Assigned'
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
@@ -84,9 +128,13 @@ class UserController extends Controller
             return response()->json(['message' => 'User created successfully!', 'user' => $user], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Failed to create user.', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'message' => 'An unexpected error occurred. Please try again later.',
+                'error_details' => $e->getMessage() // For debugging purposes (remove in production)
+            ], 500);
         }
     }
+    
     
     
 

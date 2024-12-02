@@ -205,12 +205,12 @@ const nameWithSpecialCharsPattern = /^[a-zA-Z\s.,'-]+$/;
 
 // Validate Add Lab form
 function validateAddLabForm() {
-    const isDepartmentValid = textPattern.test(departmentField.value.trim());
-    const isBuildingValid = textPattern.test(buildingField.value.trim());
+    const isDepartmentValid = departmentField.value.trim() !== '';
+    const isBuildingValid = buildingField.value.trim() !== '';
     const isRoomValid = roomNumberField.value.trim() !== '';
     const isLabNameValid = labNameField.value.trim() !== '';
-    const isProfessorValid = nameWithSpecialCharsPattern.test(professorField.value.trim());
-    const isDepartmentDirectorValid = nameWithSpecialCharsPattern.test(directorField.value.trim());
+    const isProfessorValid = professorField.value.trim() !== '';
+    const isDepartmentDirectorValid = directorField.value.trim() !== '';
 
     addLabButton.disabled = !(isDepartmentValid && isBuildingValid && isRoomValid && isLabNameValid && isProfessorValid && isDepartmentDirectorValid);
 }
@@ -252,7 +252,7 @@ function renderTable(laboratories) {
 }
 
 function searchRoom() {
-    const searchValue = searchRoomField.value.trim();
+    const searchValue = searchRoomField.value.trim().toLowerCase(); // Convert search term to lowercase
     if (!searchValue) return alert('Please enter a room number to search.');
 
     fetch(`/labs/room?room_number=${encodeURIComponent(searchValue)}`, {
@@ -265,7 +265,7 @@ function searchRoom() {
     })
         .then((response) => {
             if (!response.ok) {
-                // Gracefully handle 404 errors
+                // Handle case where no results are found
                 document.getElementById('laboratoryTableBody').innerHTML = `
                     <tr><td colspan="7" class="text-center">No laboratories found</td></tr>`;
                 document.querySelector('.table-container').style.display = 'block';
@@ -280,6 +280,7 @@ function searchRoom() {
             console.error('Error fetching labs:', error);
         });
 }
+
 
 function editLab(id) {
     fetch(`/labs/${id}`, {

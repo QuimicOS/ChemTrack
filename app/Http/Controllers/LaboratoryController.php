@@ -49,30 +49,29 @@ class LaboratoryController extends Controller
         }
     
         public function getAllLabs()
-{
-    // Retrieve the authenticated user
-    $user = Auth::user();
+    {
+        // Retrieve the authenticated user
+        $user = Auth::user();
 
-    // Define the query for laboratories
-    $labsQuery = Laboratory::select('department', 'building_name', 'room_number', 'lab_name', 'professor_investigator')
-        ->where('lab_status', 'Assigned'); // Only get active labs
+        // If the user is an administrator, retrieve all laboratories
+        if ($user->role === 'Administrator') {
+            $labs = Laboratory::select('department', 'building_name', 'room_number', 'lab_name', 'professor_investigator')
+                            ->where('lab_status', 'Assigned') // Optional: only get active labs
+                            ->get();
+        } else {
+            // For non-administrator users, retrieve only the room numbers assigned to them
+            $labs = Laboratory::select('room_number')
+                            ->where('lab_status', 'Assigned') // Optional: only get active labs
+                            ->whereIn('room_number', function ($query) use ($user) {
+                                $query->select('room_number')
+                                        ->from('rooms')
+                                        ->where('user_id', $user->id);
+                            })
+                            ->get();
+        }
 
-    // If the user is not an administrator, restrict results to their assigned rooms
-    if ($user->role !== 'Administrator') {
-        $labsQuery->whereIn('room_number', function ($query) use ($user) {
-            $query->select('room_number')
-                ->from('rooms')
-                ->where('user_id', $user->id);
-        });
+        return response()->json($labs, 200);
     }
-
-    // Execute the query
-    $labs = $labsQuery->get();
-
-    // Return the response as JSON
-    return response()->json($labs, 200);
-}
-
 
     
         // Fetch laboratory by room number to autofill lab name and investigator
@@ -170,39 +169,34 @@ class LaboratoryController extends Controller
         // Additional: Search laboratories by room number
         public function searchByRoomNumber(Request $request)
         {
-            //Log::info("searchByRoomNumber called with request data:", $request->all());
-        
-            // Step 1: Validate the request
+            // Validate the request
             $validator = Validator::make($request->all(), [
                 'room_number' => 'required|string|max:255',
             ]);
         
             if ($validator->fails()) {
-              //  Log::info("Validation failed:", $validator->errors()->toArray());
                 return response()->json(['debug' => 'Validation failed', 'errors' => $validator->errors()], 422);
             }
         
-            // Step 2: Retrieve the validated room number
-            $roomNumber = $request->query('room_number');
-           // Log::info("Searching for room number:", ['room_number' => $roomNumber]);
+            // Retrieve the validated room number and normalize it to lowercase
+            $roomNumber = strtolower($request->query('room_number'));
         
-            // Step 3: Query the database
-            $laboratories = Laboratory::where('room_number', $roomNumber)
-                ->where('lab_status', 'Assigned')
+            // Perform a case-insensitive search using LOWER
+            $laboratories = Laboratory::whereRaw('LOWER(room_number) = ?', [$roomNumber])
+                ->where('lab_status', 'Assigned') // Filter by active labs
                 ->select('id', 'department', 'building_name', 'room_number', 'lab_name', 'professor_investigator', 'department_director')
                 ->get();
         
             if ($laboratories->isEmpty()) {
-                //Log::info("No laboratories found for room number:", ['room_number' => $roomNumber]);
                 return response()->json([
                     'debug' => 'No laboratories found',
-                    'error' => 'Lab not found'
+                    'error' => 'Lab not found',
                 ], 404);
             }
         
-           // Log::info("Laboratories found:", $laboratories->toArray());
             return response()->json($laboratories, 200);
         }
+        
         
         
 

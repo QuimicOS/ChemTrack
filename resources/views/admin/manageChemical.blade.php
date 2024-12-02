@@ -394,35 +394,67 @@ function editChemical(id) {
 
 // Save edited chemical data to database
 function saveEdit() {
-    const updatedChemicalName = document.getElementById('editChemicalName').value.trim();
-    const updatedCasNumber = document.getElementById('editCasNumber').value.trim();
+    const updatedChemicalName = editChemicalNameInput.value.trim().toLowerCase();
+    const updatedCasNumber = editCasNumberInput.value.trim();
 
-    fetch(`/chemicalModify`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify({
-            chemical_id: currentChemicalId, // Use stored ID
-            chemical_name: updatedChemicalName,
-            cas_number: updatedCasNumber
+    // Check if the edited chemical already exists in the database
+    fetch(`/chemicalSearch?chemical_name=${encodeURIComponent(updatedChemicalName)}`)
+        .then(response => {
+            if (response.ok) {
+                return response.json(); // Parse JSON for valid responses
+            } else if (response.status === 404) {
+                return []; // No matching chemicals found
+            } else {
+                throw new Error(`Failed to search for chemical. Status: ${response.status}`);
+            }
         })
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Failed to update chemical');
-        return response.json();
-    })
-    .then(data => {
-        alert('Chemical updated successfully!');
-        searchChemical(); // Refresh the table with updated data
-    })
-    .catch(error => {
-        console.error('Error updating chemical:', error);
-        alert('Failed to update chemical. Please try again.');
-    });
+        .then(data => {
+            if (!Array.isArray(data)) {
+                throw new Error("Invalid data format received.");
+            }
+
+            // Check if another chemical has the same name and CAS number
+            const duplicate = data.find(
+                chem =>
+                    chem.cas_number === updatedCasNumber &&
+                    chem.chemical_name.toLowerCase() === updatedChemicalName &&
+                    chem.id !== currentChemicalId // Ensure it's not the same chemical being edited
+            );
+
+            if (duplicate) {
+                alert("This chemical already exists with the same name and CAS number.");
+                return;
+            }
+
+            // Proceed with the update if no duplicates are found
+            return fetch(`/chemicalModify`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    chemical_id: currentChemicalId, // Use stored ID
+                    chemical_name: updatedChemicalName,
+                    cas_number: updatedCasNumber
+                })
+            });
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to update chemical.');
+            return response.json();
+        })
+        .then(data => {
+            alert('Chemical updated successfully!');
+            searchChemical(); // Refresh the table with updated data
+        })
+        .catch(error => {
+            console.error('Error updating chemical:', error);
+            alert('Failed to update chemical. Please try again.');
+        });
 }
+
 
 // Delete chemical
 function deleteChemical(chemicalId) {
