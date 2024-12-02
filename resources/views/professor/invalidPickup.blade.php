@@ -1,4 +1,4 @@
-@extends('professor.templateProfessor')
+@extends('admin.templateAdmin')
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 @section('title', 'Invalidate Pickup - ChemTrack')
@@ -43,11 +43,9 @@
             <label for="filterStatus" class="form-label">Filter by Status:</label>
             <select id="filterStatus" class="form-select w-auto">
                 <option value="">All</option>
-                <option value="Active">Active</option>
+                <option value="Pending">Pending</option>
                 <option value="Completed">Completed</option>
                 <option value="Invalid">Invalid</option>
-                <option value="Pending">Pending</option>
-                <option value="Overdue">Overdue</option>
             </select>
         </div>
         <div>
@@ -97,7 +95,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-danger" onclick="confirmInvalidate()">Confirm Invalidate</button>
             </div>
         </div>
@@ -131,10 +129,10 @@ function initializeDataTable() {
     });
 
     // Custom filter by Status
-    $('#filterStatus').on('change', function() {
-        const table = $('#pickupTable').DataTable();
-        const status = $(this).val();
-        table.column(8).search(status).draw();
+    $('#filterStatus').on('change', function () {
+    const table = $('#pickupTable').DataTable();
+    const statusText = $(this).val();
+    table.column(9).search(statusText).draw(); // Column index for Status
     });
 }
 
@@ -199,7 +197,6 @@ function formatStatus(status) {
         case 0: return 'Invalid';
         case 1: return 'Completed';
         case 2: return 'Pending';
-        case 3: return 'Overdue';
         default: return 'Unknown';
     }
 }

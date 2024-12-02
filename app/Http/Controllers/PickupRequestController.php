@@ -224,50 +224,53 @@ class PickupRequestController extends Controller
 
     // Searches Pickup Requests by Laboratory, Status, and Completion Method    
     public function searchPickupRequests()
-    {
-        $pickupRequests = PickupRequest::with(['label.laboratory', 'label.user'])->get();
-    
-        if ($pickupRequests->isEmpty()) {
-            return response()->json(['message' => 'No pickup requests found.'], 404);
-        }
-    
-        $totalCount = $pickupRequests->count();
-    
-        $formattedPickupRequests = $pickupRequests->map(function ($pickup) {
-            $sixMonthsFromStart = Carbon::parse($pickup->label->accumulation_start_date)->addMonths(6);
-    
-            $chemicals = DB::table('contents')
-                ->where('label_id', $pickup->label_id)
-                ->pluck('chemical_name');
-    
-            return [
-                'Pickup Request ID' => $pickup->id,
-                'Label ID' => $pickup->label_id,
-                'Requested By' => $pickup->label->laboratory->professor_investigator ?? 'N/A',
-                'Request Date' => $pickup->created_at->format('Y-m-d'),
-                'Chemicals' => $chemicals,
-                'Building Name' => $pickup->label->building ?? null,
-                'Room Number' => $pickup->label->room_number ?? 'N/A',
-                'Quantity' => $pickup->label->quantity . ' ' . $pickup->label->units,
-                'Container Size' => $pickup->label->container_size,
-                'Timeframe' => $pickup->timeframe,
-                'Status' => match($pickup->status_of_pickup) {
-                    0 => 'Invalid',
-                    1 => 'Completed',
-                    2 => 'Pending',
-                    3 => 'Overdue',
-                    default => 'Unknown'
-                },
-                'Completion Method' => $pickup->completion_method ?? 'N/A',
-                'pickup_due' => $sixMonthsFromStart->format('M d, Y')
-            ];
-        })->sortBy('pickup_due')->values();
-    
-        return response()->json([
-            'total_reports' => $totalCount,
-            'pickup_requests' => $formattedPickupRequests
-        ], 200);
+{
+    $pickupRequests = PickupRequest::with(['label.laboratory', 'user'])->get();
+
+    if ($pickupRequests->isEmpty()) {
+        return response()->json(['message' => 'No pickup requests found.'], 404);
     }
+
+    $totalCount = $pickupRequests->count();
+
+    $formattedPickupRequests = $pickupRequests->map(function ($pickup) {
+        $sixMonthsFromStart = $pickup->label && $pickup->label->accumulation_start_date 
+            ? Carbon::parse($pickup->label->accumulation_start_date)->addMonths(6) 
+            : null;
+
+        $chemicals = DB::table('contents')
+            ->where('label_id', $pickup->label_id)
+            ->pluck('chemical_name');
+
+        return [
+            'Pickup Request ID' => $pickup->id,
+            'Label ID' => $pickup->label_id,
+            'Requested By Email' => $pickup->user ? $pickup->user->email : 'N/A', // Use user_id to get the email
+            'Request Date' => $pickup->created_at->format('Y-m-d'),
+            'Chemicals' => $chemicals,
+            'Building Name' => $pickup->label->building ?? null,
+            'Room Number' => $pickup->label->room_number ?? 'N/A',
+            'Quantity' => $pickup->label ? $pickup->label->quantity . ' ' . $pickup->label->units : 'N/A',
+            'Container Size' => $pickup->label->container_size ?? 'N/A',
+            'Timeframe' => $pickup->timeframe,
+            'Status' => match($pickup->status_of_pickup) {
+                0 => 'Invalid',
+                1 => 'Completed',
+                2 => 'Pending',
+                3 => 'Overdue',
+                default => 'Unknown'
+            },
+            'Completion Method' => $pickup->completion_method ?? 'N/A',
+            'Pickup Due' => $sixMonthsFromStart ? $sixMonthsFromStart->format('M d, Y') : 'N/A'
+        ];
+    })->sortBy('pickup_due')->values();
+
+    return response()->json([
+        'total_reports' => $totalCount,
+        'pickup_requests' => $formattedPickupRequests
+    ], 200);
+}
+
     
 
     // COUNT PICKUP REQUESTS WITH PENDING STATUS

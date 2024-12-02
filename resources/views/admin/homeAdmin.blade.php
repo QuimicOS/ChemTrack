@@ -219,81 +219,94 @@
 
     <!-- Chart.js Script for generating the charts -->
     <script>
-        const volumeCtx = document.getElementById('volumeGeneratedChart').getContext('2d');
-        const volumeGeneratedChart = new Chart(volumeCtx, {
-            type: 'line',
-            data: {
-                labels: ['Week 4', 'Week 3', 'Week 2', 'Week 1'],
-                datasets: [{
-                    label: 'Volume Generated',
-                    data: [5, 8, 4, 10],
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Volume Generated (GAL) last 30 days',
-                        font: {
-                            size: 24 // Increase font size for the title
-                        }
-                    }
+document.addEventListener('DOMContentLoaded', async function () {
+        try {
+            // Fetch data from the backend
+            const response = await fetch('/chart-data'); // Update with your correct route
+            if (!response.ok) throw new Error('Failed to fetch chart data');
+            const { labels, volumeData, weightData } = await response.json();
+
+            // Volume Generated Chart
+            const volumeCtx = document.getElementById('volumeGeneratedChart').getContext('2d');
+            const volumeGeneratedChart = new Chart(volumeCtx, {
+                type: 'line',
+                data: {
+                    labels: labels, // Dynamically fetched labels
+                    datasets: [{
+                        label: 'Volume Generated',
+                        data: volumeData, // Dynamically fetched data
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
+                options: {
+                    responsive: true,
+                    plugins: {
                         title: {
                             display: true,
-                            text: 'Gal' // Y-axis label
+                            text: 'Volume Generated (Litters) last 30 days',
+                            font: {
+                                size: 24 // Increase font size for the title
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'L' // Y-axis label
+                            }
                         }
                     }
                 }
-            }
-        });
-    
-        const weightCtx = document.getElementById('weightGeneratedChart').getContext('2d');
-        const weightGeneratedChart = new Chart(weightCtx, {
-            type: 'line',
-            data: {
-                labels: ['Week 4', 'Week 3', 'Week 2', 'Week 1'],
-                datasets: [{
-                    label: 'Weight Generated',
-                    data: [50, 60, 40, 80],
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Weight Generated (LBS) last 30 days',
-                        font: {
-                            size: 24 // Increase font size for the title
-                        }
-                    }
+            });
+
+            // Weight Generated Chart
+            const weightCtx = document.getElementById('weightGeneratedChart').getContext('2d');
+            const weightGeneratedChart = new Chart(weightCtx, {
+                type: 'line',
+                data: {
+                    labels: labels, // Dynamically fetched labels
+                    datasets: [{
+                        label: 'Weight Generated',
+                        data: weightData, // Dynamically fetched data
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
+                options: {
+                    responsive: true,
+                    plugins: {
                         title: {
                             display: true,
-                            text: 'Lbs' // Y-axis label
+                            text: 'Weight Generated (KG) last 30 days',
+                            font: {
+                                size: 24 // Increase font size for the title
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'KG' // Y-axis label
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        } catch (error) {
+            console.error('Error rendering charts:', error);
+        }
+    });
     </script>
 
     <!-- AJAX Calls for Dashboard Data Labels7Days -->

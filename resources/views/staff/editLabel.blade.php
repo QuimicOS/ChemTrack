@@ -1,4 +1,4 @@
-@extends('staff/templateStaff')
+@extends('staff.templateStaff')
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 @section('title', 'Edit Label - ChemTrack')
@@ -127,22 +127,21 @@
 </div>
 
 <!-- Modal Row Removal Confirmation -->
-<div class="modal fade" id="removeModal" tabindex="-1" aria-labelledby="removeModalLabel" aria-hidden="true">
+<div class="modal fade" id="removeRowModal" tabindex="-1" aria-labelledby="removeRowModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="removeModalLabel">Confirm Removal</h5>
+                <h5 class="modal-title" id="removeRowModalLabel">Confirm Row Removal</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p><strong>Chemical Name:</strong> <span id="modalChemicalName"></span></p>
-                <p><strong>CAS Number:</strong> <span id="modalCASNumber"></span></p>
-                <p><strong>Percentage:</strong> <span id="modalPercentage"></span></p>
-                <p>Are you sure you want to remove this chemical?</p>
+                <p>Are you sure you want to remove this chemical row?</p>
+                <p><strong>Chemical Name:</strong> <span id="confirmChemicalName"></span></p>
+                <p><strong>CAS Number:</strong> <span id="confirmCASNumber"></span></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmRemove">Confirm Remove</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="confirmRemoveRow" class="btn btn-danger">Remove</button>
             </div>
         </div>
     </div>
@@ -156,7 +155,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const crsfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     let labelData = {};
     let chemicalData = [];
-
+    let rowToRemove = null;
+    
     // Hide form sections initially
     const formSections = document.querySelectorAll('.form-section, .table-section, .submit-section');
     formSections.forEach(section => section.style.display = 'none');
@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
     /**
      * Add a new row to the chemical table
      */
-    function addChemicalRow(chemicalName = '', casNumber = '', percentage = '') {
+     function addChemicalRow(chemicalName = '', casNumber = '', percentage = '') {
         const tableBody = document.querySelector('#chemicalTable tbody');
         const newRow = document.createElement('tr');
         newRow.innerHTML = `
@@ -237,15 +237,39 @@ document.addEventListener("DOMContentLoaded", function () {
         `;
         tableBody.appendChild(newRow);
 
-        // Set up autocomplete for the new row
+        // Set up autocomplete for the chemical name field
         setupAutocomplete(newRow.querySelector('.chemical-name'));
 
-        // Add remove functionality
+        // Add click event for the "Remove" button
         newRow.querySelector('.removeRow').addEventListener('click', function () {
-            newRow.remove();
-            checkFormValidity();
+            rowToRemove = newRow; // Store the row to be removed
+            const chemicalName = newRow.querySelector('.chemical-name')?.value || 'N/A';
+            const casNumber = newRow.querySelector('.cas-number')?.value || 'N/A';
+
+            // Populate modal with row data
+            document.getElementById('confirmChemicalName').textContent = chemicalName;
+            document.getElementById('confirmCASNumber').textContent = casNumber;
+
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('removeRowModal'));
+            modal.show();
         });
+
+        checkFormValidity(); // Revalidate the form after adding a new row
     }
+
+    document.getElementById('confirmRemoveRow').addEventListener('click', function () {
+        if (rowToRemove) {
+            rowToRemove.remove(); // Remove the row
+            rowToRemove = null; // Reset the reference
+            checkFormValidity(); // Revalidate the form
+        }
+
+        // Hide the modal after removing the row
+        const modal = bootstrap.Modal.getInstance(document.getElementById('removeRowModal'));
+        modal.hide();
+    });
+
 
     /**
      * Validate the entire form and enable/disable the Update button
@@ -259,7 +283,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let allRowsValid = true;
     let totalPercentage = 0;
 
-    chemicalRows.forEach(row => {
+    chemicalRows.forEach((row) => {
         const chemicalName = row.querySelector('.chemical-name')?.value.trim();
         const casNumber = row.querySelector('.cas-number')?.value.trim();
         const percentage = parseFloat(row.querySelector('.percentage')?.value.trim());
@@ -279,66 +303,72 @@ document.addEventListener("DOMContentLoaded", function () {
     const percentageError = document.getElementById('storedError');
     if (totalPercentage !== 100) {
         percentageError.textContent = `The total percentage must equal 100%. Current total: ${totalPercentage}%`;
-        percentageError.style.display = "block";
+        percentageError.style.display = 'block';
         allRowsValid = false;
     } else {
-        percentageError.style.display = "none";
+        percentageError.style.display = 'none';
     }
 
     // Enable or disable the Update button
     const updateButton = document.getElementById('updateLabel');
-    updateButton.disabled = !stored || !/^\d*\.?\d*$/.test(stored) || units === "Select units" || labelSize === "Select label size" || !allRowsValid;
+    updateButton.disabled = !stored || !/^\d*\.?\d*$/.test(stored) || units === 'Select units' || labelSize === 'Select label size' || !allRowsValid;
 }
 
 
     /**
      * Set up autocomplete functionality for chemical name fields
      */
-    function setupAutocomplete(inputElement) {
-        inputElement.addEventListener('input', function () {
-            const val = this.value.toLowerCase();
-            const matchingChemical = chemicalData.find(chemical => chemical.chemical_name.toLowerCase() === val);
+     function setupAutocomplete(inputElement) {
+    inputElement.addEventListener('blur', function () {
+        const val = this.value.trim();
+        const matchingOption = Array.from(document.getElementById('chemicalList').options).find(option => option.value === val);
 
-            const casInput = inputElement.closest('tr')?.querySelector('.cas-number');
-            if (casInput) {
-                if (matchingChemical) {
-                    casInput.value = matchingChemical.cas_number;
-                } else {
-                    casInput.value = '';
-                }
-            }
-        });
+        const casInput = inputElement.closest('tr')?.querySelector('.cas-number');
+        if (casInput) {
+            if (matchingOption) {
+                const chemicalName = matchingOption.getAttribute('data-name');
+                const casNumber = matchingOption.getAttribute('data-cas');
 
-        inputElement.addEventListener('blur', function () {
-            const val = this.value.toLowerCase();
-            const matchingChemical = chemicalData.find(chemical => chemical.chemical_name.toLowerCase() === val);
-
-            const casInput = inputElement.closest('tr')?.querySelector('.cas-number');
-            if (casInput && !matchingChemical) {
-                this.value = '';
+                inputElement.value = chemicalName; // Only set the chemical name in the input
+                casInput.value = casNumber; // Set the CAS number in the corresponding CAS field
+            } else {
+                // Clear invalid input and visually indicate an error
+                inputElement.classList.add('is-invalid');
+                inputElement.value = '';
                 casInput.value = '';
-                alert('Please select a valid chemical from the list.');
             }
-        });
-    }
+        }
+    });
+
+    inputElement.addEventListener('input', function () {
+        // Remove the error class as user starts typing
+        this.classList.remove('is-invalid');
+    });
+}
 
     /**
      * Fetch and populate chemical list for autocomplete
      */
-    function fetchChemicalList() {
-        fetch('/chemicals')
-            .then(response => response.json())
-            .then(data => {
-                chemicalData = data;
-                const chemicalList = document.getElementById('chemicalList');
-                chemicalList.innerHTML = '';
-                data.forEach(chemical => {
-                    const option = document.createElement('option');
-                    option.value = chemical.chemical_name;
-                    chemicalList.appendChild(option);
-                });
-            })
-            .catch(error => console.error('Error fetching chemical data:', error));
+     function fetchChemicalList() {
+    fetch('/chemicals')
+        .then(response => response.json())
+        .then(data => {
+            const chemicalList = document.getElementById('chemicalList');
+            chemicalList.innerHTML = ''; // Clear the existing list
+
+            // Populate datalist with chemical names and CAS numbers
+            data.forEach(chemical => {
+                const option = document.createElement('option');
+                option.value = `${chemical.chemical_name} (CAS: ${chemical.cas_number})`; // Display both chemical name and CAS number
+                option.setAttribute('data-name', chemical.chemical_name); // Store chemical name for lookup
+                option.setAttribute('data-cas', chemical.cas_number); // Store CAS number for lookup
+                chemicalList.appendChild(option);
+            });
+
+            // Save chemical data for global usage
+            chemicalData = data;
+        })
+        .catch(error => console.error('Error fetching chemical data:', error));
     }
 
     /**
@@ -374,56 +404,68 @@ document.addEventListener("DOMContentLoaded", function () {
  * Update label functionality and print updated label
  */
  document.getElementById('updateLabel').addEventListener('click', function () {
-    const labelID = document.getElementById('labelID').value.trim();
-    const chemicalRows = document.querySelectorAll('#chemicalTable tbody tr');
-
-    let totalPercentage = 0;
-
-    chemicalRows.forEach(row => {
-        const percentage = parseFloat(row.querySelector('.percentage')?.value.trim());
-        if (!isNaN(percentage)) {
-            totalPercentage += percentage;
+        const labelID = document.getElementById('labelID').value.trim();
+        if (!labelID) {
+            alert('Label ID is required!');
+            return;
         }
-    });
 
-    if (totalPercentage !== 100) {
-        alert(`The total percentage must equal 100%. Current total: ${totalPercentage}%`);
-        return; // Prevent the update if the total is not valid
-    }
+        const updatedData = {
+            quantity: document.getElementById('stored').value.trim(),
+            units: document.getElementById('units').value,
+            label_size: document.getElementById('labelSize').value,
+            chemicals: Array.from(document.querySelectorAll('#chemicalTable tbody tr')).map(row => ({
+                chemical_name: row.querySelector('.chemical-name')?.value.trim(),
+                cas_number: row.querySelector('.cas-number')?.value.trim(),
+                percentage: row.querySelector('.percentage')?.value.trim(),
+            })),
+        };
 
-    // Proceed with the update
-    const updatedData = {
-        quantity: document.getElementById('stored').value.trim(),
-        units: document.getElementById('units').value,
-        label_size: document.getElementById('labelSize').value,
-        chemicals: Array.from(chemicalRows).map(row => ({
-            chemical_name: row.querySelector('.chemical-name')?.value.trim(),
-            cas_number: row.querySelector('.cas-number')?.value.trim(),
-            percentage: row.querySelector('.percentage')?.value.trim(),
-        })),
-    };
+        // Check for duplicate chemical entries
+        const duplicates = updatedData.chemicals.filter((chemical, index, self) =>
+            self.findIndex(c => c.chemical_name === chemical.chemical_name && c.cas_number === chemical.cas_number) !== index
+        );
 
-    fetch(`/editLabel/${labelID}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': crsfToken,
-        },
-        body: JSON.stringify(updatedData),
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Label updated successfully!');
-                // Optionally reload or reset the form
-            } else {
-                alert(data.error || 'Error updating label.');
-            }
+        if (duplicates.length > 0) {
+            alert(`Duplicate chemical entries found: ${duplicates.map(d => `${d.chemical_name} (CAS: ${d.cas_number})`).join(", ")}`);
+            return; // Stop the submission
+        }
+
+        fetch(`/editLabel/${labelID}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': crsfToken,
+            },
+            body: JSON.stringify(updatedData),
         })
-        .catch(error => console.error('Error updating label:', error));
-});
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Label updated successfully!');
 
-
+                    // Fetch the updated label data for printing
+                    fetch(`/label/${labelID}`)
+                        .then(response => response.json())
+                        .then(updatedLabelData => {
+                            if (updatedLabelData.error) {
+                                alert('Error fetching updated label data for printing.');
+                            } else {
+                                // Print the updated label
+                                updatedLabelData.chemicals = updatedData.chemicals;
+                                generatePDF(updatedLabelData);
+                            }
+                        })
+                        .catch(error => {
+                            alert('Error fetching updated label data for printing.');
+                            console.error(error);
+                        });
+                } else {
+                    alert(data.error || 'Error updating label.');
+                }
+            })
+            .catch(error => console.error('Error updating label:', error));
+    });
 
     // Initialize chemical list on page load
     fetchChemicalList();
@@ -432,9 +474,9 @@ document.addEventListener("DOMContentLoaded", function () {
 function generatePDF(labelData) {
     const { jsPDF } = window.jspdf;
 
-    const pageWidth = 215.9;  // 8.5 inches in mm
+    const pageWidth = 215.9; // 8.5 inches in mm
     const pageHeight = 279.4; // 11 inches in mm
-    let labelHeight, labelWidth, offsetX, offsetY, fontSize, lineSpacing, tableColumnSpacing, additionalSpacing;
+    let labelHeight, labelWidth, offsetX, offsetY, fontSize, lineSpacing, tableColumnSpacing, additionalSpacing, maxChemicals, noteOffset;
 
     // Fetch the labelSize from the form
     const labelSize = document.getElementById("labelSize").value;
@@ -442,7 +484,7 @@ function generatePDF(labelData) {
     // Initialize the PDF with A4 (8.5 x 11 inch) dimensions
     let doc = new jsPDF({ unit: "mm", format: [pageWidth, pageHeight] });
 
-    // Adjust label dimensions based on label size
+    // Adjust label dimensions and note offset based on label size
     if (labelSize === "Small") {
         labelHeight = 25.4;
         labelWidth = 25.4;
@@ -452,6 +494,8 @@ function generatePDF(labelData) {
         lineSpacing = 2.5;
         tableColumnSpacing = { chemical: 2, cas: 12, percent: 20 };
         additionalSpacing = 1;
+        maxChemicals = 2;
+        noteOffset = 3; // Vertical offset for the note
     } else if (labelSize === "Medium") {
         labelHeight = 76.2;
         labelWidth = 50.8;
@@ -461,6 +505,8 @@ function generatePDF(labelData) {
         lineSpacing = 4.5;
         tableColumnSpacing = { chemical: 2, cas: 20, percent: 34 };
         additionalSpacing = 2;
+        maxChemicals = 5;
+        noteOffset = 6;
     } else if (labelSize === "Large") {
         labelHeight = 152.4;
         labelWidth = 101.6;
@@ -470,8 +516,9 @@ function generatePDF(labelData) {
         lineSpacing = 7.5;
         tableColumnSpacing = { chemical: 15, cas: 60, percent: 80 };
         additionalSpacing = 6;
+        maxChemicals = 8;
+        noteOffset = 10;
     } else {
-        // Add a fallback case for invalid sizes
         console.error('Invalid label size:', labelSize);
         alert('Invalid label size selected. Please select a valid label size.');
         return; // Prevent further execution
@@ -479,6 +526,19 @@ function generatePDF(labelData) {
 
     // Draw border around the label
     doc.rect(offsetX, offsetY, labelWidth, labelHeight);
+
+    // Check if there are more chemicals than can be displayed
+    const totalChemicals = (labelData.chemicals || []).length;
+    if (totalChemicals > maxChemicals) {
+        doc.setFont("Helvetica", "italic");
+        doc.setFontSize(2);
+        doc.text(
+            "Note: Additional chemicals are listed in the system.",
+            offsetX + labelWidth / 2,
+            offsetY + 1, // Adjusted position to prevent overlap
+            { align: "center" }
+        );
+    }
 
     // Label Header
     doc.setFont("Helvetica", "bold");

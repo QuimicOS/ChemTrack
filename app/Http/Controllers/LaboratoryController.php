@@ -49,29 +49,30 @@ class LaboratoryController extends Controller
         }
     
         public function getAllLabs()
-    {
-        // Retrieve the authenticated user
-        $user = Auth::user();
+{
+    // Retrieve the authenticated user
+    $user = Auth::user();
 
-        // If the user is an administrator, retrieve all laboratories
-        if ($user->role === 'Administrator') {
-            $labs = Laboratory::select('department', 'building_name', 'room_number', 'lab_name', 'professor_investigator')
-                            ->where('lab_status', 'Assigned') // Optional: only get active labs
-                            ->get();
-        } else {
-            // For non-administrator users, retrieve only the room numbers assigned to them
-            $labs = Laboratory::select('room_number')
-                            ->where('lab_status', 'Assigned') // Optional: only get active labs
-                            ->whereIn('room_number', function ($query) use ($user) {
-                                $query->select('room_number')
-                                        ->from('rooms')
-                                        ->where('user_id', $user->id);
-                            })
-                            ->get();
-        }
+    // Define the query for laboratories
+    $labsQuery = Laboratory::select('department', 'building_name', 'room_number', 'lab_name', 'professor_investigator')
+        ->where('lab_status', 'Assigned'); // Only get active labs
 
-        return response()->json($labs, 200);
+    // If the user is not an administrator, restrict results to their assigned rooms
+    if ($user->role !== 'Administrator') {
+        $labsQuery->whereIn('room_number', function ($query) use ($user) {
+            $query->select('room_number')
+                ->from('rooms')
+                ->where('user_id', $user->id);
+        });
     }
+
+    // Execute the query
+    $labs = $labsQuery->get();
+
+    // Return the response as JSON
+    return response()->json($labs, 200);
+}
+
 
     
         // Fetch laboratory by room number to autofill lab name and investigator

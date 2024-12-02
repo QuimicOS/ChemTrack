@@ -43,7 +43,6 @@ class LabelController extends Controller
         'label.principal_investigator' => 'required|string',
         'label.container_size' => 'required|string',
         'label.quantity' => 'required|numeric',
-        //'label.label_size' => 'required|string',
         'label.units' => 'required|string',
         'content' => 'array|nullable',
         'content.*.chemical_name' => 'required_with:content|string',
@@ -457,6 +456,70 @@ class LabelController extends Controller
 // }
 
   
+
+public function getChartData()
+{
+    try {
+        // Query the database using date_created
+        $results = DB::table('label')
+            ->select(
+                DB::raw("
+                    CASE
+                        WHEN (julianday('now') - julianday(date_created)) < 1 THEN 0 -- Today
+                        ELSE CAST((julianday('now') - julianday(date_created)) / 7 AS INTEGER) + 1 -- Group by week
+                    END AS week_number
+                "), 
+                DB::raw("
+                    SUM(CASE 
+                        WHEN units = 'Milliliters' THEN quantity / 1000 -- Convert milliliters to liters
+                        WHEN units = 'Gallons' THEN quantity * 3.78541 -- Convert gallons to liters
+                        WHEN units = 'Liters' THEN quantity -- Already in liters
+                        ELSE 0 
+                    END) AS total_volume
+                "),
+                DB::raw("
+                    SUM(CASE 
+                        WHEN units = 'Grams' THEN quantity / 1000 -- Convert grams to kilograms
+                        WHEN units = 'Pounds' THEN quantity * 0.453592 -- Convert pounds to kilograms
+                        WHEN units = 'Kilograms' THEN quantity -- Already in kilograms
+                        ELSE 0 
+                    END) AS total_weight
+                ")
+            )
+            ->whereIn('status_of_label', [1, 2]) // Only include labels with status 1 or 2
+            ->whereBetween('date_created', [now()->subDays(28), now()]) // Use date_created instead of created_at
+            ->groupBy('week_number')
+            ->orderBy('week_number', 'DESC') // Sort in descending order
+            ->get();
+
+        // Prepare data for charts
+        $labels = [];
+        $volumeData = [];
+        $weightData = [];
+
+        foreach ($results as $row) {
+            if ($row->week_number == 0) {
+                $labels[] = 'Today';
+            } else {
+                $labels[] = 'Week ' . $row->week_number;
+            }
+            $volumeData[] = round($row->total_volume, 2); // Rounded to 2 decimals for cleaner display
+            $weightData[] = round($row->total_weight, 2); // Rounded to 2 decimals for cleaner display
+        }
+
+        return response()->json([
+            'labels' => $labels,
+            'volumeData' => $volumeData,
+            'weightData' => $weightData
+        ]);
+    } catch (\Exception $e) {
+        \Log::error($e->getMessage());
+        return response()->json([
+            'message' => 'Error fetching chart data',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
 
 
 

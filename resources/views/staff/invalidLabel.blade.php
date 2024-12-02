@@ -1,4 +1,4 @@
-@extends('staff/templateStaff')
+@extends('staff.templateStaff')
 
 @section('title', 'Invalidate Label - ChemTrack')
 
@@ -72,7 +72,7 @@
                 <p>Are you sure you want to invalidate this label?</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-danger" onclick="invalidateLabel()">Confirm Invalidate</button>
             </div>
         </div>

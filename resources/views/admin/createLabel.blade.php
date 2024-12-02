@@ -79,10 +79,17 @@
             <legend>Location Details</legend>
             <div class="mb-3">
                 <label for="roomNumber" class="form-label">Room Number</label>
-                <select class="form-select" id="roomNumber" required>
-                    <option value="" selected>Select Room Number</option>
-                </select>
+                <input
+                    type="text"
+                    class="form-control"
+                    id="roomNumber"
+                    placeholder="Type Room Number"
+                    autocomplete="off"
+                    required
+                />
+                <ul id="roomSuggestions" class="list-group" style="position: absolute; z-index: 1000; width: 100%; display: none;"></ul>
             </div>
+            
             <div class="mb-3">
                 <label for="department" class="form-label">Department</label>
                 <input type="text" class="form-control" id="department" placeholder="Select Room Number to autofill" readonly>
@@ -153,8 +160,40 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Existing rows are dynamically populated -->
-            </tbody>
+                <tr>
+                    <td>
+                        <input
+                            type="text"
+                            class="form-control chemical-name"
+                            placeholder="Chemical Name"
+                            list="chemicalList"
+                            required
+                        />
+                    </td>
+                    <td>
+                        <input
+                            type="text"
+                            class="form-control"
+                            name="cas_number[]"
+                            placeholder="CAS Number"
+                            readonly
+                            required
+                        />
+                    </td>
+                    <td>
+                        <input
+                            type="number"
+                            class="form-control percentage"
+                            name="percentage[]"
+                            placeholder="Percentage"
+                            required
+                        />
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger removeRow" disabled>Remove</button>
+                    </td>
+                </tr>
+            </tbody>            
         </table>
         <datalist id="chemicalList"></datalist> <!-- Datalist for autocomplete -->
         <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
@@ -188,6 +227,53 @@
             })
             .catch(error => console.error('Error fetching laboratories:', error));
 
+        const roomNumberInput = document.getElementById("roomNumber");
+        const roomSuggestions = document.getElementById("roomSuggestions");
+
+        // Show matching room numbers as the user types
+        roomNumberInput.addEventListener("input", function () {
+            const query = this.value.trim().toLowerCase();
+            roomSuggestions.innerHTML = ""; // Clear previous suggestions
+
+            if (query.length > 0) {
+                const matches = labData.filter((lab) =>
+                    lab.room_number.toLowerCase().startsWith(query)
+                );
+
+                matches.forEach((match) => {
+                    const suggestionItem = document.createElement("li");
+                    suggestionItem.className = "list-group-item list-group-item-action";
+                    suggestionItem.textContent = match.room_number;
+                    suggestionItem.addEventListener("click", function () {
+                        selectRoom(match);
+                    });
+                    roomSuggestions.appendChild(suggestionItem);
+                });
+
+                roomSuggestions.style.display = "block";
+            } else {
+                roomSuggestions.style.display = "none";
+            }
+        });
+
+        // Hide suggestions when the input loses focus
+        roomNumberInput.addEventListener("blur", function () {
+            setTimeout(() => {
+                roomSuggestions.style.display = "none";
+            }, 200); // Delay to allow click events on suggestions
+        });
+
+        // Populate fields when a room is selected
+        function selectRoom(labDetails) {
+            roomNumberInput.value = labDetails.room_number;
+            document.getElementById("labName").value = labDetails.lab_name || "N/A";
+            document.getElementById("principalInvestigator").value =
+                labDetails.professor_investigator || "N/A";
+            document.getElementById("department").value = labDetails.department || "N/A";
+            document.getElementById("building").value = labDetails.building_name || "N/A";
+            roomSuggestions.style.display = "none";
+        }
+
         // Fetch chemicals and set up autocomplete
         fetch('/chemicals')
             .then(response => response.json())
@@ -197,19 +283,6 @@
                 setupAutocompleteForChemicals(); // Apply autocomplete to all chemical name fields
             })
             .catch(error => console.error('Error fetching chemicals:', error));
-
-        // Update lab details based on room number selection
-        document.getElementById("roomNumber").addEventListener("change", function () {
-            const selectedRoom = this.value;
-            const labDetails = labData.find(lab => lab.room_number === selectedRoom);
-
-            if (labDetails) {
-            document.getElementById("labName").value = labDetails.lab_name || "N/A";
-            document.getElementById("principalInvestigator").value = labDetails.professor_investigator || "N/A";
-            document.getElementById("department").value = labDetails.department || "N/A";
-            document.getElementById("building").value = labDetails.building_name || "N/A";
-            }
-        });
 
         // Add a new row for chemicals in the table
         document.getElementById('addRow').addEventListener('click', function () {
@@ -240,51 +313,55 @@
         });
         }
 
-    // Populate the datalist for chemical autocomplete
-    function populateChemicalAutocomplete(data) {
-        const chemicalList = document.getElementById('chemicalList');
-        chemicalList.innerHTML = ''; // Clear existing options
 
-        data.forEach(chemical => {
-            const option = document.createElement('option');
-            option.value = chemical.chemical_name;
-            option.setAttribute("data-cas", chemical.cas_number);
-            chemicalList.appendChild(option);
-        });
-    }
+// Setup autocomplete for a specific input field
+function populateChemicalAutocomplete(data) {
+    const chemicalList = document.getElementById("chemicalList");
+    chemicalList.innerHTML = ""; // Clear existing options
 
-    // Setup autocomplete for a specific input field
-    function setupAutocomplete(inputElement, dataList) {
-        inputElement.addEventListener("input", function () {
-            const val = this.value.toLowerCase();
-            const matchingChemical = dataList.find(chemical => chemical.chemical_name.toLowerCase() === val);
+    data.forEach((chemical) => {
+        const option = document.createElement("option");
+        option.value = `${chemical.chemical_name} (CAS: ${chemical.cas_number})`; // Display both name and CAS number
+        option.setAttribute("data-cas", chemical.cas_number);
+        option.setAttribute("data-name", chemical.chemical_name); // Add the name attribute for later use
+        chemicalList.appendChild(option);
+    });
+}
 
-            if (matchingChemical) {
-                inputElement.closest("tr").querySelector("input[name='cas_number[]']").value = matchingChemical.cas_number;
-            } else {
-                inputElement.closest("tr").querySelector("input[name='cas_number[]']").value = "";
-            }
-        });
+// Setup autocomplete for a specific input field
+function setupAutocomplete(inputElement, dataList) {
+    inputElement.addEventListener("blur", function () {
+        const val = this.value.trim();
+        const selectedOption = Array.from(document.getElementById("chemicalList").options).find(
+            (option) => option.value === val
+        );
 
-        // Enforce valid selection
-        inputElement.addEventListener("blur", function () {
-            const val = this.value.toLowerCase();
-            const matchingChemical = dataList.find(chemical => chemical.chemical_name.toLowerCase() === val);
+        if (selectedOption) {
+            const casNumber = selectedOption.getAttribute("data-cas");
+            const chemicalName = selectedOption.getAttribute("data-name");
 
-            if (!matchingChemical) {
-                this.value = "";
-                this.closest("tr").querySelector("input[name='cas_number[]']").value = "";
-                alert("Please select a valid chemical from the list.");
-            }
-        });
-    }
+            // Set the CAS number in the related field
+            inputElement.closest("tr").querySelector("input[name='cas_number[]']").value = casNumber;
 
-    // Apply autocomplete to all existing chemical name fields
-    function setupAutocompleteForChemicals() {
-        document.querySelectorAll('.chemical-name').forEach(input => {
-            setupAutocomplete(input, chemicalData);
-        });
-    }
+            // Set only the chemical name in the input field
+            this.value = chemicalName;
+        } else {
+            // Clear invalid input
+            this.value = ""; 
+            inputElement.closest("tr").querySelector("input[name='cas_number[]']").value = "";
+            alert("Please select a valid chemical from the list.");
+        }
+    });
+}
+
+
+// Apply autocomplete to all existing and new rows
+function setupAutocompleteForChemicals() {
+    document.querySelectorAll(".chemical-name").forEach((input) => {
+        setupAutocomplete(input, chemicalData);
+    });
+}
+
 
     // Add event listeners to all "Remove" buttons
     function addRemoveRowListeners() {
@@ -353,6 +430,16 @@
             percentage: parseFloat(row.cells[2].querySelector('input').value),
         }));
 
+        // Check for duplicate chemical names and CAS numbers
+        const duplicates = contentData.filter((chemical, index, self) => 
+            self.findIndex(c => c.chemical_name === chemical.chemical_name && c.cas_number === chemical.cas_number) !== index
+        );
+
+        if (duplicates.length > 0) {
+            alert(`Duplicate chemical entries found: ${duplicates.map(d => `${d.chemical_name} (CAS: ${d.cas_number})`).join(", ")}`);
+            return; // Stop the submission
+        }
+
         fetch('/labels', {
             method: 'POST',
             headers: {
@@ -401,9 +488,9 @@
 function generatePDF(labelData) {
     const { jsPDF } = window.jspdf;
 
-    const pageWidth = 215.9;  // 8.5 inches in mm
+    const pageWidth = 215.9; // 8.5 inches in mm
     const pageHeight = 279.4; // 11 inches in mm
-    let labelHeight, labelWidth, offsetX, offsetY, fontSize, lineSpacing, tableColumnSpacing, additionalSpacing;
+    let labelHeight, labelWidth, offsetX, offsetY, fontSize, lineSpacing, tableColumnSpacing, additionalSpacing, maxChemicals, noteOffset;
 
     // Fetch the labelSize from the form
     const labelSize = document.getElementById("labelSize").value;
@@ -411,7 +498,7 @@ function generatePDF(labelData) {
     // Initialize the PDF with A4 (8.5 x 11 inch) dimensions
     let doc = new jsPDF({ unit: "mm", format: [pageWidth, pageHeight] });
 
-    // Adjust label dimensions based on label size
+    // Adjust label dimensions and note offset based on label size
     if (labelSize === "Small") {
         labelHeight = 25.4;
         labelWidth = 25.4;
@@ -421,6 +508,8 @@ function generatePDF(labelData) {
         lineSpacing = 2.5;
         tableColumnSpacing = { chemical: 2, cas: 12, percent: 20 };
         additionalSpacing = 1;
+        maxChemicals = 2;
+        noteOffset = 3; // Vertical offset for the note
     } else if (labelSize === "Medium") {
         labelHeight = 76.2;
         labelWidth = 50.8;
@@ -430,6 +519,8 @@ function generatePDF(labelData) {
         lineSpacing = 4.5;
         tableColumnSpacing = { chemical: 2, cas: 20, percent: 34 };
         additionalSpacing = 2;
+        maxChemicals = 5;
+        noteOffset = 6;
     } else if (labelSize === "Large") {
         labelHeight = 152.4;
         labelWidth = 101.6;
@@ -439,8 +530,9 @@ function generatePDF(labelData) {
         lineSpacing = 7.5;
         tableColumnSpacing = { chemical: 15, cas: 60, percent: 80 };
         additionalSpacing = 6;
+        maxChemicals = 8;
+        noteOffset = 10;
     } else {
-        // Add a fallback case for invalid sizes
         console.error('Invalid label size:', labelSize);
         alert('Invalid label size selected. Please select a valid label size.');
         return; // Prevent further execution
@@ -449,6 +541,18 @@ function generatePDF(labelData) {
     // Draw border around the label
     doc.rect(offsetX, offsetY, labelWidth, labelHeight);
 
+    // Check if there are more chemicals than can be displayed
+    const totalChemicals = (labelData.chemicals || []).length;
+    if (totalChemicals > maxChemicals) {
+        doc.setFont("Helvetica", "italic");
+        doc.setFontSize(3);
+        doc.text(
+            "Note: Additional chemicals are listed in the system.",
+            offsetX + labelWidth / 2,
+            offsetY + 1, // Adjusted position to prevent overlap
+            { align: "center" }
+        );
+    }
     // Label Header
     doc.setFont("Helvetica", "bold");
     if (labelSize === "Small"){

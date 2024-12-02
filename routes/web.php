@@ -34,7 +34,7 @@ Route::get('auth/saml2/arrival', function () {
     $user = Auth::user();
 
     if (!$user) {
-        return redirect()->route('aboutUs');
+        return redirect()->route('contactUs');
     }
 
 
@@ -179,9 +179,11 @@ Route::middleware(['auth', AdminMiddleware::class])->group(function(){
     //     return view('admin/manageQuiz');
     // })->name('admin/manageQuiz');
 
-
-
-
+    ////   Quiz Management Routes
+    Route::get('admin/manageQuiz', [ManageQuizController::class, 'show'])->name('admin.manageQuiz.show');
+    Route::post('admin/manageQuiz/save', [ManageQuizController::class, 'save'])->name('admin.manageQuiz.save');
+    //Route::post('/update-certification-status', [UserController::class, 'updateCertificationStatus'])->name('update.certificate');
+    
     //Statistics for Admin dashboard
     Route::get('/labels/last7days', [LabelController::class, 'countLabelsLast7Days']);
     Route::get('/labels/weight', [LabelController::class, 'calculateTotalWeight']); 
@@ -189,83 +191,89 @@ Route::middleware(['auth', AdminMiddleware::class])->group(function(){
     Route::get('/users/new-members', [UserController::class, 'countNewMembersLast30Days']);
     Route::get('/pickup-requests/pending', [PickupRequestController::class, 'countPendingPickupRequests']);
     Route::get('/chemicalCreatedCount', [ChemicalController::class, 'chemicalsMadeThisMonth']); 
+});
+
+
+
+    //Statistics for Admin dashboard
+    // Route::get('/labels/last7days', [LabelController::class, 'countLabelsLast7Days']);
+    // Route::get('/labels/weight', [LabelController::class, 'calculateTotalWeight']); 
+    // Route::get('/labels/volume', [LabelController::class, 'calculateTotalVolume']); 
+    // Route::get('/users/new-members', [UserController::class, 'countNewMembersLast30Days']);
+    // Route::get('/pickup-requests/pending', [PickupRequestController::class, 'countPendingPickupRequests']);
+    // Route::get('/chemicalCreatedCount', [ChemicalController::class, 'chemicalsMadeThisMonth']); 
 
 
 
 
 
     //Search Label by ID
-    Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
+    // Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
 
-    //For Create Label has ADMIN
-
-
-    //For EDIT LABEL
-    Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
+    // //For Create Label has ADMIN
 
 
+    // //For EDIT LABEL
+    // Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
 
 
 
 
-    ////For Role Managemnt
-    Route::delete('/users/{id}', [UserController::class, 'deleteUserById']);
-
-    Route::post('/newUsers', [UserController::class, 'createUser']); //Create a new user has Admin only GOODIE
-
-    Route::get('/users/search/{email}', [UserController::class, 'searchUserByEmail']); //GOODIE
-
-    Route::get('/users/certified', [UserController::class, 'getCertifiedUsers']); // // Admin get a list of users where certification status is TRUE
-
-    Route::get('/users/requested', [UserController::class, 'getRequestedUsers']); // user_status requested
-
-    Route::put('userInvalid/{id}',[UserController::class, 'invalidatesUser']); // status to denied
-
-    Route::put('userStatus/{id}',[UserController::class, 'authenticateUser']); // update the user status to Accepted, only an admin can do it
-
-    Route::get('/users/{id}', [UserController::class, 'getUserDetailsByID']);
-
-    Route::put('/users/{id}', [UserController::class, 'roleManagementEditUser']);// update the user room number and role only
-    Route::put('/users/{id}/expire-certification', [UserController::class, 'expireUserCertification']);
 
 
+    // ////For Role Managemnt
+    // Route::delete('/users/{id}', [UserController::class, 'deleteUserById']);
+
+    // Route::post('/newUsers', [UserController::class, 'createUser']); //Create a new user has Admin only GOODIE
+
+    // Route::get('/users/search/{email}', [UserController::class, 'searchUserByEmail']); //GOODIE
+
+    // Route::get('/users/certified', [UserController::class, 'getCertifiedUsers']); // // Admin get a list of users where certification status is TRUE
+
+    // Route::get('/users/requested', [UserController::class, 'getRequestedUsers']); // user_status requested
+
+    // Route::put('userInvalid/{id}',[UserController::class, 'invalidatesUser']); // status to denied
+
+    // Route::put('userStatus/{id}',[UserController::class, 'authenticateUser']); // update the user status to Accepted, only an admin can do it
+
+    // Route::get('/users/{id}', [UserController::class, 'getUserDetailsByID']);
+
+    // Route::put('/users/{id}', [UserController::class, 'roleManagementEditUser']);// update the user room number and role only
+    // Route::put('/users/{id}/expire-certification', [UserController::class, 'expireUserCertification']);
 
 
-    //Summary
-    Route::get('/unwanted-material-summary', [LabelController::class, 'unwantedMaterialSummary']);
 
-    //Memorandum
-    Route::get('/memorandum', [LabelController::class, 'memorandum']);
 
-    //For INVALIDATE LABEL
-    Route::put('/invalid/{id}', action: [LabelController::class, 'invalidateLabel']); 
+    // //Summary
+    // Route::get('/unwanted-material-summary', [LabelController::class, 'unwantedMaterialSummary']);
+
+    // //Memorandum
+    // Route::get('/memorandum', [LabelController::class, 'memorandum']);
+
+    // //For INVALIDATE LABEL
+    // Route::put('/invalid/{id}', action: [LabelController::class, 'invalidateLabel']); 
     
-    //For Laboratories
-    Route::get('/labs', [LaboratoryController::class, 'getAllLabs']);  // GET all labs ONLY ADMIN
+    // //For Laboratories
+    // Route::get('/labs', [LaboratoryController::class, 'getAllLabs']);  // GET all labs ONLY ADMIN
     
-    Route::get('/labs/room', [LaboratoryController::class, 'searchByRoomNumber']);
+    // Route::get('/labs/room', [LaboratoryController::class, 'searchByRoomNumber']);
 
-    Route::get('/labs/{lab_id}', [LaboratoryController::class, 'getLabDetails']);  // GET a lab by ID ONLY ADMIN
+    // Route::get('/labs/{lab_id}', [LaboratoryController::class, 'getLabDetails']);  // GET a lab by ID ONLY ADMIN
 
-    Route::post('/labs', [LaboratoryController::class, 'addLab']); // CREATE LAB ONLY ADMIN
+    // Route::post('/labs', [LaboratoryController::class, 'addLab']); // CREATE LAB ONLY ADMIN
 
-    Route::put('/editLabs/{lab_id}', [LaboratoryController::class, 'editlab']); // UPDATE LAB ONLY ADMIN
+    // Route::put('/editLabs/{lab_id}', [LaboratoryController::class, 'editlab']); // UPDATE LAB ONLY ADMIN
 
-    Route::put('/invalidateLabs/{lab_id}', [LaboratoryController::class, 'invalidateLab']); //ONLY ADMIN, reality is that it will not be deleted but the lab status changed to INVALID, LAB HAS 3 STATUS (ASSIGNED, UNASSIGNED, INVALID)
+    // Route::put('/invalidateLabs/{lab_id}', [LaboratoryController::class, 'invalidateLab']); //ONLY ADMIN, reality is that it will not be deleted but the lab status changed to INVALID, LAB HAS 3 STATUS (ASSIGNED, UNASSIGNED, INVALID)
 
-    Route::put('/lab/{id}/supervisor', [LaboratoryController::class, 'assignLabSupervisor']); // ONLY ADMIN can assign a supervisor to a lab
+    // Route::put('/lab/{id}/supervisor', [LaboratoryController::class, 'assignLabSupervisor']); // ONLY ADMIN can assign a supervisor to a lab
 
 
     ////   Quiz Management Routes
-    Route::get('admin/manageQuiz', [ManageQuizController::class, 'show'])->name('admin.manageQuiz.show');
-    Route::post('admin/manageQuiz/save', [ManageQuizController::class, 'save'])->name('admin.manageQuiz.save');
-    Route::post('/update-certification-status', [UserController::class, 'updateCertificationStatus'])->name('update.certificate');
+    // Route::get('admin/manageQuiz', [ManageQuizController::class, 'show'])->name('admin.manageQuiz.show');
+    // Route::post('admin/manageQuiz/save', [ManageQuizController::class, 'save'])->name('admin.manageQuiz.save');
+    // Route::post('/update-certification-status', [UserController::class, 'updateCertificationStatus'])->name('update.certificate');
 
-
-
-
-
-});
 
 
 
@@ -436,41 +444,76 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
+
+//For Create Label has ADMIN
+
+
+//For EDIT LABEL
+Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
+
+
+
+
+
+
+////For Role Managemnt
+Route::delete('/users/{id}', [UserController::class, 'deleteUserById']);
+Route::post('/newUsers', [UserController::class, 'createUser']); //Create a new user has Admin only GOODIE
+Route::get('/users/search/{email}', [UserController::class, 'searchUserByEmail']); //GOODIE
+Route::get('/users/certified', [UserController::class, 'getCertifiedUsers']); // // Admin get a list of users where certification status is TRUE
+Route::get('/users/requested', [UserController::class, 'getRequestedUsers']); // user_status requested
+Route::put('userInvalid/{id}',[UserController::class, 'invalidatesUser']); // status to denied
+Route::put('userStatus/{id}',[UserController::class, 'authenticateUser']); // update the user status to Accepted, only an admin can do it
+Route::get('/users/{id}', [UserController::class, 'getUserDetailsByID']);
+Route::put('/users/{id}', [UserController::class, 'roleManagementEditUser']);// update the user room number and role only
+Route::put('/users/{id}/expire-certification', [UserController::class, 'expireUserCertification']);
+
+
+
+
+//Summary
+Route::get('/unwanted-material-summary', [LabelController::class, 'unwantedMaterialSummary']);
+//Memorandum
+Route::get('/memorandum', [LabelController::class, 'memorandum']);
+//For INVALIDATE LABEL
+Route::put('/invalid/{id}', action: [LabelController::class, 'invalidateLabel']); 
+//For Laboratories
+Route::get('/labs', [LaboratoryController::class, 'getAllLabs']);  // GET all labs ONLY ADMIN
+Route::get('/labs/room', [LaboratoryController::class, 'searchByRoomNumber']);
+Route::get('/labs/{lab_id}', [LaboratoryController::class, 'getLabDetails']);  // GET a lab by ID ONLY ADMIN
+Route::post('/labs', [LaboratoryController::class, 'addLab']); // CREATE LAB ONLY ADMIN
+Route::put('/editLabs/{lab_id}', [LaboratoryController::class, 'editlab']); // UPDATE LAB ONLY ADMIN
+Route::put('/invalidateLabs/{lab_id}', [LaboratoryController::class, 'invalidateLab']); //ONLY ADMIN, reality is that it will not be deleted but the lab status changed to INVALID, LAB HAS 3 STATUS (ASSIGNED, UNASSIGNED, INVALID)
+Route::put('/lab/{id}/supervisor', [LaboratoryController::class, 'assignLabSupervisor']); // ONLY ADMIN can assign a supervisor to a lab
+
+
+
 
 Route::get('/laboratories', [LaboratoryController::class, 'getAllLabs']);
 Route::get('/laboratories/{room_number}', [LaboratoryController::class, 'getLabByRoomNumber']);
-
 // Chemical Routes
 //Route::get('/chemicals', [ChemicalController::class, 'getAllChemicals']);
 Route::get('/chemicals/{chemical_name}', [ChemicalController::class, 'getCASNumberByChemicalName']);
 Route::get('/chemicals', [ChemicalController::class, 'index']);
-
-
 // Content Routes (For adding chemicals with percentages to a label)
 //Route::post('/contents', [ContentController::class, 'store']);
-
 // Label Routes
 Route::post('/labels', [LabelController::class, 'store'])->name('labels.store');
 Route::post('/contents', [ContentController::class, 'store'])->name('contents.store');
 
 
-
+Route::get('/chart-data', [LabelController::class, 'getChartData']);
 
 
 
 
 Route::get('/labels/{id}', [LabelController::class, 'show']);
-
 Route::post('/createPickupRequest', [PickupRequestController::class, 'createPickupRequest']);
-
 Route::get('/getPickupRequests', [PickupRequestController::class, 'getAllPickupRequests']);
-
 Route::put('/pickupInvalidate', [PickupRequestController::class, 'invalidatePickupRequest']);
-
 Route::get('/pickupSearch', [PickupRequestController::class, 'searchPickupRequests']);
-
 Route::put('/pickupComplete', [PickupRequestController::class, 'completePickupRequest']);
-
 Route::put('/editLabel/{id}', [LabelController::class, 'updateLabel'])->name('editLabel');
 
 
@@ -511,15 +554,10 @@ Route::get('/chemicalSearch', [ChemicalController::class, 'searchChemicalName'])
    
 Route::get('/labs', [LaboratoryController::class, 'getAllLabs']);  // GET all labs ONLY ADMIN
 Route::get('/labs/room', [LaboratoryController::class, 'searchByRoomNumber']);
-
 Route::get('/labs/{lab_id}', [LaboratoryController::class, 'getLabDetails']);  // GET a lab by ID ONLY ADMIN
-
 Route::post('/labs', [LaboratoryController::class, 'addLab']); // CREATE LAB ONLY ADMIN
-
 Route::put('/editLabs/{lab_id}', [LaboratoryController::class, 'editlab']); // UPDATE LAB ONLY ADMIN
-
 Route::put('/invalidateLabs/{lab_id}', [LaboratoryController::class, 'invalidateLab']); //ONLY ADMIN, reality is that it will not be deleted but the lab status changed to INVALID, LAB HAS 3 STATUS (ASSIGNED, UNASSIGNED, INVALID)
-
 Route::put('/lab/{id}/supervisor', [LaboratoryController::class, 'assignLabSupervisor']); // ONLY ADMIN can assign a supervisor to a lab
 
 

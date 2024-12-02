@@ -208,7 +208,7 @@ function populateTable(data) {
         const row = [
             request['Pickup Request ID'] || '-',
             request['Label ID'] || '-',
-            request['Requested By'] || '-',
+            request['Requested By Email'] || '-',
             request['Request Date'] || '-',
             request['Chemicals'] ? request['Chemicals'].join(', ') : '-',
             request['Building Name'] || '-',
