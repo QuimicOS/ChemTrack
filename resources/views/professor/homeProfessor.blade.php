@@ -1,6 +1,6 @@
 @extends('professor/templateProfessor')
 
-@section('title', 'Admin Dashboard - ChemTrack')
+@section('title', 'Professor Dashboard - ChemTrack')
 
 @section('content')
 <head>

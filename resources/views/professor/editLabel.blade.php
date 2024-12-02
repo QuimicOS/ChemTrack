@@ -1,4 +1,4 @@
-@extends('professor.templateProfessor')
+@extends('professor.templateProfessor') 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 @section('title', 'Edit Label - ChemTrack')

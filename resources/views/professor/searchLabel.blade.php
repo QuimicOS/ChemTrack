@@ -1,5 +1,6 @@
 @extends('professor.templateProfessor')
 
+
 @section('title', 'Search Label - ChemTrack')
 
 @section('content')

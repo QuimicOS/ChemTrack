@@ -1,6 +1,6 @@
 @extends('professor.templateProfessor')
 
-@section('title', 'Role Request - ChemTrack')
+@section('title', 'User Request - ChemTrack')
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -34,7 +34,7 @@
 <div class="content-area container">
     <!-- Title -->
     <div class="text-center mb-4">
-        <h1 class="display-5">Role Request</h1>
+        <h1 class="display-5">User Request</h1>
         <hr class="my-4">
     </div>
 
@@ -91,7 +91,7 @@
 
         <!-- Submit Request Button (Initially Disabled) -->
         <div class="text-center">
-            <button type="button" class="btn btn-primary" id="submitBtn" disabled>Submit Request</button>
+            <button type="button" class="btn btn-success" id="submitBtn" disabled>Submit Request</button>
         </div>
     </fieldset>
     </form>
