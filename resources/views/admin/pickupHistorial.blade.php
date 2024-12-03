@@ -188,7 +188,7 @@ $(document).ready(function() {
 });
 
 function fetchPickupRequests() {
-    fetch('/pickupSearch')
+    fetch('/AdminpickupSearch')
         .then(response => response.json())
         .then(data => {
             populateTable(data.pickup_requests);
@@ -240,7 +240,7 @@ function showCompletionModal(pickupId, method) {
 }
 
 function completePickup(pickupId, method) {
-    fetch('/pickupComplete', {
+    fetch('/AdminpickupComplete', {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',

@@ -255,7 +255,7 @@ function searchRoom() {
     const searchValue = searchRoomField.value.trim().toLowerCase(); // Convert search term to lowercase
     if (!searchValue) return alert('Please enter a room number to search.');
 
-    fetch(`/labs/room?room_number=${encodeURIComponent(searchValue)}`, {
+    fetch(`/Adminlabs/room?room_number=${encodeURIComponent(searchValue)}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -283,7 +283,7 @@ function searchRoom() {
 
 
 function editLab(id) {
-    fetch(`/labs/${id}`, {
+    fetch(`/Adminlabs/${id}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -336,7 +336,7 @@ function saveEdit() {
         department_director: document.getElementById('editDepartmentDirector').value.trim(),
     };
 
-    fetch(`/editLabs/${labId}`, {
+    fetch(`/AdmineditLabs/${labId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -373,7 +373,7 @@ function deleteLab(id) {
         return;
     }
 
-    fetch(`/invalidateLabs/${id}`, {
+    fetch(`/AdmininvalidateLabs/${id}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -418,7 +418,7 @@ function validateAndAddLab() {
     };
 
     // Directly submit the new laboratory data to the backend
-    fetch('/labs', {
+    fetch('/Adminlabs', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

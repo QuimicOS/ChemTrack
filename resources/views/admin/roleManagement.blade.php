@@ -444,7 +444,7 @@ function validateForm() {
         rooms: roomNumbers,
     };
 
-    fetch('/newUsers', {
+    fetch('/AdminnewUsers', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -496,7 +496,7 @@ function renderSubmittedRequestsTable() {
 
     tableBody.innerHTML = ''; // Clear existing table rows
 
-    fetch('/users/requested', {
+    fetch('/Adminusers/requested', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -541,7 +541,7 @@ function renderSubmittedRequestsTable() {
 // Function to accept a user request
 function acceptRequest(userId) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    fetch(`/userStatus/${userId}`, {
+    fetch(`/AdminuserStatus/${userId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -578,7 +578,7 @@ function denyRequest(userId) {
     // Fetch user details to populate modal
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    fetch(`/users/${userId}`, {
+    fetch(`/Adminusers/${userId}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -614,7 +614,7 @@ function denyRequest(userId) {
 function confirmDeny(userId) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    fetch(`/userInvalid/${userId}`, {
+    fetch(`/AdminuserInvalid/${userId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -692,7 +692,7 @@ function searchUsername() {
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    fetch(`/users/search/${encodeURIComponent(searchValue)}`, {
+    fetch(`/Adminusers/search/${encodeURIComponent(searchValue)}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -721,7 +721,7 @@ function openEditModal(userId) {
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    fetch(`/users/${userId}`, {
+    fetch(`/Adminusers/${userId}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -844,7 +844,7 @@ function saveEdit() {
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    fetch(`/users/${userId}`, {
+    fetch(`/Adminusers/${userId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -895,7 +895,7 @@ function openDeleteModal(userId) {
 function confirmDelete(userId) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    fetch(`/users/${userId}`, { // Adjusted endpoint to match the delete by ID route
+    fetch(`/Adminusers/${userId}`, { // Adjusted endpoint to match the delete by ID route
         method: 'DELETE', // Use DELETE method for deletion
         headers: {
             'Content-Type': 'application/json',
@@ -949,7 +949,7 @@ function fetchCertifiedUsers() {
     tableBody.innerHTML = ''; // Clear existing rows
 
     // Fetch certified users
-    fetch('/users/certified', {
+    fetch('/Adminusers/certified', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

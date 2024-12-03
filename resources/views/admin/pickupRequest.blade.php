@@ -232,7 +232,7 @@
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    fetch(`/createPickupRequest`, {
+    fetch(`/AdmincreatePickupRequest`, {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',

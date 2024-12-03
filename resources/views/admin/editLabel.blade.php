@@ -464,7 +464,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return; // Stop the submission
         }
 
-        fetch(`/editLabel/${labelID}`, {
+        fetch(`/AdmineditLabel/${labelID}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -478,7 +478,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     alert('Label updated successfully!');
 
                     // Fetch the updated label data for printing
-                    fetch(`/label/${labelID}`)
+                    fetch(`/Adminlabel/${labelID}`)
                         .then(response => response.json())
                         .then(updatedLabelData => {
                             if (updatedLabelData.error) {

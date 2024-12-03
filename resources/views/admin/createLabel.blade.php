@@ -438,7 +438,7 @@ function setupAutocompleteForChemicals() {
             return; // Stop the submission
         }
 
-        fetch('/labels', {
+        fetch('/Adminlabels', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -262,7 +262,7 @@ function addChemical() {
     const casNumber = casNumberInput.value.trim();
 
     // Check if chemical already exists
-    fetch(`/chemicalSearch?chemical_name=${encodeURIComponent(chemicalName)}`)
+    fetch(`/AdminchemicalSearch?chemical_name=${encodeURIComponent(chemicalName)}`)
         .then(response => {
             if (response.ok) {
                 return response.json(); // Parse JSON for valid responses
@@ -286,7 +286,7 @@ function addChemical() {
             }
 
             // Proceed with adding the chemical
-            return fetch('/chemicalCreate', {
+            return fetch('/AdminchemicalCreate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -353,7 +353,7 @@ function searchChemical() {
     const chemicalName = searchChemicalInput.value.trim();
     if (!chemicalName) return alert("Please enter a chemical name to search."); // Only prompt if input is empty
 
-    fetch(`/chemicalSearch?chemical_name=${chemicalName}`, {
+    fetch(`/AdminchemicalSearch?chemical_name=${chemicalName}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -398,7 +398,7 @@ function saveEdit() {
     const updatedCasNumber = editCasNumberInput.value.trim();
 
     // Check if the edited chemical already exists in the database
-    fetch(`/chemicalSearch?chemical_name=${encodeURIComponent(updatedChemicalName)}`)
+    fetch(`/AdminchemicalSearch?chemical_name=${encodeURIComponent(updatedChemicalName)}`)
         .then(response => {
             if (response.ok) {
                 return response.json(); // Parse JSON for valid responses
@@ -427,7 +427,7 @@ function saveEdit() {
             }
 
             // Proceed with the update if no duplicates are found
-            return fetch(`/chemicalModify`, {
+            return fetch(`/AdminchemicalModify`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -458,7 +458,7 @@ function saveEdit() {
 
 // Delete chemical
 function deleteChemical(chemicalId) {
-    fetch(`/chemicalInvalidate`, {
+    fetch(`/AdminchemicalInvalidate`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -516,7 +516,7 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
     }
 
     // Call the delete API
-    fetch(`/chemicalInvalidate`, {
+    fetch(`/AdminchemicalInvalidate`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
