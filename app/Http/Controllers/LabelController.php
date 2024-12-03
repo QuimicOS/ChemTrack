@@ -460,13 +460,13 @@ class LabelController extends Controller
 public function getChartData()
 {
     try {
-        // Query the database using date_created
+        // Query the database using MySQL date functions
         $results = DB::table('label')
             ->select(
                 DB::raw("
                     CASE
-                        WHEN (julianday('now') - julianday(date_created)) < 1 THEN 0 -- Today
-                        ELSE CAST((julianday('now') - julianday(date_created)) / 7 AS INTEGER) + 1 -- Group by week
+                        WHEN DATEDIFF(NOW(), date_created) < 1 THEN 0 -- Today
+                        ELSE FLOOR(DATEDIFF(NOW(), date_created) / 7) + 1 -- Group by week
                     END AS week_number
                 "), 
                 DB::raw("
@@ -520,6 +520,7 @@ public function getChartData()
         ], 500);
     }
 }
+
 
 
 
@@ -735,7 +736,8 @@ public function unwantedMaterialSummary(Request $request)
                     WHEN label.units = 'Pounds' THEN (label.quantity * (contents.percentage / 100)) * 0.453592 -- Convert lbs to kg
                     WHEN label.units = 'Kilograms' THEN (label.quantity * (contents.percentage / 100)) -- Already in kg
                     ELSE 0 END) AS total_solid_quantity")
-            );
+            )
+            ->where('label.status_of_label', '!=', 0); // Exclude labels with status 0
 
         // Filter by date range if provided
         if ($request->filled('start_date') && $request->filled('end_date')) {
@@ -757,6 +759,7 @@ public function unwantedMaterialSummary(Request $request)
         return response()->json(['error' => 'Internal Server Error'], 500);
     }
 }
+
 
 
 

@@ -5,7 +5,7 @@
 @section('content')
 <div class="container" style="max-width: 700px; margin: 80px auto;">
     <div class="text-center mb-4">
-        <h1 class="display-5">Waste Management Quiz</h1>
+        <h1 class="display-5">Manejo de Materiales Químicos en los Laboratorios Quiz</h1>
         <hr class="my-4">
     </div>
 
