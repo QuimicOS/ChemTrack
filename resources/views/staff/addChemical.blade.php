@@ -113,7 +113,7 @@ function addChemical() {
             }
 
             // Proceed to add the chemical
-            return fetch('/chemicalCreate', {
+            return fetch('/chemicalCreateStaff', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
