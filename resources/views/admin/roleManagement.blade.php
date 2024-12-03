@@ -235,7 +235,7 @@
                     Are you sure you want to delete this user?
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" id="confirmDeleteButton" class="btn btn-danger">Delete</button>
                 </div>
             </div>
@@ -912,6 +912,9 @@ function confirmDelete(userId) {
         .then(data => {
             alert(`User deleted successfully.`);
             renderSubmittedRequestsTable(); // Refresh table
+            // Hide the delete modal
+            const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteUserModal'));
+            deleteModal.hide();
         })
         .catch(error => {
             console.error(error);

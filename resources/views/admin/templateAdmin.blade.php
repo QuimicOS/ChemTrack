@@ -161,7 +161,7 @@
           <a href="{{ route('admin/editLabel') }}" class="menu-button">Edit Label</a>
           <a href="{{ route('admin/invalidLabel') }}" class="menu-button">Invalidate Label</a>
           <a href="{{ route('admin/pickupRequest') }}" class="menu-button">Pickup Request</a>
-          <a href="{{ route('admin/invalidPickup') }}" class="menu-button">Invalidate Pickup Request</a>
+          <a href="{{ route('admin/invalidPickup') }}" class="menu-button">Manage Pickup Request</a>
           <a href="{{ route('admin/pickupHistorial') }}" class="menu-button">Pickup Historial</a>
           <a href="{{ route('admin/manageChemical') }}" class="menu-button">Manage Chemical</a>
           <a href="{{ route('admin/roleManagement') }}" class="menu-button">Role Management</a>

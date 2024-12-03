@@ -145,7 +145,7 @@
             </a>
             <a href="{{ route('admin/invalidPickup') }}" class="middle-option">
                 <img src="{{ asset('photos/invalidRequest.png') }}" alt="Invalidate Pickup Request Image" class="option-image">
-                <h3>Invalidate Pickup</h3>
+                <h3>Manage Pickup</h3>
             </a>
             <a href="{{ route('admin/pickupHistorial') }}" class="middle-option">
                 <img src="{{ asset('photos/PickupHistorial.png') }}" alt="Pickup Historial Image" class="option-image">

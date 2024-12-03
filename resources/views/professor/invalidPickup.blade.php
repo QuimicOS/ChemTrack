@@ -1,7 +1,7 @@
 @extends('professor/templateProfessor')
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
-@section('title', 'Invalidate Pickup - ChemTrack')
+@section('title', 'Manage Pickup Request - ChemTrack')
 
 @section('content')
 <style>
@@ -34,7 +34,7 @@
 
 <div class="content-area container">
     <div class="text-center mb-4">
-        <h1 class="display-5">Invalidate Pickup Request</h1>
+        <h1 class="display-5">Manage Pickup Request</h1>
         <hr class="my-4">
     </div>
 

@@ -104,7 +104,7 @@
             </a>
             <a href="{{ route('professor/invalidPickup') }}" class="middle-option">
                 <img src="{{ asset('photos/invalidRequest.png') }}" alt="Invalidate Pickup Request Image" class="option-image">
-                <h3>Invalidate Pickup</h3>
+                <h3>Manage Pickup</h3>
             </a>
             <a href="{{ route('professor/addChemical') }}" class="middle-option">
                 <img src="{{ asset('photos/manageChemicals.png') }}" alt="Manage Chemicals Image" class="option-image">
