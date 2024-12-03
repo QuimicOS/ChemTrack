@@ -216,7 +216,7 @@ function confirmInvalidate() {
         return;
     }
 
-    fetch('/pickupInvalidate', {
+    fetch('/StaffpickupInvalidate', {
     method: 'PUT',
     headers: {
         'Content-Type': 'application/json',
