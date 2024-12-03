@@ -91,7 +91,7 @@ function addChemical() {
     const casNumber = casNumberInput.value.trim();
 
     // Check if chemical already exists
-    fetch(`/chemicalSearch?chemical_name=${encodeURIComponent(chemicalName)}`)
+    fetch(`/ProfchemicalSearch?chemical_name=${encodeURIComponent(chemicalName)}`)
         .then(response => {
             if (response.ok) {
                 return response.json(); // Parse JSON for valid responses

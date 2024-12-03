@@ -399,7 +399,7 @@ function setupAutocompleteForChemicals() {
             return; // Stop the submission
         }
 
-        fetch('/labels', {
+        fetch('/Stafflabels', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
