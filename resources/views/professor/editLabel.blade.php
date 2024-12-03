@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", function () {
      * Fetch and populate form with label data
      */
     function loadLabelData(labelId) {
-        fetch(`/label/${labelId}`)
+        fetch(`/Proflabel/${labelId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
@@ -431,7 +431,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return; // Stop the submission
         }
 
-        fetch(`/editLabel/${labelID}`, {
+        fetch(`/ProfeditLabel/${labelID}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -445,7 +445,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     alert('Label updated successfully!');
 
                     // Fetch the updated label data for printing
-                    fetch(`/label/${labelID}`)
+                    fetch(`/Proflabel/${labelID}`)
                         .then(response => response.json())
                         .then(updatedLabelData => {
                             if (updatedLabelData.error) {

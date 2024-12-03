@@ -367,31 +367,31 @@ Route::middleware(['auth',ProfessorMiddleware::class])->group(function(){
 
 
     //----------------------------Search Label by id-------------------//
-    Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
+    Route::get('/Proflabel/{id}', [LabelController::class, 'searchLabelById']); 
 
 
     //---------------------------create a label----------------------//
 
-       Route::post('/labels', [LabelController::class, 'store'])->name('labels.store');
-       Route::post('/contents', [ContentController::class, 'store'])->name('contents.store');
+       Route::post('/Proflabels', [LabelController::class, 'store'])->name('labels.store');
+       Route::post('/Profcontents', [ContentController::class, 'store'])->name('contents.store');
    
 
 
    //--------------------------Edit Label-----------------------------------//
 
       //For EDIT LABEL
-      Route::get('/label/{id}', [LabelController::class, 'searchLabelById']); 
-      Route::put('/editLabel/{id}', [LabelController::class, 'updateLabel'])->name('editLabel');
+      Route::get('/Proflabel/{id}', [LabelController::class, 'searchLabelById']); 
+      Route::put('/ProfeditLabel/{id}', [LabelController::class, 'updateLabel'])->name('editLabel');
   
 
     // ---------------------------Invalid Label -------------------------------//
-    Route::put('/invalid/{id}', action: [LabelController::class, 'invalidateLabel']); 
+    Route::put('/Profinvalid/{id}', action: [LabelController::class, 'invalidateLabel']); 
 
 
     //----------------------------pickup Request  -----------------------------------------------//
-    Route::post('/createPickupRequest', [PickupRequestController::class, 'createPickupRequest']);
-    Route::get('/getPickupRequests', [PickupRequestController::class, 'getAllPickupRequests']);
-    Route::put('/pickupInvalidate', [PickupRequestController::class, 'invalidatePickupRequest']);
+    Route::post('/ProfcreatePickupRequest', [PickupRequestController::class, 'createPickupRequest']);
+    Route::get('/ProfgetPickupRequests', [PickupRequestController::class, 'getAllPickupRequests']);
+    Route::put('/ProfpickupInvalidate', [PickupRequestController::class, 'invalidatePickupRequest']);
 
     //----------------------- Chemical creation--------------------------//
     Route::post('/chemicalCreateProf', [ChemicalController::class, 'addChemical']); 

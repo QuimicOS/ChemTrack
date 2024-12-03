@@ -208,7 +208,7 @@
 document.getElementById('searchButton').addEventListener('click', function () {
     const labelID = document.getElementById('labelID').value;
 
-    fetch(`/label/${labelID}`)
+    fetch(`/Proflabel/${labelID}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Label not found');

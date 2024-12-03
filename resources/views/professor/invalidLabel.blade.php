@@ -155,7 +155,7 @@ function invalidateLabel() {
     };
 
     // Send PUT request to backend
-    fetch(`/invalid/${labelID}`, {
+    fetch(`/Profinvalid/${labelID}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',

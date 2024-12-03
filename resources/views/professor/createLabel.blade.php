@@ -400,7 +400,7 @@ function setupAutocompleteForChemicals() {
             return; // Stop the submission
         }
 
-        fetch('/labels', {
+        fetch('/Proflabels', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

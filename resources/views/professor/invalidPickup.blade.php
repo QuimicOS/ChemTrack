@@ -139,7 +139,7 @@ function initializeDataTable() {
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
 function fetchPickupRequests() {
-    fetch('/getPickupRequests', { // Updated URL to match the defined route
+    fetch('/ProfgetPickupRequests', { // Updated URL to match the defined route
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -216,7 +216,7 @@ function confirmInvalidate() {
         return;
     }
 
-    fetch('/pickupInvalidate', {
+    fetch('/ProfpickupInvalidate', {
     method: 'PUT',
     headers: {
         'Content-Type': 'application/json',
