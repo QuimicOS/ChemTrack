@@ -139,7 +139,7 @@ function initializeDataTable() {
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
 function fetchPickupRequests() {
-    fetch('/getPickupRequests', { // Updated URL to match the defined route
+    fetch('/StaffgetPickupRequests', { // Updated URL to match the defined route
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

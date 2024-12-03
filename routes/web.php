@@ -498,7 +498,7 @@ Route::middleware(['auth', StaffMiddleware::class])->group(function(){
     Route::put('/StaffpickupInvalidate', [PickupRequestController::class, 'invalidatePickupRequest']);
 
     //----------------------- Chemical creation--------------------------//
-    Route::post('/StaffchemicalCreateStaff', [ChemicalController::class, 'addChemical']); 
+    Route::post('/chemicalCreateStaff', [ChemicalController::class, 'addChemical']); 
     Route::get('/StaffchemicalSearch', [ChemicalController::class, 'searchChemicalName']);
 
 
