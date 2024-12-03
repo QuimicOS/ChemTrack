@@ -128,15 +128,15 @@
 
                 <!-- Notification Bell Icon -->
                 <div class="dropdown me-3">
-                    <button class="btn btn-light position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="btn btn-light position-relative" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-bell"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notificationCount"></span>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notificationCount">
+                        </span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end" id="notificationMenu" aria-labelledby="notificationDropdown">
-                        <li class="dropdown-item">No Notifications Available</li>
+                    <ul class="dropdown-menu dropdown-menu-end" id="notificationMenu" aria-labelledby="dropdownMenuButton">
+                        <!-- Menu items will be dynamically populated here -->
                     </ul>
                 </div>
-
                 <!-- Username and Sign Out -->
                 <span class="navbar-text me-3"><b>{{Auth::user()->name}}</b></span>
                 <a href="{{ route('auth.saml.logout') }}" class="btn btn-danger">Sign Out</a>
@@ -197,56 +197,73 @@
     <!-- JS for managing notification count -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const notificationBadge = document.getElementById('notificationCount');
-            const notificationMenu = document.getElementById('notificationMenu');
-    
-            // Fetch professor notifications
-            fetch('/notificationUserCount')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Error fetching notifications: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Clear the notification menu
-                    notificationMenu.innerHTML = '';
-    
-                    if (data.length === 0) {
-                        // No notifications
-                        notificationMenu.innerHTML = '<li class="dropdown-item">No Notifications Available</li>';
-                        notificationBadge.classList.add('d-none');
-                        return;
-                    }
-    
-                    // Update notification count badge
-                    let totalNotifications = 0;
-                    data.forEach(notification => {
-                        totalNotifications += notification.count;
-    
-                        // Add notification type to dropdown menu
-                        const notificationType = notification.notification_type === 2
-                            ? 'Label 5 Months'
-                            : 'Label 6 Months';
-                        
-                        notificationMenu.innerHTML += `
-                            <li>
-                                <a class="dropdown-item notification-link" href="{{ route('professor/notifications') }}">
-                                    ${notificationType} (${notification.count})
-                                </a>
-                            </li>
+        const notificationCountElement = document.getElementById('notificationCount');
+        const menu = document.getElementById('notificationMenu');
+
+        // Fetch notification types for the authenticated user
+        fetch('/notificationTypes')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error fetching notification types: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Clear the menu
+                menu.innerHTML = '';
+
+                // Notification type titles
+                const notificationTitles = {
+                    2: 'Label(s) Without Pickup',
+                    1: 'Invalidated Pickup Request(s)'
+                };
+
+                // Add menu items dynamically based on available types
+                data.forEach(notification => {
+                    const type = notification.notification_type;
+                    if (notificationTitles[type]) {
+                        const listItem = document.createElement('li');
+                        listItem.innerHTML = `
+                            <a class="dropdown-item notification-link" href="{{ route('professor/notifications') }}?type=${type}">
+                                ${notificationTitles[type]}
+                            </a>
                         `;
-                    });
-    
-                    // Display badge with total notifications
-                    notificationBadge.textContent = totalNotifications;
-                    notificationBadge.classList.remove('d-none');
-                })
-                .catch(error => {
-                    console.error('Error fetching notifications:', error);
-                    notificationMenu.innerHTML = '<li class="dropdown-item">No Notifications</li>';
+                        menu.appendChild(listItem);
+                    }
                 });
-        });
+
+                // If no notifications are available
+                if (data.length === 0) {
+                    menu.innerHTML = '<li><span class="dropdown-item">No Notifications Available</span></li>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                menu.innerHTML = '<li><span class="dropdown-item text-danger">Error Loading Notifications</span></li>';
+            });
+
+            fetch('/notificationUserCount')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error fetching notifications: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const count = data.count; // Extract the count
+                if (count > 0) {
+                    notificationCountElement.textContent = count;
+                    notificationCountElement.classList.remove('d-none'); // Show badge
+                } else {
+                    notificationCountElement.classList.add('d-none'); // Hide badge if no notifications
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching notifications count:', error);
+            });
+
+    });
+
     </script>
 </body>
 </html>

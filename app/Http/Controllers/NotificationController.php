@@ -234,6 +234,35 @@ class NotificationController extends Controller
         return response()->json($notificationTypes);
     }
 
+    public function getUserNotificationTypes()
+    {
+        $user = Auth::user();
+    
+        // Check if the user is authenticated
+        if (!$user) {
+            return response()->json(['message' => 'User is not authenticated.'], 403);
+        }
+    
+        // Fetch the room numbers assigned to the user
+        $userRooms = DB::table('rooms')
+            ->where('user_id', $user->id)
+            ->where('lab_status', 'Assigned')
+            ->pluck('room_number');
+    
+        // Check if the user has any assigned rooms
+        if ($userRooms->isEmpty()) {
+            return response()->json(['message' => 'No assigned rooms found for this user.'], 404);
+        }
+    
+        // Fetch distinct notification types sent to the user's assigned rooms
+        $notificationTypes = Notification::whereIn('send_to', $userRooms)
+            ->where('status_of_notification', 0) // Only unread notifications
+            ->select('notification_type')
+            ->distinct()
+            ->get();
+    
+        return response()->json($notificationTypes);
+    }
     
 
 

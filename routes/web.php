@@ -541,6 +541,9 @@ Route::get('/todoList', action: [NotificationController::class, 'todoList']);
 Route::post('/checkPickupRequest', [LabelController::class, 'checkPickupRequest']);
 Route::get('/notificationUnreadCount', action: [NotificationController::class, 'unreadNotificationsCount']);
 Route::get('/notifications/types', [NotificationController::class, 'getNotificationTypes']);
+Route::get('/notificationUserCount', [NotificationController::class, 'countUserNotifications']);
+Route::get('/notificationUserUnreads', [NotificationController::class, 'getUserNotifications']);
+Route::get('/notificationTypes', [NotificationController::class, 'getUserNotificationTypes']);
 
 // ------------------------------------------------------------------------------------------------------
 
