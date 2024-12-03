@@ -129,12 +129,13 @@
 
                 <!-- Notification Bell Icon -->
                 <div class="dropdown me-3">
-                    <button class="btn btn-light position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="btn btn-light position-relative" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-bell"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notificationCount"></span>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notificationCount">
+                        </span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end" id="notificationMenu" aria-labelledby="notificationDropdown">
-                        <li class="dropdown-item">No Notifications Available</li>
+                    <ul class="dropdown-menu dropdown-menu-end" id="notificationMenu" aria-labelledby="dropdownMenuButton">
+                        <!-- Menu items will be dynamically populated here -->
                     </ul>
                 </div>
 
@@ -196,27 +197,74 @@
 
     <!-- JS for managing notification count -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let unreadCount = 3;  // Initial unread notification count
-            const notificationBadge = document.getElementById('notificationCount');
+        document.addEventListener('DOMContentLoaded', function () {
+        const notificationCountElement = document.getElementById('notificationCount');
+        const menu = document.getElementById('notificationMenu');
 
-            // Handle clicking on a notification
-            document.querySelectorAll('.notification-link').forEach(function(link) {
-                link.addEventListener('click', function() {
-                    // Decrement unread count
-                    if (unreadCount > 0) {
-                        unreadCount--;
-                    }
+        // Fetch notification types for the authenticated user
+        fetch('/notificationTypes')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error fetching notification types: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Clear the menu
+                menu.innerHTML = '';
 
-                    // Update the badge
-                    if (unreadCount === 0) {
-                        notificationBadge.style.display = 'none';
-                    } else {
-                        notificationBadge.textContent = unreadCount;
+                // Notification type titles
+                const notificationTitles = {
+                    2: 'Label(s) Without Pickup',
+                    1: 'Invalidated Pickup Request(s)'
+                };
+
+                // Add menu items dynamically based on available types
+                data.forEach(notification => {
+                    const type = notification.notification_type;
+                    if (notificationTitles[type]) {
+                        const listItem = document.createElement('li');
+                        listItem.innerHTML = `
+                            <a class="dropdown-item notification-link" href="{{ route('staff/notifications') }}?type=${type}">
+                                ${notificationTitles[type]}
+                            </a>
+                        `;
+                        menu.appendChild(listItem);
                     }
                 });
+
+                // If no notifications are available
+                if (data.length === 0) {
+                    menu.innerHTML = '<li><span class="dropdown-item">No Notifications Available</span></li>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                menu.innerHTML = '<li><span class="dropdown-item text-danger">Error Loading Notifications</span></li>';
             });
-        });
+
+            fetch('/notificationUserCount')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error fetching notifications: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const count = data.count; // Extract the count
+                if (count > 0) {
+                    notificationCountElement.textContent = count;
+                    notificationCountElement.classList.remove('d-none'); // Show badge
+                } else {
+                    notificationCountElement.classList.add('d-none'); // Hide badge if no notifications
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching notifications count:', error);
+            });
+
+    });
+
     </script>
 </body>
 </html>
