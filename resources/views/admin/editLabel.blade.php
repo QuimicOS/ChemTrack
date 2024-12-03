@@ -199,7 +199,7 @@ document.addEventListener("DOMContentLoaded", function () {
      * Fetch and populate form with label data
      */
     function loadLabelData(labelId) {
-        fetch(`/label/${labelId}`)
+        fetch(`/Adminlabel/${labelId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
