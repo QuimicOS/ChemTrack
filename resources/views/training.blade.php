@@ -1,12 +1,12 @@
 @extends('templateQuiz')
 
-@section('title', 'Waste Management Training')
+@section('title', 'Training')
 
 @section('content')
 <div class="container" style="margin-top: 80px; margin-left: 150px;">
     <!-- Title Section -->
     <div class="text-center mb-4">
-        <h1 class="display-5">Waste Management Training</h1>
+        <h1 class="display-5">Manejo de Materiales Químicos en los Laboratorios Training</h1>
         <hr class="my-4">
     </div>
 

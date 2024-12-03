@@ -93,7 +93,7 @@
         </div>
 
         <div class="text-end">
-            <button type="button" class="btn btn-success" onclick="validateForm()">Add</button>
+            <button type="button" class="btn btn-success" onclick="validateForm()" disabled>Add User</button>
         </div>
     </form>
     </fieldset>
@@ -119,39 +119,65 @@
     </div>
     </fieldset>
 
+    <!-- Deny user modal -->
+    <div class="modal fade" id="denyUserModal" tabindex="-1" aria-labelledby="denyUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="denyUserModalLabel">Confirm Denial</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to deny the following user?
+                    <ul>
+                        <li><strong>Email:</strong> <span id="denyUserEmail"></span></li>
+                        <li><strong>Requested Role:</strong> <span id="denyUserRole"></span></li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="confirmDenyButton" class="btn btn-danger">Deny User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
     <!-- Search Section for Editing Users -->
     <fieldset>
-    <div class="row mb-3 mt-5">
-        <div class="col-md-8">
-            <h3>
-            <label for="searchUsername" class="form-label">Search User to Edit</label>
-            <input type="text" class="form-control" id="searchUsername" placeholder="Enter username (e.g., name.lastname)">
+        <div class="row mb-3 mt-5">
+            <div class="col-md-8">
+                <h3>
+                    <label for="searchUsername" class="form-label">Search User to Edit</label>
+                    <input type="text" class="form-control" id="searchUsername" placeholder="Enter username (e.g., name.lastname)">
+                </h3>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button class="btn btn-primary w-100" onclick="searchUsername()">Search</button>
+            </div>
         </div>
-        <div class="col-md-4 d-flex align-items-end">
-            <button class="btn btn-primary w-100" onclick="searchUsername()">Search</button>
+    
+        <!-- Edit Users Table -->
+        <div id="editUsersTableContainer" class="table-container mt-3" style="display: none;">
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Username</th>
+                        <th>Laboratories</th>
+                        <th>Role</th>
+                        <th>Options</th>
+                    </tr>
+                </thead>
+                <tbody id="searchResultsTableBody">
+                    <!-- Default Empty Row -->
+                    <tr>
+                        <td colspan="4" class="text-center">No users found. Use the search bar to find a user.</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </div>
     </fieldset>
-
-    <!-- Edit Users Table -->
-    <fieldset>
-    <div class="table-container mt-3">
-        <h3>Edit Users</h3>
-        <table class="table table-bordered table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>Username</th>
-                    <th>Laboratories</th>
-                    <th>Role</th>
-                    <th>Options</th>
-                </tr>
-            </thead>
-            <tbody id="searchResultsTableBody">
-                <!-- Edit Users search results will populate here -->
-            </tbody>
-        </table>
-    </div>
-    </fieldset>
+    
 
     <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -219,13 +245,13 @@
     
 
     <!-- Show Certified Users Button -->
-    <fieldset>
-    <div class="text-center mt-5">
-        <button type="button" class="btn btn-primary" onclick="toggleCertifiedUsers()">Show Certified Users</button>
-    </div>
+<div class="text-center mt-5">
+    <button type="button" class="btn btn-primary" onclick="toggleCertifiedUsers()">Show Certified Users</button>
+</div>
 
-    <!-- Certified Users Table (Initially Hidden) -->
-    <div class="table-container mt-3" id="certifiedUsersContainer" style="display: none;">
+<!-- Certified Users Fieldset -->
+<fieldset id="certifiedUsersFieldset" style="display: none;">
+    <div class="table-container mt-3">
         <h3>Certified Users</h3>
         <table class="table table-bordered table-hover" id="certifiedUsersTable">
             <thead class="table-dark">
@@ -244,8 +270,8 @@
             <button type="button" class="btn btn-primary" onclick="generatePDF()">Generate PDF</button>
         </div>
     </div>
-    </fieldset>
-</div>
+</fieldset>
+
 @endsection
 
 @section('scripts')
@@ -277,31 +303,53 @@ function addRoomNumberField() {
     roomNumberContainer.appendChild(newInputGroup);
 }
 // Regular expressions for validation
-const namePattern = /^[a-zA-Z\s]+$/; // Only letters and spaces for names and department
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const roomNumberPattern = /^[a-zA-Z0-9]{1,5}-[a-zA-Z0-9]{1,5}$/; // Room number format
+const namePattern = /^[\s\S]+$/; // Accepts any character including spaces
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Unchanged as email has specific format requirements
+const roomNumberPattern = /^[\s\S]+$/; // Accepts any character including letters, numbers, and special characters
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Attach event listeners to all fields for validation
+    const fieldsToValidate = document.querySelectorAll(
+        '#firstName, #lastName, #email, #department, #role, .room-number'
+    );
+    fieldsToValidate.forEach((field) => {
+        field.addEventListener('input', toggleSubmitButton);
+        field.addEventListener('change', toggleSubmitButton); // For dropdowns like role
+    });
+
+    // Run the toggleSubmitButton function on page load in case fields are prefilled
+    toggleSubmitButton();
+});
+
 
 // Toggle submit button based on all validations
 function toggleSubmitButton() {
-    const nameField = document.getElementById('name');
-    const lastNameField = document.getElementById('lastName');
-    const emailField = document.getElementById('email');
-    const departmentField = document.getElementById('department');
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const department = document.getElementById('department').value.trim();
+    const role = document.getElementById('role').value;
     const roomNumberFields = document.querySelectorAll('.room-number');
-    const roleField = document.getElementById('role');
-    const submitButton = document.getElementById('submitBtn');
 
-    // Check if all fields are valid
-    const isValid = 
-        namePattern.test(nameField.value.trim()) &&
-        namePattern.test(lastNameField.value.trim()) &&
-        emailPattern.test(emailField.value.trim()) &&
-        namePattern.test(departmentField.value.trim()) &&
-        Array.from(roomNumberFields).every(field => roomNumberPattern.test(field.value.trim())) &&
-        roleField.value; // Ensures role is selected
+    // Validate fields
+    const isValid =
+        firstName !== '' &&
+        lastName !== '' &&
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && // Email validation
+        department !== '' &&
+        role !== '' &&
+        Array.from(roomNumberFields).every(field => field.value.trim() !== ''); // Validate all room numbers
 
-    submitButton.disabled = !isValid;  // Enable button only if all fields are valid
+    // Enable or disable the Add button
+    const addButton = document.querySelector('button[onclick="validateForm()"]');
+    if (addButton) {
+        addButton.disabled = !isValid; // Disable button if any field is invalid
+    }
 }
+
+
+
+
 
 // Add additional room number field
 function addRoomNumberField() {
@@ -334,6 +382,7 @@ function addRoomNumberField() {
     toggleSubmitButton(); // Re-validate form
 }
 
+
 // Define form fields
 const firstNameField = document.getElementById('firstName');
 const lastNameField = document.getElementById('lastName');
@@ -355,98 +404,78 @@ function validateForm() {
     document.getElementById('roleError').textContent = '';
     document.getElementById('laboratoryError').textContent = '';
 
-    // Validate Name and Last Name: Characters only
+    // Validate fields
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
-    if (!/^[a-zA-Z\s]+$/.test(firstName)) {
-        document.getElementById('firstNameError').textContent = 'First name must contain only letters.';
-        isValid = false;
-    }
-    if (!/^[a-zA-Z\s]+$/.test(lastName)) {
-        document.getElementById('lastNameError').textContent = 'Last name must contain only letters.';
-        isValid = false;
-    }
-
-    // Validate Email
     const email = document.getElementById('email').value.trim();
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(email)) {
-        document.getElementById('emailError').textContent = 'Invalid email format.';
-        isValid = false;
-    }
-
-    // Validate Department
     const department = document.getElementById('department').value.trim();
-    if (!/^[a-zA-Z\s]+$/.test(department)) {
-        document.getElementById('departmentError').textContent = 'Department must contain only letters.';
-        isValid = false;
-    }
-
-    // Validate Role
     const role = document.getElementById('role').value;
-    if (!role) {
-        document.getElementById('roleError').textContent = 'Please select a role.';
-        isValid = false;
-    }
-
-    // Validate Room Numbers
     const roomNumberFields = document.querySelectorAll('.room-number');
     const roomNumbers = Array.from(roomNumberFields)
         .map(field => field.value.trim())
         .filter(room => room !== "") // Filter out empty room numbers
         .map(room => ({ room_number: room })); // Map to required format
 
-    // Submit form if valid
-    if (isValid) {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    isValid =
+        firstName !== '' &&
+        lastName !== '' &&
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && // Email validation
+        department !== '' &&
+        role !== '' &&
+        roomNumbers.length > 0;
 
-        // Payload structured to match the backend
-        const roleRequestData = {
-            user: {
-                name: firstName,
-                last_name: lastName,
-                email: email,
-                department: department,
-                role: role,
-            },
-            rooms: roomNumbers, // Send only valid rooms
-        };
+    // Disable/Enable Add button based on validation
+    const addButton = document.querySelector('button[onclick="validateForm()"]');
+    addButton.disabled = !isValid;
 
-        fetch('/newUsers', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': csrfToken,
-    },
-    body: JSON.stringify(roleRequestData),
-})
-.then(response => {
-    if (!response.ok) {
-        return response.json().then(errorData => {
-            throw errorData; // Pass the error data to the catch block
+    // If form is not valid, return early
+    if (!isValid) return;
+
+    // Send request if form is valid
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const roleRequestData = {
+        user: {
+            name: firstName,
+            last_name: lastName,
+            email: email,
+            department: department,
+            role: role,
+        },
+        rooms: roomNumbers,
+    };
+
+    fetch('/newUsers', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify(roleRequestData),
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw errorData; // Pass the error data to the catch block
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('User added successfully!');
+            document.getElementById('roleForm').reset();
+            addButton.disabled = true; // Disable button after successful submission
+        })
+        .catch(error => {
+            // Check if there's an error message and display it in an alert
+            if (error.message) {
+                alert(error.message);
+            } else {
+                alert('An unexpected error occurred. Please try again.');
+            }
+            console.error('Error:', error); // Keep for debugging
         });
-    }
-    return response.json();
-})
-.then(data => {
-    alert('User added successfully!');
-    document.getElementById('roleForm').reset();
-})
-.catch(error => {
-    if (error.invalid_rooms) {
-        document.getElementById('laboratoryError').textContent = `Invalid rooms: ${error.invalid_rooms.join(', ')}`;
-    } else if (error.message) {
-        alert(error.message);
-    } else {
-        alert('An unexpected error occurred. Please try again.');
-    }
-});
-
-
-    }
 }
-
 
 
 
@@ -463,82 +492,50 @@ function populateLabDropdowns(data) {
 // Function to render submitted requested users
 function renderSubmittedRequestsTable() {
     const tableBody = document.getElementById('submittedRequestsTableBody');
+    if (!tableBody) return; // Ensure the element exists
+
     tableBody.innerHTML = ''; // Clear existing table rows
 
-
-    // Fetch users with 'requested' status
     fetch('/users/requested', {
-    method: 'GET',
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-    },
-})
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(errorData => {
-                throw new Error(errorData.message || 'Error fetching requested users');
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error fetching requested users');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (!data.requested_users || data.requested_users.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center">No requested users found</td></tr>`;
+                return;
+            }
+
+            data.requested_users.forEach(user => {
+                const row = `
+                    <tr>
+                        <td>${user.email}</td>
+                        <td>${user.room_numbers || 'N/A'}</td>
+                        <td>${user.role || 'N/A'}</td>
+                        <td>${new Date(user.created_at).toLocaleString()}</td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="acceptRequest(${user.id})">Accept</button>
+                            <button class="btn btn-danger btn-sm" onclick="denyRequest(${user.id})">Deny</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
             });
-        }
-        return response.json(); // Parse JSON if response is OK
-    })
-    .then(data => {
-        const tableBody = document.getElementById('submittedRequestsTableBody');
-        tableBody.innerHTML = ''; // Clear existing rows
-
-        // Check if data is empty
-        if (!data.requested_users || data.requested_users.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="5" class="text-center">No requested users found</td></tr>`;
-            return;
-        }
-
-        // Populate the table with user data
-        data.requested_users.forEach(user => {
-            const roomNumbers = user.room_numbers; // Use 'room_numbers' from backend
-
-            const row = `
-                <tr>
-                    <td>${user.email}</td>
-                    <td>${roomNumbers}</td>
-                    <td>${user.role || 'N/A'}</td>
-                    <td>${new Date(user.created_at).toLocaleString()}</td>
-                    <td>
-                        <button class="btn btn-success btn-sm" onclick="acceptRequest(${user.id})">Accept</button>
-                        <button class="btn btn-danger btn-sm" onclick="denyRequest(${user.id})">Deny</button>
-                    </td>
-                </tr>
-            `;
-            tableBody.innerHTML += row;
-        });
-    })
-    .catch(error => {
-        console.error('Error:', error.message);
-        const tableBody = document.getElementById('submittedRequestsTableBody');
-        tableBody.innerHTML = `<tr><td colspan="5" class="text-center">No requested users found</td></tr>`;
-    });
-
-
-
-
-
-
-        fetch('/laboratories')
-            .then(response => response.json())
-            .then(data => {
-                labData = data;
-                populateLabDropdowns(data);
-            })
-            .catch(error => console.error('Error fetching laboratories:', error));
-
-
-            document.getElementById("editLaboratory").addEventListener("change", function () {
-            const selectedRoom = this.value;
-            const labDetails = labData.find(lab => lab.room_number === selectedRoom);
+        })
+        .catch(error => {
+            console.error('Error:', error.message);
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center">No requested users found at the moment</td></tr>`;
         });
 }
-
-
-
 
 
 // Function to accept a user request
@@ -578,6 +575,43 @@ function acceptRequest(userId) {
 
 
 function denyRequest(userId) {
+    // Fetch user details to populate modal
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    fetch(`/users/${userId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+        },
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch user details for denial');
+            }
+            return response.json();
+        })
+        .then(user => {
+            // Populate modal fields
+            document.getElementById('denyUserEmail').textContent = user.email || 'N/A';
+            document.getElementById('denyUserRole').textContent = user.role || 'N/A';
+
+            // Attach user ID to the confirm button
+            const confirmDenyButton = document.getElementById('confirmDenyButton');
+            confirmDenyButton.onclick = () => confirmDeny(userId);
+
+            // Show the modal
+            const denyModal = new bootstrap.Modal(document.getElementById('denyUserModal'));
+            denyModal.show();
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Error fetching user details for denial.');
+        });
+}
+
+function confirmDeny(userId) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     fetch(`/userInvalid/${userId}`, {
@@ -590,25 +624,44 @@ function denyRequest(userId) {
     })
         .then(response => {
             if (!response.ok) {
-                throw new Error('Failed to deny user request');
+                throw new Error('Failed to deny user');
             }
             return response.json();
         })
         .then(() => {
             alert('User request denied');
-            renderSubmittedRequestsTable(); // Refresh the table
+            
+            // Hide the deny modal
+            const denyModal = bootstrap.Modal.getInstance(document.getElementById('denyUserModal'));
+            denyModal.hide();
+
+            // Clear modal content
+            document.getElementById('denyUserEmail').textContent = '';
+            document.getElementById('denyUserRole').textContent = '';
+
+            // Refresh the table
+            renderSubmittedRequestsTable();
         })
         .catch(error => {
             console.error(error);
-            alert('Failed to deny user request');
+            alert('Failed to deny user request.');
         });
 }
 
-
 // Function to render edit users table based on search results
 function renderEditUsersTable(userList) {
+    const tableContainer = document.getElementById('editUsersTableContainer');
     const tableBody = document.getElementById('searchResultsTableBody');
     tableBody.innerHTML = ''; // Clear previous results
+
+    if (!userList || userList.length === 0) {
+        // Hide the table if no results
+        tableContainer.style.display = 'none';
+        return;
+    }
+
+    // Show the table
+    tableContainer.style.display = 'block';
 
     userList.forEach(user => {
         const roomNumbers = user.room_numbers
@@ -626,16 +679,7 @@ function renderEditUsersTable(userList) {
         </tr>`;
         tableBody.innerHTML += row;
     });
-
-    if (userList.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="4" class="text-center">No users found</td></tr>`;
-    }
 }
-
-
-
-
-
 
 // Function to search for a user by a email
 function searchUsername() {
@@ -667,10 +711,10 @@ function searchUsername() {
         })
         .catch(error => {
             console.error(error);
-            alert('Active user not found.');
-            renderEditUsersTable([]); // Clear the table if no user is found
+            renderEditUsersTable([]); // Hide the table if no user is found
         });
 }
+
 
 function openEditModal(userId) {
     console.log('Opening edit modal for user ID:', userId); // Debug the passed userId
@@ -780,7 +824,6 @@ function addEditRoomNumberField() {
 
 function saveEdit() {
     const userId = document.getElementById('editUserId').value; // Retrieve user ID
-    console.log('Editing User ID:', userId); // Debug user ID
 
     if (!userId) {
         alert('User ID is missing. Cannot save changes.');
@@ -822,23 +865,23 @@ function saveEdit() {
         })
         .then(() => {
             alert('User updated successfully!');
+            
+            // Close the modal
             const editModal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
-            editModal.hide();
-            renderSubmittedRequestsTable(); // Refresh table
+            if (editModal) {
+                editModal.hide();
+            }
+
+            // Refresh the table by performing the same search again
+            const searchValue = document.getElementById('searchUsername').value.trim();
+            if (searchValue) {
+                searchUsername(); // Refresh table with the current search term
+            }
         })
         .catch(error => {
             console.error(error);
         });
 }
-
-
-
-
-
-
-
-
-
 
 
 // Open delete confirmation modal
@@ -889,12 +932,15 @@ function showAlert(message) {
 
 // Toggle the display of the certified users container
 function toggleCertifiedUsers() {
-    const certifiedContainer = document.getElementById('certifiedUsersContainer');
-    certifiedContainer.style.display = (certifiedContainer.style.display === 'none' || !certifiedContainer.style.display) ? 'block' : 'none';
-    if (certifiedContainer.style.display === 'block') {
-        fetchCertifiedUsers(); // Fetch certified users only when visible
+    const certifiedFieldset = document.getElementById('certifiedUsersFieldset');
+    certifiedFieldset.style.display = (certifiedFieldset.style.display === 'none' || !certifiedFieldset.style.display) ? 'block' : 'none';
+
+    // Fetch data only when the fieldset is displayed
+    if (certifiedFieldset.style.display === 'block') {
+        fetchCertifiedUsers();
     }
 }
+
 
 
 // Fetch certified users from the backend and render the table
@@ -945,6 +991,8 @@ function fetchCertifiedUsers() {
             tableBody.innerHTML = `<tr><td colspan="4" class="text-center">Error fetching certified users</td></tr>`;
         });
 }
+
+
 
 // PDF Generation for Certified Users
 function generatePDF() {

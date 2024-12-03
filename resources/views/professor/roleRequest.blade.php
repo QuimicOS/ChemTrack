@@ -1,6 +1,6 @@
 @extends('professor.templateProfessor')
 
-@section('title', 'User Request - ChemTrack')
+@section('title', 'Role Request - ChemTrack')
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -101,14 +101,8 @@
 
 @section('scripts')
 <script>
-// Regular expressions for validation
-// Regular expressions for validation
-const namePattern = /^[a-zA-Z\s]+$/; // Only letters and spaces for names and department
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const roomNumberPattern = /^[a-zA-Z0-9]{1,5}-[a-zA-Z0-9]{1,5}$/; // Room number format
-
-// Toggle submit button based on all validations
-function toggleSubmitButton() {
+// Validation for Role Request form fields
+function validateRoleRequestForm() {
     const nameField = document.getElementById('name');
     const lastNameField = document.getElementById('lastName');
     const emailField = document.getElementById('email');
@@ -116,15 +110,15 @@ function toggleSubmitButton() {
     const roomNumberFields = document.querySelectorAll('.room-number');
     const submitButton = document.getElementById('submitBtn');
 
-    // Check if all fields are valid
-    const isValid = 
-        namePattern.test(nameField.value.trim()) &&
-        namePattern.test(lastNameField.value.trim()) &&
-        emailPattern.test(emailField.value.trim()) &&
-        namePattern.test(departmentField.value.trim()) &&
-        Array.from(roomNumberFields).every(field => roomNumberPattern.test(field.value.trim()));
+    // Check if all fields are not blank
+    const isValid =
+        nameField.value.trim() !== '' &&
+        lastNameField.value.trim() !== '' &&
+        emailField.value.trim() !== '' &&
+        departmentField.value.trim() !== '' &&
+        Array.from(roomNumberFields).every(field => field.value.trim() !== '');
 
-    submitButton.disabled = !isValid; // Enable button only if all fields are valid
+    submitButton.disabled = !isValid; // Enable button only if all fields are filled
 }
 
 // Add additional room number field
@@ -140,22 +134,24 @@ function addRoomNumberField() {
     newInput.required = true;
 
     // Add event listener for validation
-    newInput.addEventListener('input', toggleSubmitButton);
+    newInput.addEventListener('input', validateRoleRequestForm);
 
     const removeButton = document.createElement('button');
     removeButton.type = 'button';
     removeButton.className = 'btn btn-outline-danger';
     removeButton.textContent = '-';
-    removeButton.onclick = () => newFieldGroup.remove();
+    removeButton.onclick = () => {
+        newFieldGroup.remove();
+        validateRoleRequestForm(); // Re-validate form after removal
+    };
 
     newFieldGroup.appendChild(newInput);
     newFieldGroup.appendChild(removeButton);
 
     roomNumberContainer.appendChild(newFieldGroup);
-    toggleSubmitButton(); // Re-validate form
+    validateRoleRequestForm(); // Re-validate form
 }
 
-// Submit form data to backend using POST request
 function submitRoleRequest() {
     const nameField = document.getElementById('name');
     const lastNameField = document.getElementById('lastName');
@@ -173,7 +169,7 @@ function submitRoleRequest() {
         },
         rooms: Array.from(roomNumberFields).map(field => ({
             room_number: field.value.trim(),
-        }))
+        })),
     };
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -191,35 +187,48 @@ function submitRoleRequest() {
         .then(response => {
             if (!response.ok) {
                 return response.json().then(errorData => {
-                    throw new Error(JSON.stringify(errorData.errors || errorData.message || 'Error creating user'));
+                    throw errorData; // Pass the error data to the catch block
                 });
             }
-            return response.json(); // Parse the JSON response
+            return response.json();
         })
         .then(data => {
-            alert('User created successfully!');
-            console.log('Response:', data);
-
-            // Clear the form fields
+            alert('User added successfully!');
             document.getElementById('roleRequestForm').reset();
-            toggleSubmitButton(); // Disable the button again after submission
+            validateRoleRequestForm(); // Disable the button after successful submission
         })
         .catch(error => {
-            console.error('Error creating user:', error);
-            alert(`Failed to create user: ${error.message}`);
+            // Handle validation errors and unexpected errors separately
+            if (error.errors) {
+                // Validation errors
+                if (error.errors['user.email']) {
+                    alert('The email provided is already associated with an account. Please use a different email.');
+                } else if (error.errors['rooms.0.room_number']) {
+                    alert('One or more selected rooms are not active laboratories or do not exist.');
+                } else {
+                    alert('There was an issue with your submission. Please check the form and try again.');
+                }
+            } else if (error.message) {
+                // Other errors with a message
+                alert(error.message);
+            } else {
+                // Fallback for unexpected errors
+                alert('An unexpected error occurred. Please try again.');
+            }
         });
 }
 
 
 // Attach event listeners to input fields to toggle the submit button state
-document.getElementById('name').addEventListener('input', toggleSubmitButton);
-document.getElementById('lastName').addEventListener('input', toggleSubmitButton);
-document.getElementById('email').addEventListener('input', toggleSubmitButton);
-document.getElementById('department').addEventListener('input', toggleSubmitButton);
-document.querySelector('.room-number').addEventListener('input', toggleSubmitButton);
+document.getElementById('name').addEventListener('input', validateRoleRequestForm);
+document.getElementById('lastName').addEventListener('input', validateRoleRequestForm);
+document.getElementById('email').addEventListener('input', validateRoleRequestForm);
+document.getElementById('department').addEventListener('input', validateRoleRequestForm);
+document.querySelector('.room-number').addEventListener('input', validateRoleRequestForm);
 
 // Attach click event to submit button to handle form submission
 document.getElementById('submitBtn').addEventListener('click', submitRoleRequest);
+
 
 </script>
 @endsection
