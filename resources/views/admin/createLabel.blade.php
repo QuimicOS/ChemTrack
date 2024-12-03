@@ -79,10 +79,17 @@
             <legend>Location Details</legend>
             <div class="mb-3">
                 <label for="roomNumber" class="form-label">Room Number</label>
-                <select class="form-select" id="roomNumber" required>
-                    <option value="" selected>Select Room Number</option>
-                </select>
-            </div>
+                <input
+                    type="text"
+                    class="form-control"
+                    id="roomNumber"
+                    placeholder="Start typing to search for a room number"
+                    list="roomNumberList"
+                    autocomplete="off"
+                    required
+                />
+                <datalist id="roomNumberList"></datalist>
+            </div>            
             <div class="mb-3">
                 <label for="department" class="form-label">Department</label>
                 <input type="text" class="form-control" id="department" placeholder="Select Room Number to autofill" readonly>
@@ -213,12 +220,23 @@
 
         // Fetch laboratories and populate dropdowns
         fetch('/laboratories')
-            .then(response => response.json())
-            .then(data => {
-                labData = data;
-                populateLabDropdowns(data);
-            })
-            .catch(error => console.error('Error fetching laboratories:', error));
+        .then((response) => response.json())
+        .then((data) => {
+            const roomList = document.getElementById("roomNumberList");
+            roomList.innerHTML = ""; // Clear any existing options
+
+            data.forEach((lab) => {
+                const option = document.createElement("option");
+                option.value = lab.room_number; // Populate with room number
+                option.setAttribute("data-labName", lab.lab_name || "N/A");
+                option.setAttribute("data-department", lab.department || "N/A");
+                option.setAttribute("data-building", lab.building_name || "N/A");
+                option.setAttribute("data-professor", lab.professor_investigator || "N/A");
+                roomList.appendChild(option);
+            });
+        })
+        .catch((error) => console.error("Error fetching laboratories:", error));
+
 
         // Fetch chemicals and set up autocomplete
         fetch('/chemicals')
@@ -231,17 +249,25 @@
             .catch(error => console.error('Error fetching chemicals:', error));
 
         // Update lab details based on room number selection
-        document.getElementById("roomNumber").addEventListener("change", function () {
-            const selectedRoom = this.value;
-            const labDetails = labData.find(lab => lab.room_number === selectedRoom);
+        document.getElementById("roomNumber").addEventListener("input", function () {
+        const inputVal = this.value.trim();
+        const selectedOption = Array.from(document.getElementById("roomNumberList").options).find(
+            (option) => option.value === inputVal
+        );
 
-            if (labDetails) {
-            document.getElementById("labName").value = labDetails.lab_name || "N/A";
-            document.getElementById("principalInvestigator").value = labDetails.professor_investigator || "N/A";
-            document.getElementById("department").value = labDetails.department || "N/A";
-            document.getElementById("building").value = labDetails.building_name || "N/A";
-            }
-        });
+        if (selectedOption) {
+            document.getElementById("labName").value = selectedOption.getAttribute("data-labName");
+            document.getElementById("department").value = selectedOption.getAttribute("data-department");
+            document.getElementById("building").value = selectedOption.getAttribute("data-building");
+            document.getElementById("principalInvestigator").value = selectedOption.getAttribute("data-professor");
+        } else {
+            // Clear fields if no valid selection
+            document.getElementById("labName").value = "";
+            document.getElementById("department").value = "";
+            document.getElementById("building").value = "";
+            document.getElementById("principalInvestigator").value = "";
+        }
+     });
 
         // Add a new row for chemicals in the table
         document.getElementById('addRow').addEventListener('click', function () {
@@ -342,6 +368,19 @@ function setupAutocompleteForChemicals() {
             alert('Please fill in all required fields.');
         }
     });
+
+    // Validate stored quantity
+    const storedInput = document.getElementById("stored");
+    const value = parseFloat(storedInput.value);
+
+    if (isNaN(value) || value <= 0) {
+        storedInput.value = "";
+        storedInput.style.borderColor = "red";
+        alert("Invalid input: Stored quantity must be a positive numeric value.");
+        isValid = false;
+    } else {
+        storedInput.style.borderColor = "";
+    }
 
     // Validate percentage inputs
     const percentages = Array.from(document.querySelectorAll('.percentage'));

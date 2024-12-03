@@ -66,7 +66,7 @@
                     <input type="text" class="form-control" id="editedBy" readonly>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="stored" class="form-label">New Total Stored</label>
+                    <label for="stored" class="form-label">Updated Quantity (Total in Container)</label>
                     <input type="text" class="form-control" id="stored" placeholder="Enter stored quantity (ex. 4.6, 7)" oninput="validateStoredInput()">
                     <small id="storedError" class="text-danger" style="display: none;">Incorrect input: Only numeric values are allowed.</small>
                 </div>

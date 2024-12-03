@@ -93,44 +93,40 @@ class PickupRequestController extends Controller
 {
     $validator = Validator::make($request->all(), [
         'label_id' => 'required|integer',
-        'timeframe' => 'required|string'
+        'timeframe' => 'required|string',
     ]);
 
-    // Verify input data
+    // Validate input data
     if ($validator->fails()) {
         return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
     }
     $validatedData = $validator->validated();
 
-    // Verify Authenticated User
+    // Verify authenticated user
     $user = Auth::user();
     if (!$user) {
         return response()->json(['message' => 'User is not authenticated.'], 401);
     }
 
-    // Verify Label existence
+    // Verify label existence
     $label = Label::find($validatedData['label_id']);
     if (!$label) {
         return response()->json(['success' => false, 'error' => 'Label not found'], 404);
     }
 
-    // Verify Label Status
+    // Verify label status
     if ($label->status_of_label == 0) {
         return response()->json(['success' => false, 'error' => 'The label is invalid and cannot be used for a Pickup Request.'], 400);
     }
 
-    // Verify Room Number Authorization
-    if ($user->role === 'Administrator') {
-        Log::info("Administrator (User ID: {$user->id}) is creating a Pickup Request for Label ID {$label->id}");
-    } else {
-        // Check if user is associated with the room
+    // Check room number authorization for non-admin users
+    if ($user->role !== 'Administrator') {
         $room = DB::table('rooms')
             ->where('room_number', $label->room_number)
             ->where('user_id', $user->id)
             ->first();
 
         if (!$room) {
-            Log::warning("User ID {$user->id} is not authorized to create a Pickup Request for Label ID {$label->id} in Room {$label->room_number}");
             return response()->json(['error' => 'You do not have permission to create a Pickup Request for this label.'], 403);
         }
     }
@@ -151,12 +147,12 @@ class PickupRequestController extends Controller
         'status_of_pickup' => 2, // Pending status
         'completion_date' => null,
         'completion_method' => null,
+        'user_id' => $user->id, // Save the user ID explicitly
     ]);
 
-    Log::info("Pickup Request created by User ID {$user->id} for Label ID {$label->id}");
-
-    return response()->json(['success' => true, 'data' => $pickupRequest], 201);
+    return response()->json(['success' => true, 'data' => $pickupRequest->load('label')], 201);
 }
+
 
     
 
@@ -224,52 +220,54 @@ class PickupRequestController extends Controller
 
     // Searches Pickup Requests by Laboratory, Status, and Completion Method    
     public function searchPickupRequests()
-{
-    $pickupRequests = PickupRequest::with(['label.laboratory', 'user'])->get();
-
-    if ($pickupRequests->isEmpty()) {
-        return response()->json(['message' => 'No pickup requests found.'], 404);
+    {
+        $pickupRequests = PickupRequest::with(['label.laboratory', 'user'])->get();
+    
+        if ($pickupRequests->isEmpty()) {
+            return response()->json(['message' => 'No pickup requests found.'], 404);
+        }
+    
+        $totalCount = $pickupRequests->count();
+    
+        $formattedPickupRequests = $pickupRequests->map(function ($pickup) {
+            $sixMonthsFromStart = $pickup->label && $pickup->label->accumulation_start_date 
+                ? Carbon::parse($pickup->label->accumulation_start_date)->addMonths(6) 
+                : null;
+    
+            $chemicals = DB::table('contents')
+                ->where('label_id', $pickup->label_id)
+                ->pluck('chemical_name');
+    
+            return [
+                'Pickup Request ID' => $pickup->id,
+                'Label ID' => $pickup->label_id,
+                'Requested By Email' => $pickup->user ? $pickup->user->email : 'N/A', // Use user_id to get the email
+                'Request Date' => $pickup->created_at->format('Y-m-d'),
+                'Chemicals' => $chemicals,
+                'Building Name' => $pickup->label->building ?? null,
+                'Room Number' => $pickup->label->room_number ?? 'N/A',
+                'Quantity' => $pickup->label ? $pickup->label->quantity . ' ' . $pickup->label->units : 'N/A',
+                'Container Size' => $pickup->label->container_size ?? 'N/A',
+                'Timeframe' => $pickup->timeframe,
+                'Status' => match($pickup->status_of_pickup) {
+                    0 => 'Invalid',
+                    1 => 'Completed',
+                    2 => 'Pending',
+                    3 => 'Overdue',
+                    default => 'Unknown'
+                },
+                'Completion Method' => $pickup->completion_method ?? 'N/A',
+                'Pickup Due' => $sixMonthsFromStart ? $sixMonthsFromStart->format('M d, Y') : 'N/A'
+            ];
+        })->sortBy('pickup_due')->values();
+    
+        return response()->json([
+            'total_reports' => $totalCount,
+            'pickup_requests' => $formattedPickupRequests
+        ], 200);
     }
+    
 
-    $totalCount = $pickupRequests->count();
-
-    $formattedPickupRequests = $pickupRequests->map(function ($pickup) {
-        $sixMonthsFromStart = $pickup->label && $pickup->label->accumulation_start_date 
-            ? Carbon::parse($pickup->label->accumulation_start_date)->addMonths(6) 
-            : null;
-
-        $chemicals = DB::table('contents')
-            ->where('label_id', $pickup->label_id)
-            ->pluck('chemical_name');
-
-        return [
-            'Pickup Request ID' => $pickup->id,
-            'Label ID' => $pickup->label_id,
-            'Requested By Email' => $pickup->user ? $pickup->user->email : 'N/A', // Use user_id to get the email
-            'Request Date' => $pickup->created_at->format('Y-m-d'),
-            'Chemicals' => $chemicals,
-            'Building Name' => $pickup->label->building ?? null,
-            'Room Number' => $pickup->label->room_number ?? 'N/A',
-            'Quantity' => $pickup->label ? $pickup->label->quantity . ' ' . $pickup->label->units : 'N/A',
-            'Container Size' => $pickup->label->container_size ?? 'N/A',
-            'Timeframe' => $pickup->timeframe,
-            'Status' => match($pickup->status_of_pickup) {
-                0 => 'Invalid',
-                1 => 'Completed',
-                2 => 'Pending',
-                3 => 'Overdue',
-                default => 'Unknown'
-            },
-            'Completion Method' => $pickup->completion_method ?? 'N/A',
-            'Pickup Due' => $sixMonthsFromStart ? $sixMonthsFromStart->format('M d, Y') : 'N/A'
-        ];
-    })->sortBy('pickup_due')->values();
-
-    return response()->json([
-        'total_reports' => $totalCount,
-        'pickup_requests' => $formattedPickupRequests
-    ], 200);
-}
 
     
 

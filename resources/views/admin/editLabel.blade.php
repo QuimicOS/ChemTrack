@@ -66,9 +66,8 @@
                     <input type="text" class="form-control" id="editedBy" readonly>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="stored" class="form-label">New Total Stored</label>
+                    <label for="stored" class="form-label">Updated Quantity (Total in Container)</label>
                     <input type="text" class="form-control" id="stored" placeholder="Enter stored quantity (ex. 4.6, 7)" oninput="validateStoredInput()">
-                    <small id="storedError" class="text-danger" style="display: none;">Incorrect input: Only numeric values are allowed.</small>
                 </div>
             </div>
             <div class="row">
@@ -97,6 +96,7 @@
 
         <!-- Chemical Table Section -->
         <div class="table-section table-responsive">
+            <small id="storedError" class="text-danger" style="display: none;"></small>
             <table class="table table-bordered" id="chemicalTable">
                 <thead class="table-dark">
                     <tr>
@@ -151,6 +151,34 @@
 @section('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 <script>
+
+function validateStoredInput() {
+    const storedInput = document.getElementById("stored");
+
+    storedInput.addEventListener("input", (event) => {
+        const value = event.target.value;
+
+        // Allow only numeric values and a single decimal point
+        const numericValue = value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');
+
+        if (value !== numericValue) {
+            storedInput.value = numericValue;
+        }
+
+        // Validate numeric input and ensure it's positive
+        const parsedValue = parseFloat(numericValue);
+        if (isNaN(parsedValue) || parsedValue <= 0) {
+            storedInput.classList.add("is-invalid");
+            storedInput.value = ""; // Clear invalid input
+            alert("Invalid input: Stored quantity must be a positive numeric value.");
+        } else {
+            storedInput.classList.remove("is-invalid");
+        }
+
+        checkFormValidity(); // Revalidate the form
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     const crsfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     let labelData = {};
@@ -314,7 +342,6 @@ document.addEventListener("DOMContentLoaded", function () {
     updateButton.disabled = !stored || !/^\d*\.?\d*$/.test(stored) || units === 'Select units' || labelSize === 'Select label size' || !allRowsValid;
 }
 
-
     /**
      * Set up autocomplete functionality for chemical name fields
      */
@@ -407,6 +434,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const labelID = document.getElementById('labelID').value.trim();
         if (!labelID) {
             alert('Label ID is required!');
+            return;
+        }
+
+        const storedValue = parseFloat(document.getElementById("stored").value.trim());
+        if (isNaN(storedValue) || storedValue <= 0.000001) {
+            alert("Stored quantity must be a valid positive number.");
             return;
         }
 
