@@ -18,7 +18,8 @@ class PickupRequest extends Model
         'completion_method',
         'message',
         'label_id',
-        'user_id'
+        'user_id',
+        'invalidated_by'
     ];
 
     /**

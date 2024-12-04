@@ -40,7 +40,8 @@ class Label extends Model
         'quantity', 
         'units', 
         'status_of_label', 
-        'message'
+        'message',
+        'invalidated_by'
     ];
 
     public static function boot()

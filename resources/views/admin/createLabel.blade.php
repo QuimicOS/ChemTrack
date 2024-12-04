@@ -334,7 +334,7 @@ function setupAutocomplete(inputElement, dataList) {
             // Clear invalid input
             this.value = ""; 
             inputElement.closest("tr").querySelector("input[name='cas_number[]']").value = "";
-            alert("Please select a valid chemical from the list.");
+            alert("Please select a valid chemical from the list. If not exist add the chemical.");
         }
     });
 }

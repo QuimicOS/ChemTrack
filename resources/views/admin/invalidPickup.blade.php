@@ -60,6 +60,8 @@
                 <tr>
                     <th scope="col">Pickup ID</th>
                     <th scope="col">Label ID</th>
+                    <th scope="col">Created by</th>
+                    <th scope="col">Invalidated by</th>
                     <th scope="col">Chemical Name</th>
                     <th scope="col">Building</th>
                     <th scope="col">Room Number</th>
@@ -108,6 +110,9 @@
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 
 <script>
+
+const userEmail = @json(Auth::user()->email);
+
  document.addEventListener("DOMContentLoaded", function() {
     initializeDataTable();
     fetchPickupRequests();
@@ -175,6 +180,8 @@ function populateTable(data) {
         const row = [
             request["Pickup ID"] || '-',
             request["Label ID"] || '-',
+            request["Created by"] || '-',
+            request["Invalidated by"] || '-',
             chemicalNames, // Join array items for Chemical Name
             request["Building Name"] || '-',
             request["Room Number"] || '-',
@@ -224,7 +231,8 @@ function confirmInvalidate() {
     },
     body: JSON.stringify({
         pickup_id: selectedPickupID,
-        message: reason // Include the reason
+        message: reason,
+        invalidated_by: userEmail,  // Include the reason
     })
 })
 .then(response => {

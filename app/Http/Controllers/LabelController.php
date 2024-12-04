@@ -234,29 +234,41 @@ class LabelController extends Controller
     /////////////////// a label by ID /////////////////////////////////////////
     public function searchLabelById($id)
     {
+        $user = Auth::user(); // Get the currently authenticated user
+
         // Retrieve the label by label_id
-        $label = DB::table('label')
-            ->where('label_id', $id)
-            ->first();
-    
+        $labelQuery = DB::table('label')->where('label_id', $id);
+
+        // Restrict access for non-administrators
+        if ($user->role !== 'Administrator') {
+            $labelQuery->whereIn('room_number', function ($subQuery) use ($user) {
+                $subQuery->select('room_number')
+                    ->from('rooms')
+                    ->where('user_id', $user->id);
+            });
+        }
+
+        $label = $labelQuery->first();
+
         // Check if the label exists
         if (!$label) {
-            return response()->json(['error' => 'Label not found'], 404);
+            return response()->json(['error' => 'Label not found or access denied'], 404);
         }
-    
+
         // Retrieve related contents for the label
-        $contents = DB::table(table: 'contents')
+        $contents = DB::table('contents')
             ->where('label_id', $id)
             ->select('chemical_name', 'cas_number', 'percentage')
             ->get();
-    
+
         // Combine label data with contents
         $labelData = (array) $label;
         $labelData['contents'] = $contents;
-    
+
         // Return label data with contents
         return response()->json($labelData, 200);
     }
+
 
 
 
@@ -402,6 +414,7 @@ class LabelController extends Controller
                 ->update([
                     'status_of_label' => 0, // Set to invalid
                     'message' => $request->message,
+                    'invalidated_by' => $request->invalidated_by,
                 ]);
     
             if ($updatedRows) {

@@ -17,6 +17,7 @@ return new class extends Migration
         Schema::create('label', function (Blueprint $table) {
             $table->id('label_id'); // Unique identifier for the label
             $table->string('created_by')->nullable(); // User's email (not referenced)
+            $table->string('invalidated_by')->nullable(); // User's email (not referenced)
             $table->string('department')->nullable(); // Department (user input)
             $table->string('building')->nullable(); // Building (user input)
             $table->string('room_number', 255)->nullable(); // Room number (user input)
@@ -25,7 +26,7 @@ return new class extends Migration
 
             $table->date('date_created'); // Date the label was created
             $table->string('container_size'); // Container size as a string
-            $table->integer('quantity'); // Quantity of the substance
+            $table->float('quantity'); // Quantity of the substance
             $table->string('units')->nullable();; // Units of measurement (e.g., L, mL)
             $table->tinyInteger('status_of_label')->default(Label::STATUS_PENDING); // Status with default value
             $table->text('message')->nullable(); // Optional message field

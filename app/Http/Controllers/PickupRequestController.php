@@ -165,7 +165,8 @@ class PickupRequestController extends Controller
         // Validate the request
         $request->validate([
             'pickup_id' => 'required|exists:pickup,id', // Correct table name here
-            'message' => 'required|string|max:255'
+            'message' => 'required|string|max:255',
+            'invalidated_by' => 'required|string|max:255'
         ]);
 
         // Find the pickup request
@@ -178,6 +179,7 @@ class PickupRequestController extends Controller
         // Update the status and save the invalidation message
         $pickupRequest->status_of_pickup = 0; // Set to 'Invalid'
         $pickupRequest->message = $request->message;
+        $pickupRequest->invalidated_by = $request->invalidated_by;
         $pickupRequest->save();
 
         return response()->json(['success' => true, 'message' => 'Pickup request invalidated successfully']);
@@ -308,6 +310,8 @@ class PickupRequestController extends Controller
             return [
                 'Pickup ID' => $pickupRequest->id,
                 'Label ID' => $pickupRequest->label ? $pickupRequest->label->label_id : null,
+                'Created by'=> $pickupRequest->user ? $pickupRequest->user->email : null,
+                'Invalidated by' => $pickupRequest->invalidated_by ?? '',
                 'Chemical(s)' => $chemicals,
                 'Building Name' => $pickupRequest->label ? $pickupRequest->label->building : null,
                 'Room Number' => $pickupRequest->label ? $pickupRequest->label->room_number : null,

@@ -80,6 +80,8 @@
 </div>
 
 <script>
+    const userEmail = @json(Auth::user()->email);
+
     // Ensure only numeric characters in Label ID input
     function validateLabelID() {
         const labelIDInput = document.getElementById('labelID');
@@ -151,7 +153,8 @@ function invalidateLabel() {
 
     // Create the JSON data to send
     const jsonData = {
-        message: reason
+        message: reason,
+        invalidated_by: userEmail,
     };
 
     // Send PUT request to backend
