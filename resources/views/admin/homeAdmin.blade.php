@@ -336,30 +336,30 @@ document.addEventListener('DOMContentLoaded', async function () {
             .then(response => response.json())
             .then(data => {
                 const totalWeightElement = document.querySelector('.total-weight h5');
+                const totalWeight = typeof data.total_weight_kg === 'number' ? data.total_weight_kg : 0;
                 if (totalWeightElement) {
-                    totalWeightElement.textContent = `${data.total_weight_kg.toFixed(2)} Kg`;
+                    totalWeightElement.textContent = `${totalWeight.toFixed(2)} Kg`;
                 } else {
                     console.error('Total weight element not found');
                 }
             })
             .catch(error => console.error('Error fetching total weight:', error));
-        }
-
-        // <!-- AJAX Calls for Dashboard Data volumegenerated -->
+    }
 
         function fetchTotalVolume() {
         fetch('/labels/volume')
             .then(response => response.json())
             .then(data => {
                 const totalVolumeElement = document.querySelector('.total-volume h5');
+                const totalVolume = typeof data.total_volume_liters === 'number' ? data.total_volume_liters : 0;
                 if (totalVolumeElement) {
-                    totalVolumeElement.textContent = `${data.total_volume_liters.toFixed(2)} Liters`;
+                    totalVolumeElement.textContent = `${totalVolume.toFixed(2)} Liters`;
                 } else {
                     console.error('Total volume element not found');
                 }
             })
             .catch(error => console.error('Error fetching total volume:', error));
-        }
+    }
 
 
 
