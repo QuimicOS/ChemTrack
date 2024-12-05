@@ -40,6 +40,7 @@ class Notification extends Model
      * 6 = User Role Requested
      * 7 = Maximum Capacity Reached (55 Gallons)
      * 8 = Maximum P Material Capacity Reached (1 Quart)
+     * 9 = Label Invalidated
      */
     
     // DIRECT RELATIONSHIPS

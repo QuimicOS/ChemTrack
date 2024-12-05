@@ -81,7 +81,8 @@ const notificationTitles = {
     5: "New Chemical",
     6: "User Role Requested",
     7: "Maximum Capacity Reached (55 Gallons)",
-    8: "P Material Capacity Reached (1 Liter or 1 Kilogram)"
+    8: "P Material Capacity Reached (1 Liter or 1 Kilogram)",
+    9: "Invalidated Label"
 };
 
 function fetchNotifications(url, containerId, allowMarkAsRead) {

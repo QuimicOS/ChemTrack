@@ -150,7 +150,7 @@ class NotificationController extends Controller
     
         $notifications = Notification::whereIn('send_to', $userRooms) 
             ->where('status_of_notification', 0) 
-            ->where('notification_type', 1)
+            ->whereIn('notification_type', [1, 9])
             ->orderBy('created_at', 'desc') 
             ->get();
     
@@ -173,7 +173,7 @@ class NotificationController extends Controller
     
         $notificationCount = Notification::whereIn('send_to', $userRooms)
             ->where('status_of_notification', 0) 
-            ->whereIn('notification_type', [1, 2])
+            ->whereIn('notification_type', [1, 2, 9])
             ->count();
     
         return response()->json(['count' => $notificationCount]);

@@ -225,7 +225,8 @@
                         5: 'New Chemical(s) Added',
                         6: 'New User Request(s)',
                         7: 'Maximum Capacity Reached',
-                        8: 'P Materials Capacity Reached'
+                        8: 'P Materials Capacity Reached',
+                        9: 'Invalidated Label(s)'
                     };
 
                     // Add menu items dynamically based on available types

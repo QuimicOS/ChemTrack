@@ -50,7 +50,7 @@
 </div>
 
 <!-- Active Notifications Section -->
-<h3>Invalidated Pickup Requests</h3>
+<h3>Invalidated Labels and Pickup Requests</h3>
 <div id="userNotificationsList">
     <!-- Active notifications will be dynamically loaded here -->
 </div>

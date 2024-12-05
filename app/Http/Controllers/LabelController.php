@@ -384,8 +384,8 @@ class LabelController extends Controller
                 return response()->json(['error' => 'Unauthorized: User not authenticated'], 401);
             }
     
-            // Fetch the label by ID
-            $label = DB::table('label')->where('label_id', $id)->first();
+            // Fetch the label by ID using Eloquent
+            $label = Label::find($id);
             if (!$label) {
                 return response()->json(['error' => 'Label not found'], 404);
             }
@@ -408,27 +408,21 @@ class LabelController extends Controller
                 }
             }
     
-            // Update the label to "Invalid"
-            $updatedRows = DB::table('label')
-                ->where('label_id', $id)
-                ->update([
-                    'status_of_label' => 0, // Set to invalid
-                    'message' => $request->message,
-                    'invalidated_by' => $request->invalidated_by,
-                ]);
+            // Update the label fields
+            $label->status_of_label = 0; // Set to invalid
+            $label->message = $request->message;
+            $label->invalidated_by = $user->email; // Assuming the user ID of the one invalidating
+            $label->save(); // Triggers the `updated()` event in the Label model
     
-            if ($updatedRows) {
-                return response()->json([
-                    'success' => 'Label updated successfully to Invalid',
-                    'message' => $request->message,
-                ], 200);
-            } else {
-                return response()->json(['error' => 'Error invalidating label'], 500);
-            }
+            return response()->json([
+                'success' => 'Label updated successfully to Invalid',
+                'message' => $request->message,
+            ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error invalidating label', 'details' => $e->getMessage()], 500);
         }
     }
+    
     
     
 

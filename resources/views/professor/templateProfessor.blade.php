@@ -215,7 +215,8 @@
                 // Notification type titles
                 const notificationTitles = {
                     2: 'Label(s) Without Pickup',
-                    1: 'Invalidated Pickup Request(s)'
+                    1: 'Invalidated Pickup Request(s)',
+                    9: 'Invalidated Label(s)'
                 };
 
                 // Add menu items dynamically based on available types

@@ -93,7 +93,40 @@ class Label extends Model
             } catch (\Exception $e) {
                 \Log::error("Error in 55-gallon notification: " . $e->getMessage());
             }
-        });            
+        });
+
+        static::updated(function ($label) {
+            \Log::info("Label updated event triggered for label_id: {$label->label_id}");
+            
+            if ($label->status_of_label === 0) {
+                \Log::info("Creating notifications for invalidated label: {$label->label_id}");
+        
+                try {
+                    // Notification for Administrator
+                    Notification::create([
+                        'send_to' => 'Administrator',
+                        'status_of_notification' => 0,
+                        'notification_type' => 9,
+                        'message' => "Label {$label->label_id} has been invalidated by {$label->invalidated_by}. Reason for invalidation: {$label->message}.",
+                        'label_id' => $label->label_id,
+                    ]);
+                    \Log::info("Notification created for Administrator.");
+        
+                    // Notification for Room
+                    Notification::create([
+                        'send_to' => $label->room_number,
+                        'status_of_notification' => 0,
+                        'notification_type' => 9,
+                        'message' => "Label {$label->label_id} has been invalidated by {$label->invalidated_by}. Reason for invalidation: {$label->message}.",
+                        'label_id' => $label->label_id,
+                    ]);
+                    \Log::info("Notification created for Room: {$label->room_number}.");
+                } catch (\Exception $e) {
+                    \Log::error("Failed to create notification: " . $e->getMessage());
+                }
+            }
+        });
+        
     }
     
     

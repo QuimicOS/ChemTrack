@@ -55,7 +55,7 @@ class PickupRequest extends Model
                 'send_to' => 'Administrator',
                 'status_of_notification' => 0,
                 'notification_type' => 1,
-                'message' => "Pickup Request {$pickupInvalid->id} has been invalidated. Reason for invalidation: {$pickupInvalid->message}.",
+                'message' => "Pickup Request {$pickupInvalid->id} has been invalidated by {$pickupInvalid->invalidated_by}. Reason for invalidation: {$pickupInvalid->message}.",
                 'label_id' => $pickupInvalid->label->label_id,
                 'pickup_id' => $pickupInvalid->id,
             ]);
@@ -70,7 +70,7 @@ class PickupRequest extends Model
                 'send_to' => $pickupInvalid->label->room_number,
                 'status_of_notification' => 0,
                 'notification_type' => 1,
-                'message' => "Pickup Request {$pickupInvalid->id} has been invalidated. Reason for invalidation: {$pickupInvalid->message}.",
+                'message' => "Pickup Request {$pickupInvalid->id} has been invalidated by {$pickupInvalid->invalidated_by}. Reason for invalidation: {$pickupInvalid->message}.",
                 'label_id' => $pickupInvalid->label->label_id,
                 'pickup_id' => $pickupInvalid->id,
             ]);
