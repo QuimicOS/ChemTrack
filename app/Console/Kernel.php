@@ -36,8 +36,13 @@ class Kernel extends ConsoleKernel
     //php artisan notifications:cleanup
    
     $schedule->command('users:expire-certifications')->daily();
+    //php artisan users:expire-certifications
 
     $schedule->command('cleanup:delete-old-records')->daily();
+    //php artisan cleanup:delete-old-records
+
+    $schedule->command('notifications:admin-35months')->daily();
+    //php artisan notifications:admin-35months
     }
 
 
