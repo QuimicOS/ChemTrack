@@ -506,75 +506,76 @@ Route::middleware(['auth', StaffMiddleware::class])->group(function(){
 
 
 
+Route::middleware(['auth'])->group(function(){
 
 
-
-//--------------------------------------------Autocomplete--------------------------//
-Route::get('/laboratories', [LaboratoryController::class, 'getAllLabs']);
-Route::get('/laboratories/{room_number}', [LaboratoryController::class, 'getLabByRoomNumber']);
-
-
-// Chemical Routes
-//Route::get('/chemicals', [ChemicalController::class, 'getAllChemicals']);
-Route::get('/chemicals/{chemical_name}', [ChemicalController::class, 'getCASNumberByChemicalName']);
-Route::get('/chemicals', [ChemicalController::class, 'index']);
-
-//------------------------------------------------------------------------------------//
+    //--------------------------------------------Autocomplete--------------------------//
+    Route::get('/laboratories', [LaboratoryController::class, 'getAllLabs']);
+    Route::get('/laboratories/{room_number}', [LaboratoryController::class, 'getLabByRoomNumber']);
 
 
+    // Chemical Routes
+    //Route::get('/chemicals', [ChemicalController::class, 'getAllChemicals']);
+    Route::get('/chemicals/{chemical_name}', [ChemicalController::class, 'getCASNumberByChemicalName']);
+    Route::get('/chemicals', [ChemicalController::class, 'index']);
 
-
-// -------------------------------------Notification Routes--------------------------------------------------
-Route::put('/notificationRead', action: [NotificationController::class, 'markAsRead']);
-Route::get('/notificationAdminActives', action: [NotificationController::class, 'adminGetUnreadNotifications']);
-Route::get('/notificationAdminRead', action: [NotificationController::class, 'adminGetReadNotifications']);
-Route::get('/notificationAdminOverdues', action: [NotificationController::class, 'adminGetOverdueNotifications']);
-Route::get('/notificationGetToDo', action: [NotificationController::class, 'getToDo']);
-Route::get('/create5Months', action: [LabelController::class, 'getValidLabels']);
-
-Route::get('/todoList', action: [NotificationController::class, 'todoList']);
-Route::post('/checkPickupRequest', [LabelController::class, 'checkPickupRequest']);
-Route::get('/notificationUnreadCount', action: [NotificationController::class, 'unreadNotificationsCount']);
-Route::get('/notifications/types', [NotificationController::class, 'getNotificationTypes']);
-Route::get('/notificationUserCount', [NotificationController::class, 'countUserNotifications']);
-Route::get('/notificationUserUnreads', [NotificationController::class, 'getUserNotifications']);
-Route::get('/notificationTypes', [NotificationController::class, 'getUserNotificationTypes']);
-
-// ------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------//
 
 
 
 
-//////////////////////////////////////////////////////////////////////////////////
-////////////////////////////// Quiz //////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
 
-Route::get('/notice', function () {
-    return view('notice');
-})->name('notice');
+    // -------------------------------------Notification Routes--------------------------------------------------
+    Route::put('/notificationRead', action: [NotificationController::class, 'markAsRead']);
+    Route::get('/notificationAdminActives', action: [NotificationController::class, 'adminGetUnreadNotifications']);
+    Route::get('/notificationAdminRead', action: [NotificationController::class, 'adminGetReadNotifications']);
+    Route::get('/notificationAdminOverdues', action: [NotificationController::class, 'adminGetOverdueNotifications']);
+    Route::get('/notificationGetToDo', action: [NotificationController::class, 'getToDo']);
+    Route::get('/create5Months', action: [LabelController::class, 'getValidLabels']);
 
-Route::get('/training', function () {
-    return view('training');
-})->name('training');
+    Route::get('/todoList', action: [NotificationController::class, 'todoList']);
+    Route::post('/checkPickupRequest', [LabelController::class, 'checkPickupRequest']);
+    Route::get('/notificationUnreadCount', action: [NotificationController::class, 'unreadNotificationsCount']);
+    Route::get('/notifications/types', [NotificationController::class, 'getNotificationTypes']);
+    Route::get('/notificationUserCount', [NotificationController::class, 'countUserNotifications']);
+    Route::get('/notificationUserUnreads', [NotificationController::class, 'getUserNotifications']);
+    Route::get('/notificationTypes', [NotificationController::class, 'getUserNotificationTypes']);
 
-Route::get('/quiz', function () {
-    return view('quiz');
-})->name('quiz');
-
-
-//// Quiz Routes for Users
-Route::get('/quiz', [QuizController::class, 'show'])->name('quiz.show');
-Route::post('/quiz/submit', [QuizController::class, 'submit'])->name('quiz.submit');
-Route::post('/quiz/pass', [QuizController::class, 'passQuiz'])->name('quiz.pass');
-Route::post('/update-certification-status', [UserController::class, 'updateCertificationStatus'])->name('update.certificate');
-
-
-// //////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
+    // ------------------------------------------------------------------------------------------------------
 
 
 
+
+    //////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////// Quiz //////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
+
+    Route::get('/notice', function () {
+        return view('notice');
+    })->name('notice');
+
+    Route::get('/training', function () {
+        return view('training');
+    })->name('training');
+
+    Route::get('/quiz', function () {
+        return view('quiz');
+    })->name('quiz');
+
+
+    //// Quiz Routes for Users
+    Route::get('/quiz', [QuizController::class, 'show'])->name('quiz.show');
+    Route::post('/quiz/submit', [QuizController::class, 'submit'])->name('quiz.submit');
+    Route::post('/quiz/pass', [QuizController::class, 'passQuiz'])->name('quiz.pass');
+    Route::post('/update-certification-status', [UserController::class, 'updateCertificationStatus'])->name('update.certificate');
+
+
+    // //////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
+
+
+});
 
 
 
