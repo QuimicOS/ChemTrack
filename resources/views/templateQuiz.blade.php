@@ -108,7 +108,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <span class="navbar-text me-3"><b>{{Auth::user()->name}}</b></span>
-                <button class="btn btn-outline-danger">Sign Out</button>
+                <a href="{{ route('auth.saml.logout') }}" class="btn btn-danger">Sign Out</a>
                 </ul>
 
 
