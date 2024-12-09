@@ -80,6 +80,8 @@
 </div>
 
 <script>
+    const userEmail = @json(Auth::user()->email);
+    
     // Ensure only numeric characters in Label ID input
     function validateLabelID() {
         const labelIDInput = document.getElementById('labelID');
