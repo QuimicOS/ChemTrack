@@ -492,7 +492,7 @@ function generatePDF(labelData) {
         offsetY = (pageHeight - labelHeight) / 2;
         fontSize = 4;
         lineSpacing = 2.5;
-        tableColumnSpacing = { chemical: 2, cas: 12, percent: 20 };
+        tableColumnSpacing = { chemical: 2, cas: 13, percent: 22 };
         additionalSpacing = 1;
         maxChemicals = 2;
         noteOffset = 3; // Vertical offset for the note
@@ -503,7 +503,7 @@ function generatePDF(labelData) {
         offsetY = (pageHeight - labelHeight) / 2;
         fontSize = 6;
         lineSpacing = 4.5;
-        tableColumnSpacing = { chemical: 2, cas: 20, percent: 34 };
+        tableColumnSpacing = { chemical: 3, cas: 30, percent: 43 };
         additionalSpacing = 2;
         maxChemicals = 5;
         noteOffset = 6;
@@ -514,7 +514,7 @@ function generatePDF(labelData) {
         offsetY = (pageHeight - labelHeight) / 2;
         fontSize = 9;
         lineSpacing = 7.5;
-        tableColumnSpacing = { chemical: 15, cas: 60, percent: 80 };
+        tableColumnSpacing = { chemical: 3, cas: 70, percent: 90 };
         additionalSpacing = 6;
         maxChemicals = 8;
         noteOffset = 10;

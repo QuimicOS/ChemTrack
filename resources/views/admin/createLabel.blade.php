@@ -201,8 +201,28 @@
 </fieldset>
 
 
-<!-- Submit button -->
-<button type="button" class="btn btn-success" onclick="validateAndSubmit()">Submit and Generate PDF</button>
+<!-- Preview Button -->
+<button type="button" class="btn btn-secondary" id="previewButton">Preview Label</button>
+
+<!-- Modal for Preview -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">Label Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <iframe id="pdfPreview" style="width: 100%; height: 500px;" frameborder="0"></iframe>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="validateAndSubmit()">Submit and Generate PDF</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 
@@ -212,7 +232,9 @@
 <script>
     let labData = [];
     let chemicalData = [];
+    let confirm = 0;
 
+    // Wait until the DOM content is fully loaded
     document.addEventListener("DOMContentLoaded", function () {
         // Set today's date for the label creation date field
         const today = new Date().toISOString().split("T")[0];
@@ -242,19 +264,20 @@
         fetch('/chemicals')
             .then(response => response.json())
             .then(data => {
-                chemicalData = data;
-                populateChemicalAutocomplete(data);
+                chemicalData = data; // Store chemicals globally for reuse
+                populateChemicalAutocomplete(data); // Populate the autocomplete options
                 setupAutocompleteForChemicals(); // Apply autocomplete to all chemical name fields
             })
             .catch(error => console.error('Error fetching chemicals:', error));
 
-        // Update lab details based on room number selection
+        // Update lab details based on selected room number
         document.getElementById("roomNumber").addEventListener("input", function () {
         const inputVal = this.value.trim();
         const selectedOption = Array.from(document.getElementById("roomNumberList").options).find(
             (option) => option.value === inputVal
         );
 
+         // Autofill related fields when a valid room number is selected
         if (selectedOption) {
             document.getElementById("labName").value = selectedOption.getAttribute("data-labName");
             document.getElementById("department").value = selectedOption.getAttribute("data-department");
@@ -269,7 +292,7 @@
         }
      });
 
-        // Add a new row for chemicals in the table
+        // Add a new row to the chemicals table
         document.getElementById('addRow').addEventListener('click', function () {
             const tableBody = document.getElementById('chemicalTable').getElementsByTagName('tbody')[0];
             const newRow = document.createElement('tr');
@@ -288,7 +311,7 @@
         addRemoveRowListeners();
     });
 
-    // Populate laboratory dropdowns
+    // Populate the chemical autocomplete datalist
     function populateLabDropdowns(data) {
         const roomNumberSelect = document.getElementById('roomNumber');
         roomNumberSelect.innerHTML = '<option value="" selected>Select Room Number</option>';
@@ -296,10 +319,10 @@
         data.forEach(lab => {
             roomNumberSelect.add(new Option(`${lab.room_number}`, lab.room_number));
         });
-        }
+    }
 
 
-// Setup autocomplete for a specific input field
+// Populate the chemical autocomplete datalist
 function populateChemicalAutocomplete(data) {
     const chemicalList = document.getElementById("chemicalList");
     chemicalList.innerHTML = ""; // Clear existing options
@@ -313,7 +336,7 @@ function populateChemicalAutocomplete(data) {
     });
 }
 
-// Setup autocomplete for a specific input field
+// Set up autocomplete for a specific input field
 function setupAutocomplete(inputElement, dataList) {
     inputElement.addEventListener("blur", function () {
         const val = this.value.trim();
@@ -322,6 +345,7 @@ function setupAutocomplete(inputElement, dataList) {
         );
 
         if (selectedOption) {
+            // Autofill CAS number based on selected chemical
             const casNumber = selectedOption.getAttribute("data-cas");
             const chemicalName = selectedOption.getAttribute("data-name");
 
@@ -340,7 +364,7 @@ function setupAutocomplete(inputElement, dataList) {
 }
 
 
-// Apply autocomplete to all existing and new rows
+// Apply autocomplete to all chemical input fields
 function setupAutocompleteForChemicals() {
     document.querySelectorAll(".chemical-name").forEach((input) => {
         setupAutocomplete(input, chemicalData);
@@ -457,6 +481,7 @@ function setupAutocompleteForChemicals() {
         .then(data => {
             if (data.success) {
                 alert('Label created successfully');
+                confirm = 1; 
                 labelData.label_id = data.data.label_id;
                 labelData.chemicals = contentData;
                 generatePDF(labelData);
@@ -483,6 +508,41 @@ function setupAutocompleteForChemicals() {
     }
     }
 
+    document.getElementById("previewButton").addEventListener("click", function () {
+    // Collect form data to generate the preview
+    confirm = 0;
+    const labelData = {
+        label_id: "Preview", // Placeholder for preview
+        date_created: document.getElementById("dateCreated").value,
+        department: document.getElementById("department").value,
+        building: document.getElementById("building").value,
+        room_number: document.getElementById("roomNumber").value,
+        lab_name: document.getElementById("labName").value,
+        principal_investigator: document.getElementById("principalInvestigator").value,
+        container_size: document.getElementById("containerSize").value,
+        quantity: document.getElementById("stored").value,
+        units: document.getElementById("units").value,
+        chemicals: Array.from(document.querySelectorAll("#chemicalTable tbody tr")).map(row => ({
+            chemical_name: row.cells[0].querySelector('input').value,
+            cas_number: row.cells[1].querySelector('input').value,
+            percentage: parseFloat(row.cells[2].querySelector('input').value),
+        })),
+    };
+
+    // Generate PDF for preview
+    const doc = generatePDF(labelData);
+
+    // Show preview in modal
+    const pdfBlob = doc.output("blob");
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const previewIframe = document.getElementById("pdfPreview");
+    previewIframe.src = pdfUrl;
+
+    // Show the modal (Bootstrap 5 method)
+    const modal = new bootstrap.Modal(document.getElementById("previewModal"));
+    modal.show();
+});
+
 function generatePDF(labelData) {
     const { jsPDF } = window.jspdf;
 
@@ -504,7 +564,7 @@ function generatePDF(labelData) {
         offsetY = (pageHeight - labelHeight) / 2;
         fontSize = 4;
         lineSpacing = 2.5;
-        tableColumnSpacing = { chemical: 2, cas: 12, percent: 20 };
+        tableColumnSpacing = { chemical: 2, cas: 13, percent: 21 };
         additionalSpacing = 1;
         maxChemicals = 2;
         noteOffset = 3; // Vertical offset for the note
@@ -515,7 +575,7 @@ function generatePDF(labelData) {
         offsetY = (pageHeight - labelHeight) / 2;
         fontSize = 6;
         lineSpacing = 4.5;
-        tableColumnSpacing = { chemical: 2, cas: 20, percent: 34 };
+        tableColumnSpacing = { chemical: 3, cas: 30, percent: 43 };
         additionalSpacing = 2;
         maxChemicals = 5;
         noteOffset = 6;
@@ -526,7 +586,7 @@ function generatePDF(labelData) {
         offsetY = (pageHeight - labelHeight) / 2;
         fontSize = 9;
         lineSpacing = 7.5;
-        tableColumnSpacing = { chemical: 15, cas: 60, percent: 80 };
+        tableColumnSpacing = { chemical: 3, cas: 70, percent: 90 };
         additionalSpacing = 6;
         maxChemicals = 8;
         noteOffset = 10;
@@ -688,10 +748,16 @@ function generatePDF(labelData) {
         contentY += lineSpacing;
         doc.text(chemical.chemical_name, offsetX + tableColumnSpacing.chemical, contentY);
         doc.text(chemical.cas_number, offsetX + tableColumnSpacing.cas, contentY);
-        doc.text(String(chemical.percentage), offsetX + tableColumnSpacing.percent, contentY);
+        doc.text(String(chemical.percentage), offsetX + tableColumnSpacing.percent + 1, contentY);
     });
 
-    doc.save(`label_${String(labelData.label_id) || "N/A"}.pdf`);
+    // Download PDF if confirm is set to 1
+    if (confirm === 1) {
+        doc.save(`label_${labelData.label_id || "N/A"}.pdf`);
+        confirm = 0;
+    }
+
+    return doc;
 }
 
 
