@@ -205,6 +205,7 @@ Route::middleware(['auth', AdminMiddleware::class])->group(function(){
 
     //Search Label by ID
     Route::get('/Adminlabel/{id}', [LabelController::class, 'searchLabelById']); 
+    Route::get('/Adminlabel/room/{roomNumber}', [LabelController::class, 'getLabelsByRoom']);
 
 
 
@@ -360,6 +361,7 @@ Route::middleware(['auth',ProfessorMiddleware::class])->group(function(){
 
     //----------------------------Search Label by id-------------------//
     Route::get('/Proflabel/{id}', [LabelController::class, 'searchLabelById']); 
+    Route::get('/Proflabel/room/{roomNumber}', [LabelController::class, 'getLabelsByRoom']);
 
 
     //---------------------------create a label----------------------//
@@ -464,6 +466,7 @@ Route::middleware(['auth', StaffMiddleware::class])->group(function(){
 
     //----------------------------Search Label by id-------------------//
     Route::get('/Stafflabel/{id}', [LabelController::class, 'searchLabelById']); 
+    Route::get('/Stafflabel/room/{roomNumber}', [LabelController::class, 'getLabelsByRoom']);
 
 
     //---------------------------create a label----------------------//

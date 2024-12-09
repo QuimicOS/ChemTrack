@@ -216,19 +216,6 @@ class LabelController extends Controller
     }
 }
     
-
-    
-
-
-
-
-
-
-
-
-
-
-
     //////////////////// Search LABEL FRONT END////////////////////////////////////
 
     /////////////////// a label by ID /////////////////////////////////////////
@@ -269,34 +256,42 @@ class LabelController extends Controller
         return response()->json($labelData, 200);
     }
 
+    public function getLabelsByRoom($roomNumber)
+    {
+        $user = Auth::user(); // Get the authenticated user
 
+        // Non-admin users: Check if the user is assigned to the room
+        $room = DB::table('rooms')
+            ->where('room_number', $roomNumber)
+            ->where('user_id', $user->id)
+            ->first();
 
+        if (!$room && $user->role !== 'Administrator') {
+            return response()->json([
+                'error' => 'You do not have permission to view labels for this room.',
+                'status' => 403
+            ]);
+        }
 
+        // Retrieve labels and their related chemical information
+        $labels = DB::table('label')
+            ->where('room_number', $roomNumber)
+            ->where('status_of_label', 1) // 1 = Pending
+            ->get()
+            ->map(function ($label) {
+                // Fetch contents for each label
+                $contents = DB::table('contents')
+                    ->where('label_id', $label->label_id)
+                    ->select('chemical_name', 'cas_number', 'percentage')
+                    ->get();
 
+                // Add the contents to the label
+                $label->contents = $contents;
+                return $label;
+            });
 
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
+        return response()->json(['labels' => $labels]);
+    }
 
 
     ////////////////////////Design methods/////////////////////////////////////
@@ -421,48 +416,52 @@ class LabelController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error invalidating label', 'details' => $e->getMessage()], 500);
         }
-    }
-    
-    
-    
+    }  
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////// STATISTICS para FRONTEND/////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+public function calculateTotalWeight()
+{
+    $totalWeightKg = Label::where('date_created', '>=', now()->subDays(30))
+        ->whereIn('units', ['Grams', 'Kilograms', 'Pounds'])
+        ->selectRaw("
+            SUM(
+                CASE
+                    WHEN units = 'Grams' THEN quantity / 1000
+                    WHEN units = 'Pounds' THEN quantity * 0.453592
+                    WHEN units = 'Kilograms' THEN quantity
+                    ELSE 0
+                END
+            ) AS total_weight_kg
+        ")
+        ->value('total_weight_kg');
+
+    return response()->json(['total_weight_kg' => $totalWeightKg], 200);
+}
 
 
 
-//     public function invalidateLabel(Request $request, $id)
-// {
-//     // Validate the provided message
-//     $request->validate([
-//         'message' => 'required|string|max:255'
-//     ]);
+public function calculateTotalVolume()
+{
+    $totalVolumeLiters = Label::where('date_created', '>=', now()->subDays(30))
+        ->whereIn('units', ['Milliliters', 'Liters', 'Gallons'])
+        ->selectRaw("
+            SUM(
+                CASE
+                    WHEN units = 'Milliliters' THEN quantity / 1000
+                    WHEN units = 'Gallons' THEN quantity * 3.78541
+                    WHEN units = 'Liters' THEN quantity
+                    ELSE 0
+                END
+            ) AS total_volume_liters
+        ")
+        ->value('total_volume_liters');
 
-//     // Retrieve the label by ID
-//     $label = Label::find($id);
-//     if (!$label) {
-//         return response()->json(['error' => 'Label not found'], 404);
-//     }
+    return response()->json(['total_volume_liters' => $totalVolumeLiters], 200);
+}
 
-//     // Get the authenticated user and their laboratory ID
-//     $user = Auth::user();
-//     $userLabId = $user->lab_id; // Assuming the user has a `laboratories_id` field indicating their lab
-
-//     // Check if the user's lab matches the label's lab
-//     if ($label->lab_id !== $userLabId) { 
-//         return response()->json(['error' => 'Unauthorized: You do not have permission to invalidate this label'], 403);
-//     }
-
-//     // Invalidate the label and store the message
-//     $label->update([
-//         'status_of_label' => 'INVALID',
-//         'message' => $request->message
-//     ]);
-
-//     return response()->json([
-//         'success' => 'Label updated successfully to Invalid',
-//         'message' => $request->message
-//     ], 200);
-// }
-
-  
 
 public function getChartData()
 {
@@ -528,198 +527,6 @@ public function getChartData()
     }
 }
 
-
-
-
-
-    
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////// STATISTICS para FRONTEND/////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-// public function calculateTotalWeight()
-// {
-//     // Define solid units for categorization
-//     $solidUnits = ['Grams', 'Kilograms', 'Pounds'];
-
-//     // Get the date 30 days ago
-//     $thirtyDaysAgo = Carbon::now()->subDays(30);
-
-//     // Get all labels created in the last 30 days
-//     $labels = Label::where(DB::raw('date(label.date_created)'), '>=', $thirtyDaysAgo)->get();
-
-//     // Initialize variable for total solid weight
-//     $totalSolidWeight = 0;
-
-//     // Loop through labels to sum quantities based on units
-//     foreach ($labels as $label) {
-//         if (in_array(strtolower($label->units), $solidUnits)) {
-//             $totalSolidWeight += $label->quantity;
-//         }
-//     }
-
-//     // Return the total solid weight as a response
-//     return response()->json([
-//         'total_solid_weight' => $totalSolidWeight,
-//     ]);
-// }
-
-public function calculateTotalWeight()
-{
-    $totalWeightKg = Label::where('date_created', '>=', now()->subDays(30))
-        ->whereIn('units', ['Grams', 'Kilograms', 'Pounds'])
-        ->selectRaw("
-            SUM(
-                CASE
-                    WHEN units = 'Grams' THEN quantity / 1000
-                    WHEN units = 'Pounds' THEN quantity * 0.453592
-                    WHEN units = 'Kilograms' THEN quantity
-                    ELSE 0
-                END
-            ) AS total_weight_kg
-        ")
-        ->value('total_weight_kg');
-
-    return response()->json(['total_weight_kg' => $totalWeightKg], 200);
-}
-
-
-
-public function calculateTotalVolume()
-{
-    $totalVolumeLiters = Label::where('date_created', '>=', now()->subDays(30))
-        ->whereIn('units', ['Milliliters', 'Liters', 'Gallons'])
-        ->selectRaw("
-            SUM(
-                CASE
-                    WHEN units = 'Milliliters' THEN quantity / 1000
-                    WHEN units = 'Gallons' THEN quantity * 3.78541
-                    WHEN units = 'Liters' THEN quantity
-                    ELSE 0
-                END
-            ) AS total_volume_liters
-        ")
-        ->value('total_volume_liters');
-
-    return response()->json(['total_volume_liters' => $totalVolumeLiters], 200);
-}
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
 
 ////////////////////UNWANTED MATERIAL SUMMARY////////////////////////////// 
 
@@ -830,21 +637,6 @@ public function getLabInfoByRoomNumber($roomNumber)
 
 
 
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
 //////////////////////////////// MEMORANDUM/////////////////////////////////
 public function memorandum(Request $request)
 {
@@ -871,13 +663,6 @@ public function memorandum(Request $request)
 
 
 
-
-
-
-
-
-
-
     //// get the label close to the 6 month mark
     public function getLabelsNearSixMonths()
     {
@@ -894,15 +679,5 @@ public function memorandum(Request $request)
             'labels' => $labels
         ], 200);
     }
-
-
-
-
-
-
-
-
-
- 
 
 }

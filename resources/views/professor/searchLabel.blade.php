@@ -1,6 +1,5 @@
 @extends('professor.templateProfessor')
 
-
 @section('title', 'Search Label - ChemTrack')
 
 @section('content')
@@ -58,7 +57,7 @@
     <h1 class="display-5">Search Label</h1>
     <hr class="my-4">
   </div>
-
+<fieldset>
   <!-- Label ID Searchbar and Search Button -->
   <div class="search-container mb-5">
     <label for="labelID" class="form-label">Label ID <span class="text-danger">*</span></label>
@@ -162,7 +161,36 @@
       </tbody>
     </table>
   </div>
+</fieldset>
 
+  <!-- Room Number Search -->
+  <fieldset>
+    <div class="search-container mb-5">
+      <label for="roomNumberSearch" class="form-label">Room Number <span class="text-danger">*</span></label>
+      <input type="text" class="form-control" id="roomNumberSearch" placeholder="Enter Room Number" required>
+      <button id="searchRoomButton" class="btn btn-primary" disabled>Search</button>
+    </div>
+
+    <!-- Room Number Labels Table -->
+    <div class="table-container room-number-table" style="display:none;">
+      <h4>Labels for Room Number (Pendings)</h4>
+      <table class="table table-bordered table-hover">
+          <thead class="table-dark">
+              <tr>
+                  <th scope="col">Label ID</th>
+                  <th scope="col">Date Created</th>
+                  <th scope="col">Created By</th>
+                  <th scope="col">Chemical name</th>
+                  <th scope="col">Container Size</th>
+                  <th scope="col">Quantity</th>
+              </tr>
+          </thead>
+          <tbody id="roomLabelsTableBody">
+              <!-- Table rows will be dynamically added here -->
+          </tbody>
+      </table>
+    </div>
+  </fieldset>
 <script>
   // Only allow numeric input in Label ID field
   document.getElementById('labelID').addEventListener('keydown', function (event) {
@@ -261,12 +289,68 @@ document.getElementById('searchButton').addEventListener('click', function () {
         })
         .catch(error => {
             console.error('Error fetching label:', error);
-            alert('Label not found or an error occurred.');
+            alert('Label not found or access denied to view this label.');
         });
 });
 
+document.getElementById('roomNumberSearch').addEventListener('input', function () {
+    const roomNumber = this.value;
+    const isNotEmpty = roomNumber.trim().length > 0;
 
+    document.getElementById('searchRoomButton').disabled = !isNotEmpty;
 
+    if (!isNotEmpty) {
+        this.classList.add('is-invalid');
+    } else {
+        this.classList.remove('is-invalid');
+    }
+});
+
+document.getElementById('searchRoomButton').addEventListener('click', function () {
+    const roomNumber = document.getElementById('roomNumberSearch').value;
+
+    fetch(`/Proflabel/room/${roomNumber}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Room not found or no labels available.');
+            }
+            return response.json(); // Ensure the response is parsed as JSON
+        })
+        .then(data => {
+            // Show the room number table
+            document.querySelector('.room-number-table').style.display = 'block';
+
+            // Clear the table first
+            const tableBody = document.getElementById('roomLabelsTableBody');
+            tableBody.innerHTML = '';
+
+            // Populate the table with labels from JSON data
+            if (data.labels && data.labels.length > 0) {
+                data.labels.forEach(label => {
+                    // For each label, create a row
+                    const row = `
+                        <tr>
+                            <td>${label.label_id}</td>
+                            <td>${label.date_created}</td>
+                            <td>${label.created_by}</td>
+                            <td>
+                                ${label.contents.map(content => content.chemical_name).join(', ')}
+                            </td>
+                            <td>${label.container_size}</td>
+                            <td>${label.quantity} ${label.units}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            } else {
+                alert('You do not have permission to view labels for this room, or there are no pending labels.');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching room labels:', error);
+            alert('Room not found or no labels available.');
+        });
+});
 </script>
 
 
