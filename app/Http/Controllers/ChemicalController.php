@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Chemical;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class ChemicalController extends Controller
 {
@@ -35,7 +36,8 @@ class ChemicalController extends Controller
         $validatedData = $request->validate([
             'chemical_name' => 'required|string|max:255',
             'cas_number' => 'required|string|max:255',
-            'status_of_chemical' => 'required|integer|in: 0,1',  //0 = Inactive 1= Active
+            'status_of_chemical' => 'required|integer|in:0,1', // 0 = Inactive, 1 = Active
+            'user_id' => 'required|integer|exists:users,id', // Ensure user_id exists in the users table
         ]);
     
         $chemical = Chemical::create($validatedData);
@@ -90,6 +92,10 @@ class ChemicalController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $user = Auth::user(); // Ensure user is authenticated
+        if (!$user) {
+            return response()->json(['message' => 'User not authenticated.'], 401);
+        }
         $validatedData = $validator->validated();
 
         $existingChemical = Chemical::where('chemical_name', $validatedData['chemical_name'])
@@ -100,7 +106,7 @@ class ChemicalController extends Controller
             return response()->json(['message' => 'Chemical Already Exists.'], 409);
         }
 
-        $chemical = Chemical::create(array_merge($validatedData, ['status_of_chemical' => '1']));
+        $chemical = Chemical::create(array_merge($validatedData, ['status_of_chemical' => '1', 'user_id' => $user->id,]));
 
         return response()->json($chemical, 201);
     }

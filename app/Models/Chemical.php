@@ -14,7 +14,8 @@ class Chemical extends Model
     protected $fillable = [
         'chemical_name',
         'cas_number',
-        'status_of_chemical'
+        'status_of_chemical',
+        'user_id',
     ];
 
     /**
@@ -30,12 +31,16 @@ class Chemical extends Model
 
         // Listen to the `created` event
         static::created(function ($chemical) {
+
+            // Fetch the user's email using the relationship
+            $userEmail = $chemical->user->email ?? 'Unknown User';
+
             // Trigger a notification (use a service or event instead of directly calling a controller)
             Notification::create([
                 'send_to' => 'Administrator',
                 'status_of_notification' => 0,
                 'notification_type' => 5,
-                'message' => "A new chemical has been created: {$chemical->chemical_name} with CAS Number: {$chemical->cas_number}",
+                'message' => "A new chemical has been created by {$userEmail}: {$chemical->chemical_name} with CAS Number: {$chemical->cas_number}",
                 'chemical_id' => $chemical->id,
             ]);
         });
@@ -44,7 +49,7 @@ class Chemical extends Model
     // INVERSE RELATIONSHIPS
     public function user()
     {
-    return $this->hasMany(User::class, 'user_id');
+    return $this->belongsTo(User::class, 'user_id');
     }
 
     public function notification()

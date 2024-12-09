@@ -69,6 +69,8 @@
 
 @section('scripts')
     <script>
+
+        const currentUserId = @json(Auth::id());
         // CSRF token for secure requests
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
@@ -139,6 +141,7 @@
                             chemical_name: chemicalName,
                             cas_number: casNumber,
                             status_of_chemical: 1, // Sets status to active (1)
+                            user_id: currentUserId,
                         }),
                     });
                 })

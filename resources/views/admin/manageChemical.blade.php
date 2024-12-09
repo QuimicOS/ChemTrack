@@ -199,6 +199,8 @@
 
 @section('scripts')
     <script>
+
+    const currentUserId = @json(Auth::id());
         // Global variable to store the current chemical ID for edits and deletions
         let currentChemicalId = null;
 
@@ -289,6 +291,7 @@
                             chemical_name: chemicalName,
                             cas_number: casNumber,
                             status_of_chemical: 1, // Set status as active by default
+                            user_id: currentUserId,
                         }),
                     });
                 })

@@ -7,7 +7,7 @@ use App\Models\Content;
 
 class ContentController extends Controller
 {
-    // Store content for a label
+    // Store content for a label (a subtable that map chemicals in each label)
     public function store(Request $request)
     {
         $request->validate([
