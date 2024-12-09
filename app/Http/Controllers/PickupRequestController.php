@@ -85,7 +85,7 @@ class PickupRequestController extends Controller
     }    
 
 // ------------------------------------------------------------------------------------------------------
-// -------------------------------------------FRONTEND METHODS-------------------------------------------
+// -------------------------------------------PICKUP REQUEST---------------------------------------------
 // ------------------------------------------------------------------------------------------------------ 
 
     // Creates a Pickup Request using a valid LABEL_ID
@@ -157,8 +157,9 @@ class PickupRequestController extends Controller
     
 
     
-
-    // INVALIDATE PICKUP REQUEST
+// ------------------------------------------------------------------------------------------------------
+// ------------------------------------INVALID PICKUP REQUEST--------------------------------------------
+// ------------------------------------------------------------------------------------------------------ 
     public function invalidatePickupRequest(Request $request)
 {
     try {
@@ -191,9 +192,9 @@ class PickupRequestController extends Controller
     
 
     
-
-
-    //CHANGE STATUS OF LABEL AND PICKUP TO COMPLETED
+// ------------------------------------------------------------------------------------------------------
+// -------------------------------------------PICKUP HISTORIAL (ADMIN)-----------------------------------
+// ------------------------------------------------------------------------------------------------------   
     public function completePickupRequest(Request $request)
 {
     $validator = Validator::make($request->all(), [
@@ -219,8 +220,7 @@ class PickupRequestController extends Controller
 
     return response()->json(['success' => true, 'message' => 'Pickup request completed successfully.']);
 }
-
-    // Searches Pickup Requests by Laboratory, Status, and Completion Method    
+ 
     public function searchPickupRequests()
     {
         $pickupRequests = PickupRequest::with(['label.laboratory', 'user'])->get();
@@ -245,6 +245,7 @@ class PickupRequestController extends Controller
                 'Label ID' => $pickup->label_id,
                 'Requested By Email' => $pickup->user ? $pickup->user->email : 'N/A', // Use user_id to get the email
                 'Request Date' => $pickup->created_at->format('Y-m-d'),
+                'Completion Date' => substr($pickup->completion_date, 0, 10) ?? 'N/A',
                 'Chemicals' => $chemicals,
                 'Building Name' => $pickup->label->building ?? null,
                 'Room Number' => $pickup->label->room_number ?? 'N/A',
@@ -270,10 +271,9 @@ class PickupRequestController extends Controller
     }
     
 
-
-    
-
-    // COUNT PICKUP REQUESTS WITH PENDING STATUS
+// ------------------------------------------------------------------------------------------------------
+// -------------------------------------------PICKUP STATS DASHBOARD (ADMIN)-----------------------------
+// ------------------------------------------------------------------------------------------------------   
     public function countPendingPickupRequests()
     {
         $pickupCount = PickupRequest::where('status_of_pickup', 2)->count();
@@ -281,7 +281,9 @@ class PickupRequestController extends Controller
         return response()->json($pickupCount, 200);
     }
 
-    // RETURNS DATABASE INFORMATION THROUGH FOREIGN KEYSpublic function getAllPickupRequests()
+// ------------------------------------------------------------------------------------------------------
+// -------------------------------------------MANAGE PICKUP REQUESTS ------------------------------------
+// ------------------------------------------------------------------------------------------------------   
     public function getAllPickupRequests()
     {
         // Retrieve the authenticated user

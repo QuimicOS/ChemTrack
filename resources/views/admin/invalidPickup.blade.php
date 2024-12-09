@@ -114,37 +114,40 @@
 const userEmail = @json(Auth::user()->email);
 
  document.addEventListener("DOMContentLoaded", function() {
+    // Initialize DataTable and fetch initial pickup requests
     initializeDataTable();
     fetchPickupRequests();
 });
 
-let selectedPickupID = null;
+let selectedPickupID = null; // Variable to store the selected Pickup ID for invalidation
 
+//Initialize the DataTable with options for pagination, custom filters, and sorting.
 function initializeDataTable() {
     $('#pickupTable').DataTable({
-        "pageLength": 10,
-        "order": [[7, "asc"]],
+        "pageLength": 10, // Show 10 rows per page
+        "order": [[7, "asc"]], // Default sorting by container capacity (index 7)
         "dom": 'tip'  // Hide default search box and only show paging
     });
 
     // Custom search by Room Number
     $('#filterRoom').on('input', function() {
         const table = $('#pickupTable').DataTable();
-        table.column(4).search(this.value).draw();
+        table.column(6).search(this.value).draw();
     });
 
     // Custom filter by Status
     $('#filterStatus').on('change', function () {
     const table = $('#pickupTable').DataTable();
     const statusText = $(this).val();
-    table.column(9).search(statusText).draw(); // Column index for Status
+    table.column(11).search(statusText).draw(); // Column index for Status
     });
 }
 
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+//Fetch pickup request data from the server and populate the DataTable.
 function fetchPickupRequests() {
-    fetch('/AdmingetPickupRequests', { // Updated URL to match the defined route
+    fetch('/AdmingetPickupRequests', { // Endpoint for fetching pickup requests
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -168,15 +171,18 @@ function fetchPickupRequests() {
     });
 }
 
+//Populate the DataTable with pickup request data.
 function populateTable(data) {
     const table = $('#pickupTable').DataTable();
     table.clear();
 
     data.forEach(request => {
+        // Format chemical names (join array if it's an array, otherwise display '-')
         const chemicalNames = Array.isArray(request["Chemical(s)"])
             ? request["Chemical(s)"].join(', ')
             : '-';
 
+        // Prepare a row for the DataTable
         const row = [
             request["Pickup ID"] || '-',
             request["Label ID"] || '-',
@@ -198,7 +204,7 @@ function populateTable(data) {
     table.draw();
 }
 
-
+//Format the status value into a readable string.
 function formatStatus(status) {
     switch (status) {
         case 0: return 'Invalid';
@@ -208,13 +214,15 @@ function formatStatus(status) {
     }
 }
 
+// Show the invalidation modal for a selected pickup request
 function showModal(pickupID) {
-    selectedPickupID = pickupID;
-    document.getElementById('modalPickupID').textContent = pickupID;
+    selectedPickupID = pickupID; // Store the selected Pickup ID
+    document.getElementById('modalPickupID').textContent = pickupID;  // Display the Pickup ID in the modal
     const modal = new bootstrap.Modal(document.getElementById('invalidateModal'));
     modal.show();
 }
 
+//Confirm the invalidation of a pickup request with a reason.
 function confirmInvalidate() {
     const reason = document.getElementById('invalidateReason').value.trim();
 
@@ -223,7 +231,7 @@ function confirmInvalidate() {
         return;
     }
 
-    fetch('/AdminpickupInvalidate', {
+    fetch('/AdminpickupInvalidate', { // Endpoint for invalidation
     method: 'PUT',
     headers: {
         'Content-Type': 'application/json',
@@ -257,6 +265,5 @@ function confirmInvalidate() {
 });
 
 }
-
 </script>
 @endsection
