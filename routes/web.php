@@ -182,10 +182,12 @@ Route::middleware(['auth', AdminMiddleware::class])->group(function(){
 
 
 
-    ////   Quiz Management Routes
-    Route::get('admin/manageQuiz', [ManageQuizController::class, 'show'])->name('admin.manageQuiz.show');
-    Route::post('admin/manageQuiz/save', [ManageQuizController::class, 'save'])->name('admin.manageQuiz.save');
-    //Route::post('/update-certification-status', [UserController::class, 'updateCertificationStatus'])->name('update.certificate');
+   //   Manage Quiz Routes
+   Route::get('admin/manageQuiz', [ManageQuizController::class, 'viewQuestions'])->name('admin.manageQuiz.show');
+   Route::post('admin/manageQuiz/add', [ManageQuizController::class, 'addQuestion'])->name('admin.manageQuiz.add');
+   Route::post('admin/manageQuiz/delete', [ManageQuizController::class, 'deleteQuestion'])->name('admin.manageQuiz.delete');
+   Route::post('admin/manageQuiz/save', [ManageQuizController::class, 'saveQuizSettings'])->name('admin.manageQuiz.save');
+   Route::post('/admin/manageQuiz/toggleStatus', [ManageQuizController::class, 'toggleQuestionStatus'])->name('admin.manageQuiz.toggleStatus');
     
 
 
@@ -281,16 +283,6 @@ Route::middleware(['auth', AdminMiddleware::class])->group(function(){
     Route::put('/AdmininvalidateLabs/{lab_id}', [LaboratoryController::class, 'invalidateLab']); //ONLY ADMIN, reality is that it will not be deleted but the lab status changed to INVALID, LAB HAS 3 STATUS (ASSIGNED, UNASSIGNED, INVALID)
 
     Route::put('/Adminlab/{id}/supervisor', [LaboratoryController::class, 'assignLabSupervisor']); // ONLY ADMIN can assign a supervisor to a lab
-
-
-
-
-
-    //   Quiz Management Routes
-    Route::get('admin/manageQuiz', [ManageQuizController::class, 'show'])->name('admin.manageQuiz.show');
-    Route::post('admin/manageQuiz/save', [ManageQuizController::class, 'save'])->name('admin.manageQuiz.save');
-
-
 
 });
 
