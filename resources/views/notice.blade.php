@@ -34,23 +34,3 @@
             </div>
         </div>
     </div>
-{{-- @endsection
-
-@section('scripts')  <!-- Optional scripts for redirection -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log("Notice page loaded successfully.");
-
-            // Check if user has valid certification status
-            // Redirect to training page if certification is invalid
-            /*
-            var isCertified = false;  // You can replace this with actual server-side data checking
-
-            if (!isCertified) {
-                window.location.href = "{{ route('trainingPage') }}";  // Redirect to training page
-            }
-            */
-        });
-    </script>
-@endsection
- --}}
