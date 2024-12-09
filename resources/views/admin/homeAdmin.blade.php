@@ -193,7 +193,7 @@
             </div>
             <div class="dashboard-card total-weight">
                 <h5>0</h5>
-                <p>WEIGHT GENERATED (Kilograms) LAST 30 DAYS</p>
+                <p>MASS GENERATED (Kilograms) LAST 30 DAYS</p>
             </div>
             <div class="dashboard-card total-volume">
                 <h5>0</h5>
@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     plugins: {
                         title: {
                             display: true,
-                            text: 'Weight Generated (KG) last 30 days',
+                            text: 'Mass Generated (KG) last 30 days',
                             font: {
                                 size: 24 // Increase font size for the title
                             }

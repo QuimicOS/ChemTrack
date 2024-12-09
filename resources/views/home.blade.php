@@ -6,31 +6,13 @@
     <style>
         .hero-container {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             margin-top: 1.25rem;
             background-color: #f0f0f0;
             border-radius: 10px;
             padding: 2rem;
-        }
-
-        .hero-left {
-            flex: 1;
-            text-align: center;
-        }
-
-        .hero-left img {
-            margin: 0 auto 1rem auto;
-            display: block;
-        }
-
-        .hero-left .btn {
-            margin-top: 1rem;
-        }
-
-        .hero-right {
-            flex: 1;
-            text-align: center;
         }
 
         .gray-box {
@@ -41,9 +23,15 @@
             font-size: 1rem;
         }
 
+        .chemtrack-its-a {
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
         .ossoa-image {
-            max-width: 100%;
+            max-width: 40%;
             border-radius: 10px;
+            margin-bottom: 1.5rem; /* Adds spacing below the image */
         }
 
         .content-area {
@@ -63,16 +51,9 @@
 
         <!-- Hero Section with two columns: left (text and centered logo) and right (OSSOA image) -->
         <div class="hero-container">
-            <div class="hero-left">
-                <img class="logochemtrack-transparent-1-icon img-fluid mb-3" alt="ChemTrack Logo" src="{{ asset('photos/Logo ChemTrack.jpg') }}">
-                <div class="chemtrack-its-a">
-                    ChemTrack is a webApp designed for tracking, identifying, notifying about orders or pickups, and reporting on unwanted materials at the University of Puerto Rico, Mayagüez Campus.
-                </div>
-                <a href="{{ url('contactUs') }}" class="btn btn-primary">See More</a>
-            </div>
-
-            <div class="hero-right">
-                <img class="ossoa-image img-fluid" src="{{ asset('photos/ossoa logo.png') }}" alt="OSSOA Logo">
+            <img class="ossoa-image img-fluid" src="{{ asset('photos/ossoa logo.png') }}" alt="OSSOA Logo">
+            <div class="chemtrack-its-a">
+                ChemTrack is a webApp designed for tracking, identifying, notifying about orders or pickups, and reporting on unwanted materials at the University of Puerto Rico, Mayagüez Campus.
             </div>
         </div>
     </div>

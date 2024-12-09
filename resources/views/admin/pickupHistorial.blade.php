@@ -107,6 +107,7 @@
                     <th scope="col">Label ID</th>
                     <th scope="col">Requested By</th>
                     <th scope="col">Date Requested</th>
+                    <th scope="col">Completion Date</th>
                     <th scope="col">Chemical Name</th>
                     <th scope="col">Building</th>
                     <th scope="col">Room Number</th>
@@ -156,39 +157,39 @@
 $(document).ready(function() {
     // Initialize DataTable and store it in a global variable for reuse
     window.table = $('#pickupTable').DataTable({
-        "pageLength": 10,
-        "order": [[3, "asc"]],
+        "pageLength": 10, // Set default number of rows per page
+        "order": [[3, "asc"]], // Sort by the 4th column (Request Date) in ascending order
         "dom": 'tip'  // Hide default search bar, keep pagination
     });
 
     // Custom search for Building and Room Number
     $('#buildingSearch').on('input', function() {
-        window.table.column(5).search(this.value).draw();
+        window.table.column(6).search(this.value).draw();
     });
 
     $('#roomSearch').on('input', function() {
-        window.table.column(6).search(this.value).draw();
+        window.table.column(7).search(this.value).draw();
     });
 
     // Custom filter for Status dropdown
     $('#statusFilter').on('change', function() {
         const status = $(this).val();
-        window.table.column(10).search(status === 'all' ? '' : status).draw();
+        window.table.column(11).search(status === 'all' ? '' : status).draw();
     });
 
     // Custom filter for Type (Completion Method) dropdown
     $('#typeFilter').on('change', function() {
         const type = $(this).val();
-        window.table.column(11).search(type === 'all' ? '' : type === 'regular' ? 'Regular' : 'Clean Out').draw();
+        window.table.column(12).search(type === 'all' ? '' : type === 'regular' ? 'Regular' : 'Clean Out').draw();
     });
-
 
     // Fetch and populate data initially
     fetchPickupRequests();
 });
 
+// Fetch pickup request data from the server
 function fetchPickupRequests() {
-    fetch('/AdminpickupSearch')
+    fetch('/AdminpickupSearch') // API endpoint for retrieving pickup requests
         .then(response => response.json())
         .then(data => {
             populateTable(data.pickup_requests);
@@ -199,17 +200,19 @@ function fetchPickupRequests() {
         });
 }
 
+// Populate the DataTable with fetched data
 function populateTable(data) {
     // Clear existing data in the table
     window.table.clear();
 
-    // Populate table with new data
+    // Loop through each pickup request and add rows to the table
     data.forEach(request => {
         const row = [
             request['Pickup Request ID'] || '-',
             request['Label ID'] || '-',
             request['Requested By Email'] || '-',
             request['Request Date'] || '-',
+            request['Completion Date'] || '-',
             request['Chemicals'] ? request['Chemicals'].join(', ') : '-',
             request['Building Name'] || '-',
             request['Room Number'] || '-',
@@ -230,8 +233,9 @@ function populateTable(data) {
     window.table.draw();
 }
 
-// Function to show confirmation modal
+// Show confirmation modal for marking a pickup as completed
 function showCompletionModal(pickupId, method) {
+    // Attach an event listener to the confirmation button
     $('#confirmCompletionButton').off('click').on('click', function() {
         completePickup(pickupId, method);
         $('#completionModal').modal('hide');
@@ -239,8 +243,9 @@ function showCompletionModal(pickupId, method) {
     $('#completionModal').modal('show');
 }
 
+// Mark a pickup request as completed
 function completePickup(pickupId, method) {
-    fetch('/AdminpickupComplete', {
+    fetch('/AdminpickupComplete', { // API endpoint for marking a pickup as completed
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -251,6 +256,7 @@ function completePickup(pickupId, method) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Show success message and refresh the table
             alert('Pickup request marked as completed successfully!');
             fetchPickupRequests(); // Refresh the table data
         } else {

@@ -61,6 +61,7 @@
                 <div class="invalid-feedback">Please enter a valid numeric Label ID.</div>
             </div>
 
+            <h6 class="display-8">Available Times to Hand in the Container</h6>
             <div class="time-select">
                 @php
                     $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];

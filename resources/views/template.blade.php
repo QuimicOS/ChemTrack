@@ -27,9 +27,22 @@
         .footerprimary {
             background-color: #f8f9fa;
             padding: 1rem;
+            text-align: center;
             border-radius: 10px;
-            margin-top: 1rem;
-            font-size: 1rem;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+  
+        .footerprimary p {
+            margin-bottom: 0;
+            color: #6c757d;
+        }
+  
+        .footerprimary nav a {
+            color: #6c757d;
+            margin-left: 10px;
+            margin-right: 10px;
+            text-decoration: none;
         }
 
         /* UPRM Portico Banner */

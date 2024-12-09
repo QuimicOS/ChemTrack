@@ -76,7 +76,7 @@
     <div class="content-area container">
         <!-- Title -->
         <div class="text-center mb-4">
-            <h1 class="display-5">Professor Dashboard</h1>
+            <h1 class="display-5">Faculty Dashboard</h1>
             <hr class="my-4">
         </div>
 

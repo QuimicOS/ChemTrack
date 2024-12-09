@@ -61,6 +61,7 @@
                 <div class="invalid-feedback">Please enter a valid numeric Label ID.</div>
             </div>
 
+            <h6 class="display-8">Available Times to Hand in the Container</h6>
             <div class="time-select">
                 @php
                     $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -133,6 +134,7 @@
 @section('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Array representing days of the week for the time selection
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
         // Validate Label ID and Time Selection
@@ -142,16 +144,18 @@
         validateForm(); // Ensure the form validation is called
         };
 
-
+        // Validate the entire form including Label ID and timeframes
         function validateForm() {
         const labelValue = document.getElementById('labelID').value;
         const isValidLabelID = labelValue !== ''; // Valid if not empty
 
-        let isTimeSelectionValid = true;
-        let hasValidDay = false;
+        let isTimeSelectionValid = true; // Flag to track if all timeframes are valid
+        let hasValidDay = false; // Flag to ensure at least one day has valid times
 
-        const timeRegex = /^(\d{1,2}):(\d{2})\s?(AM|PM)$/; // Regex to validate time format (e.g., 8:00 AM)
-        
+        // Regex to validate time format (e.g., 8:00 AM)
+        const timeRegex = /^(\d{1,2}):(\d{2})\s?(AM|PM)$/;
+
+        // Loop through each day and validate the start and end times
         days.forEach(day => {
             const start = document.getElementById(day + 'Start').value;
             const end = document.getElementById(day + 'End').value;
@@ -191,47 +195,50 @@
     document.getElementById('requestBtn').disabled = !(isValidLabelID && isTimeSelectionValid && hasValidDay);
 }
 
+    // Event listeners to validate Label ID and time selection inputs
+    document.getElementById('labelID').addEventListener('input', validateLabelID);
+    days.forEach(day => {
+        document.getElementById(day + 'Start').addEventListener('change', validateForm);
+        document.getElementById(day + 'End').addEventListener('change', validateForm);
+    });
 
-        document.getElementById('labelID').addEventListener('input', validateLabelID);
+    // Initial validation call to ensure button state is set
+    validateForm();
+
+    // Show modal and populate with selected times
+    document.getElementById('requestBtn').addEventListener('click', function () {
+        document.getElementById('modalLabelID').innerText = document.getElementById('labelID').value;
+        const modalTimeList = document.getElementById('modalTimeList');
+        modalTimeList.innerHTML = '';
+    
+        // Loop through each day and add valid timeframes to the modal
         days.forEach(day => {
-            document.getElementById(day + 'Start').addEventListener('change', validateForm);
-            document.getElementById(day + 'End').addEventListener('change', validateForm);
+            const start = document.getElementById(day + 'Start').value;
+            const end = document.getElementById(day + 'End').value;
+            if (start !== '-' && end !== '-') {
+                const li = document.createElement('li');
+                li.textContent = `${day.charAt(0).toUpperCase() + day.slice(1)}: ${start} to ${end}`;
+                modalTimeList.appendChild(li);
+            }
         });
 
-        // Initial validation call to ensure button state is set
-        validateForm();
+        // Show the confirmation modal
+        const confirmRequestModal = new bootstrap.Modal(document.getElementById('confirmRequestModal'));
+        confirmRequestModal.show();
+    });
 
-        // Show modal and populate with selected times
-        document.getElementById('requestBtn').addEventListener('click', function () {
-            document.getElementById('modalLabelID').innerText = document.getElementById('labelID').value;
-            const modalTimeList = document.getElementById('modalTimeList');
-            modalTimeList.innerHTML = '';
-        
-            days.forEach(day => {
-                const start = document.getElementById(day + 'Start').value;
-                const end = document.getElementById(day + 'End').value;
-                if (start !== '-' && end !== '-') {
-                    const li = document.createElement('li');
-                    li.textContent = `${day.charAt(0).toUpperCase() + day.slice(1)}: ${start} to ${end}`;
-                    modalTimeList.appendChild(li);
-                }
-            });
-
-            const confirmRequestModal = new bootstrap.Modal(document.getElementById('confirmRequestModal'));
-            confirmRequestModal.show();
-        });
-
-       // Function to create a pickup request and post data to the server
+    // Function to create a pickup request and send data to the server
     function createPickupRequest(labelID, timeframe) {
     console.log("Create Pickup Request Function Called");
 
     const requestData = {
-        label_id: labelID,
-        timeframe: timeframe
+        label_id: labelID, // Label ID of the request
+        timeframe: timeframe // Selected timeframes
     };
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+    // Send POST request to the server
     fetch(`/AdmincreatePickupRequest`, {
     method: 'POST',
     headers: {
@@ -277,11 +284,12 @@ function resetForm() {
     validateForm(); // Revalidate to disable the button if necessary
 }
 
-// Triggering the createPickupRequest function on confirm button click
+// Trigger the createPickupRequest function when the confirm button is clicked
 document.getElementById('confirmRequest').addEventListener('click', function () {
     const labelID = document.getElementById('labelID').value;
     let timeframe = '';
 
+    // Construct the timeframe string from selected times
     days.forEach(day => {
         const start = document.getElementById(day + 'Start').value;
         const end = document.getElementById(day + 'End').value;
