@@ -82,7 +82,7 @@
             <h2>User Guide</h2>
             <div class="pdf-viewer-container">
                 <!-- Embedded PDF using iframe -->
-                <iframe class="pdf-viewer" src="{{ asset('testPdf.pdf') }}" frameborder="0"></iframe>
+                <iframe class="pdf-viewer" src="{{ asset('User Guide - Professor and Staff.pdf') }}" frameborder="0"></iframe>
             </div>
         </div>
 
